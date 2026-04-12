@@ -399,19 +399,32 @@ img { max-width:100%; display:block; }
     <div class="section-label">Rates</div>
     <div class="course-card">
       <h3>Sample Analysis Pricing</h3>
-      <table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:0.5rem;">
+      <p class="course-desc" style="margin-bottom:1rem;">Per-sample rates by isotope analysis, sample type, volume tier, and UGA affiliation.</p>
+      <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:0.85rem; min-width:560px;">
         <thead>
           <tr style="border-bottom:2px solid var(--accent);">
-            <th style="text-align:left; padding:0.6rem 0.5rem; color:var(--ink);">Service</th>
-            <th style="text-align:right; padding:0.6rem 0.5rem; color:var(--ink);">Rate</th>
+            <th rowspan="2" style="text-align:left; padding:0.6rem 0.5rem; color:var(--ink); vertical-align:bottom;">Isotope analysis</th>
+            <th rowspan="2" style="text-align:left; padding:0.6rem 0.5rem; color:var(--ink); vertical-align:bottom;">Sample type</th>
+            <th colspan="2" style="text-align:center; padding:0.6rem 0.5rem; color:var(--ink); border-bottom:1px solid var(--rule-light);">UGA rate / sample</th>
+            <th colspan="2" style="text-align:center; padding:0.6rem 0.5rem; color:var(--ink); border-bottom:1px solid var(--rule-light);">Outside UGA rate / sample</th>
+          </tr>
+          <tr style="border-bottom:1px solid var(--rule-light);">
+            <th style="text-align:right; padding:0.4rem 0.5rem; color:var(--muted); font-weight:500; font-size:0.78rem;">1–200 samples</th>
+            <th style="text-align:right; padding:0.4rem 0.5rem; color:var(--muted); font-weight:500; font-size:0.78rem;">200+ samples</th>
+            <th style="text-align:right; padding:0.4rem 0.5rem; color:var(--muted); font-weight:500; font-size:0.78rem;">1–200 samples</th>
+            <th style="text-align:right; padding:0.4rem 0.5rem; color:var(--muted); font-weight:500; font-size:0.78rem;">200+ samples</th>
           </tr>
         </thead>
-        <tbody>
-          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem;">Filter water samples and sample prep</td><td style="text-align:right; padding:0.6rem 0.5rem; font-family:var(--mono);">$3.00 / sample</td></tr>
-          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem;">Water sample prep only</td><td style="text-align:right; padding:0.6rem 0.5rem; font-family:var(--mono);">$1.50 / sample</td></tr>
+        <tbody style="font-family:var(--mono); font-size:0.82rem;">
+          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem; font-family:var(--sans);"><sup>2</sup>H, <sup>18</sup>O</td><td style="padding:0.6rem 0.5rem; font-family:var(--sans);">Water</td><td style="text-align:right; padding:0.6rem 0.5rem;">$8.82</td><td style="text-align:right; padding:0.6rem 0.5rem;">$8.82</td><td style="text-align:right; padding:0.6rem 0.5rem;">$9.41</td><td style="text-align:right; padding:0.6rem 0.5rem;">$8.82</td></tr>
+          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem; font-family:var(--sans);"><sup>2</sup>H, <sup>18</sup>O, <sup>17</sup>O</td><td style="padding:0.6rem 0.5rem; font-family:var(--sans);">Water</td><td style="text-align:right; padding:0.6rem 0.5rem;">$10.29</td><td style="text-align:right; padding:0.6rem 0.5rem;">$10.29</td><td style="text-align:right; padding:0.6rem 0.5rem;">$10.98</td><td style="text-align:right; padding:0.6rem 0.5rem;">$10.29</td></tr>
+          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem; font-family:var(--sans);"><sup>2</sup>H, <sup>18</sup>O</td><td style="padding:0.6rem 0.5rem; font-family:var(--sans);">Other liquids*</td><td style="text-align:right; padding:0.6rem 0.5rem;">$26.45</td><td style="text-align:right; padding:0.6rem 0.5rem;">$26.45</td><td style="text-align:right; padding:0.6rem 0.5rem;">$28.23</td><td style="text-align:right; padding:0.6rem 0.5rem;">$26.45</td></tr>
+          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem; font-family:var(--sans);"><sup>2</sup>H, <sup>18</sup>O, <sup>17</sup>O</td><td style="padding:0.6rem 0.5rem; font-family:var(--sans);">Other liquids*</td><td style="text-align:right; padding:0.6rem 0.5rem;">$30.86</td><td style="text-align:right; padding:0.6rem 0.5rem;">$30.86</td><td style="text-align:right; padding:0.6rem 0.5rem;">$32.94</td><td style="text-align:right; padding:0.6rem 0.5rem;">$30.86</td></tr>
         </tbody>
       </table>
-      <p class="course-desc" style="margin-top:1rem; font-size:0.82rem; color:var(--muted);"><strong style="color:var(--ink);">Note:</strong> Liquids with high total dissolved solids (e.g., plant leaves, stems, juices) may require additional preparation. Analysis of brackish or brine samples may incur higher rates due to greater consumption of consumables (syringes, septa, salt liners). Please contact us for a custom quote on non-standard sample types.</p>
+      </div>
+      <p class="course-desc" style="margin-top:1rem; font-size:0.78rem; color:var(--muted);">*Other liquids = liquids with high total dissolved solids (e.g., plant leaves, stems, juices). <strong style="color:var(--ink);">Note:</strong> Analysis of brackish or brine samples may incur higher rates due to greater consumption of consumables (syringes, septa, salt liners). Please contact us for a custom quote on non-standard sample types.</p>
     </div>
 
     <div class="section-label">How to Submit</div>
