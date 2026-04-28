@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaristo Critical Zone Hydrology Lab | University of Georgia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Libre+Franklin:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #181b1a;
+  --paper: #f9f8f5;
+  --warm: #f2f0eb;
+  --accent: #1b5e3b;
+  --accent-hover: #24784e;
+  --accent-pale: #e4f0e9;
+  --muted: #6d7370;
+  --rule: #d6d3cc;
+  --rule-light: #e8e6e1;
+  --hero-bg: #122418;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'Libre Franklin', 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --max-w: 1080px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:16px; }
+body { font-family:var(--sans); color:var(--ink); background:var(--paper); line-height:1.72; -webkit-font-smoothing:antialiased; }
+a { color:var(--accent); text-decoration:none; transition:color .25s var(--ease); }
+a:hover { color:var(--accent-hover); }
+img { max-width:100%; display:block; }
+
+/* ═══════ NAVIGATION ═══════ */
+.nav {
+  position:fixed; top:0; left:0; right:0; z-index:1000;
+  background:rgba(249,248,245,0.88);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--rule);
+  transition:box-shadow .3s var(--ease);
+}
+.nav.scrolled { box-shadow:0 2px 20px rgba(0,0,0,0.06); }
+.nav-inner {
+  max-width:var(--max-w); margin:0 auto; padding:0 2rem;
+  display:flex; align-items:center; justify-content:space-between; height:62px;
+}
+.nav-brand { display:flex; flex-direction:column; line-height:1.2; cursor:pointer; }
+.nav-brand-name { font-family:var(--serif); font-size:1rem; color:var(--accent); }
+.nav-brand-sub { font-size:0.65rem; color:var(--muted); letter-spacing:0.12em; text-transform:uppercase; font-weight:500; }
+.nav-links { display:flex; gap:2px; }
+.nav-links a {
+  font-size:0.76rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--muted); padding:0.45rem 0.8rem; border-radius:6px; cursor:pointer;
+  transition:all .25s var(--ease);
+}
+.nav-links a:hover, .nav-links a.active { color:var(--accent); background:var(--accent-pale); }
+.hamburger { display:none; background:none; border:none; cursor:pointer; padding:8px; }
+.hamburger svg { display:block; }
+
+/* ═══════ HERO ═══════ */
+.hero {
+  margin-top:62px; position:relative; overflow:hidden;
+  min-height:480px; display:flex; align-items:center;
+  background: linear-gradient(145deg, #0e2218 0%, #1b5e3b 55%, #14402a 100%);
+}
+.hero::before {
+  content:''; position:absolute; inset:0; opacity:0.06;
+  background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 40%);
+}
+.hero::after {
+  content:''; position:absolute; inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-inner {
+  position:relative; z-index:2; max-width:var(--max-w);
+  margin:0 auto; padding:4.5rem 2rem; color:white; width:100%;
+}
+.hero-eyebrow {
+  font-family:var(--mono); font-size:0.7rem; letter-spacing:0.2em;
+  text-transform:uppercase; opacity:0.55; margin-bottom:1rem;
+}
+.hero h1 {
+  font-family:var(--serif); font-size:clamp(2rem, 4.5vw, 3.2rem);
+  font-weight:400; line-height:1.18; margin-bottom:1rem; max-width:680px;
+}
+.hero-subtitle {
+  font-size:1.08rem; line-height:1.7; opacity:0.75; max-width:540px; font-weight:300;
+}
+.hero-tags {
+  margin-top:2rem; display:flex; gap:0.6rem; flex-wrap:wrap;
+}
+.hero-tag {
+  font-size:0.7rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;
+  padding:0.35rem 0.85rem; border-radius:100px;
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.8);
+}
+.hero-cta { margin-top:2rem; display:flex; gap:1rem; flex-wrap:wrap; }
+.btn {
+  display:inline-flex; align-items:center; gap:0.5rem;
+  padding:0.7rem 1.5rem; border-radius:8px; font-weight:600;
+  font-size:0.85rem; letter-spacing:0.02em; transition:all .25s var(--ease); cursor:pointer; border:none;
+}
+.btn-white { background:white; color:var(--accent); }
+.btn-white:hover { background:var(--accent-pale); transform:translateY(-1px); color:var(--accent); }
+.btn-ghost { background:rgba(255,255,255,0.08); color:white; border:1px solid rgba(255,255,255,0.2); }
+.btn-ghost:hover { background:rgba(255,255,255,0.15); color:white; }
+
+/* ═══════ PAGES ═══════ */
+.page { display:none; animation:fadeUp .4s var(--ease); }
+.page.active { display:block; }
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.section { max-width:var(--max-w); margin:0 auto; padding:3.5rem 2rem; }
+.section-head { margin-bottom:2.5rem; padding-bottom:1rem; border-bottom:2px solid var(--accent); }
+.section-head h2 { font-family:var(--serif); font-size:1.85rem; font-weight:400; color:var(--ink); }
+.section-head p { font-size:0.88rem; color:var(--muted); margin-top:0.3rem; }
+
+/* ═══════ STATS BAR ═══════ */
+.stats-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--rule-light); border-radius:10px; overflow:hidden; margin:2rem 0; }
+.stat { background:white; padding:1.5rem; text-align:center; }
+.stat-num { font-family:var(--serif); font-size:2rem; color:var(--accent); }
+.stat-label { font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; font-weight:500; margin-top:0.2rem; }
+
+/* ═══════ LATEST PUBS GRID ═══════ */
+.latest-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:1.2rem; margin-top:1.5rem; }
+.latest-card {
+  border-radius:10px; overflow:hidden; background:white;
+  border:1px solid var(--rule-light); transition:all .3s var(--ease);
+  display:flex; flex-direction:column; text-decoration:none; color:var(--ink);
+}
+.latest-card:hover { box-shadow:0 6px 24px rgba(0,0,0,0.08); transform:translateY(-3px); color:var(--ink); }
+.latest-card-img { height:48px; background:var(--accent); display:flex; align-items:center; justify-content:center; }
+.latest-card-img span { font-family:var(--mono); font-size:0.65rem; color:rgba(255,255,255,0.7); letter-spacing:0.1em; text-transform:uppercase; }
+.latest-card-body { padding:1.1rem; flex:1; display:flex; flex-direction:column; }
+.latest-card-body h4 { font-size:0.85rem; line-height:1.4; margin-bottom:0.5rem; flex:1; }
+.latest-card-body .journal { font-size:0.72rem; color:var(--muted); font-style:italic; }
+.latest-card-body .year-badge { font-family:var(--mono); font-size:0.68rem; color:var(--accent); margin-bottom:0.3rem; }
+
+/* ═══════ PEOPLE ═══════ */
+.person-card { display:grid; grid-template-columns:180px 1fr; gap:2rem; padding:2rem 0; border-bottom:1px solid var(--rule-light); }
+.person-card:last-child { border-bottom:none; }
+.person-photo { width:180px; height:220px; border-radius:10px; overflow:hidden; background:var(--warm); display:flex; align-items:center; justify-content:center; }
+.person-photo .placeholder { font-family:var(--serif); font-size:2.5rem; color:var(--accent); opacity:0.3; }
+.person-info h3 { font-family:var(--serif); font-size:1.25rem; margin-bottom:0.15rem; }
+.person-role { font-size:0.82rem; color:var(--accent); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.8rem; }
+.person-bio { font-size:0.92rem; color:#3a3d3b; line-height:1.75; }
+.person-bio .funding { font-size:0.82rem; color:var(--muted); margin-top:0.6rem; font-style:italic; }
+.section-label { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin:2rem 0 1rem; padding-top:1rem; border-top:1px solid var(--rule-light); }
+
+/* ═══════ RESEARCH ═══════ */
+.research-block { display:block; padding:2.5rem 0; border-bottom:1px solid var(--rule-light); max-width:780px; }
+.research-block:nth-child(even) { direction:rtl; }
+.research-block:nth-child(even) > * { direction:ltr; }
+.research-block:last-of-type { border-bottom:none; }
+.research-text h3 { font-family:var(--serif); font-size:1.2rem; margin-bottom:0.8rem; line-height:1.35; }
+.research-text p { font-size:0.9rem; color:#3a3d3b; line-height:1.75; }
+.research-pubs { margin-top:1rem; font-size:0.8rem; color:var(--muted); line-height:1.8; }
+.research-pubs strong { color:var(--ink); }
+.research-images { display:flex; flex-direction:column; gap:0.8rem; }
+.research-images img { border-radius:8px; width:100%; object-fit:cover; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+
+/* ═══════ PUBLICATIONS ═══════ */
+.pub-year { font-family:var(--serif); font-size:1.6rem; color:var(--accent); margin:2.5rem 0 1rem; padding-top:1.5rem; border-top:2px solid var(--rule-light); }
+.pub-year:first-of-type { margin-top:0; border-top:none; padding-top:0; }
+.pub-item { padding:0.9rem 0; border-bottom:1px solid var(--rule-light); font-size:0.88rem; line-height:1.7; color:#3a3d3b; display:flex; gap:0.8rem; }
+.pub-num { font-family:var(--mono); font-size:0.75rem; font-weight:500; color:var(--accent); min-width:28px; padding-top:2px; }
+.pub-item a { font-weight:500; }
+.pub-item strong { color:var(--ink); }
+.pub-badge { display:inline-block; font-size:0.65rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:0.15rem 0.5rem; border-radius:4px; background:var(--accent-pale); color:var(--accent); margin-left:0.4rem; vertical-align:middle; }
+
+/* ═══════ TEACHING ═══════ */
+.course-card { padding:1.8rem; border-radius:10px; background:white; border:1px solid var(--rule-light); margin-bottom:1.2rem; box-shadow:0 1px 4px rgba(0,0,0,0.03); transition:box-shadow .3s var(--ease), transform .3s var(--ease); }
+.course-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.06); transform:translateY(-2px); }
+.course-code { font-family:var(--mono); font-size:0.72rem; font-weight:500; color:var(--accent); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.3rem; }
+.course-card h3 { font-family:var(--serif); font-size:1.15rem; margin-bottom:0.6rem; }
+.course-meta { display:flex; gap:1.5rem; flex-wrap:wrap; font-size:0.78rem; color:var(--muted); margin-bottom:0.8rem; }
+.course-desc { font-size:0.88rem; color:#3a3d3b; line-height:1.7; }
+
+/* ═══════ SERVICE ═══════ */
+.service-group { margin-bottom:2.5rem; }
+.service-group h3 { font-family:var(--serif); font-size:1.15rem; margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid var(--rule-light); }
+.service-list { list-style:none; }
+.service-list li { font-size:0.88rem; color:#3a3d3b; padding:0.5rem 0; border-bottom:1px solid var(--rule-light); line-height:1.6; }
+.service-list li:last-child { border-bottom:none; }
+
+/* ═══════ THEME CARDS (HOME) ═══════ */
+.theme-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; }
+
+/* ═══════ FOOTER ═══════ */
+.footer { background:var(--hero-bg); color:rgba(255,255,255,0.6); padding:3rem 2rem; margin-top:2rem; }
+.footer-inner { max-width:var(--max-w); margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
+.footer-brand { font-family:var(--serif); font-size:1rem; color:rgba(255,255,255,0.85); }
+.footer-links { display:flex; gap:1.5rem; }
+.footer-links a { color:rgba(255,255,255,0.5); font-size:0.78rem; font-weight:500; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; }
+.footer-links a:hover { color:rgba(255,255,255,0.9); }
+
+/* ═══════ RESPONSIVE ═══════ */
+@media (max-width:768px) {
+  .nav-links { display:none; position:fixed; top:62px; left:0; right:0; background:var(--paper); flex-direction:column; padding:1rem; border-bottom:1px solid var(--rule); box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+  .nav-links.open { display:flex; }
+  .hamburger { display:block; }
+  .person-card { grid-template-columns:1fr; }
+  .person-photo { width:120px; height:150px; }
+  .research-block, .research-block:nth-child(even) { grid-template-columns:1fr; direction:ltr; }
+  .latest-grid { grid-template-columns:1fr; }
+  .stats-bar { grid-template-columns:repeat(2,1fr); }
+  .theme-grid { grid-template-columns:1fr; }
+  .hero h1 { font-size:1.9rem; }
+  .footer-inner { flex-direction:column; text-align:center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ NAVIGATION ═══════ -->
+<nav class="nav" id="mainNav">
+  <div class="nav-inner">
+    <div class="nav-brand" onclick="showPage('home')">
+      <span class="nav-brand-name">Evaristo CZ Hydrology Lab</span>
+      <span class="nav-brand-sub">University of Georgia</span>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a class="active" data-page="home" onclick="showPage('home')">Home</a>
+      <a data-page="people" onclick="showPage('people')">People</a>
+      <a data-page="research" onclick="showPage('research')">Research</a>
+      <a data-page="publications" onclick="showPage('publications')">Publications</a>
+      <a data-page="teaching" onclick="showPage('teaching')">Teaching</a>
+      <a data-page="samples" onclick="showPage('samples')">Submit Samples</a>
+      <a data-page="service" onclick="showPage('service')">Service</a>
+      <a data-page="utrecht" onclick="showPage('utrecht')">Utrecht</a>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">
+      <svg width="22" height="16" viewBox="0 0 22 16" fill="none"><rect width="22" height="2" rx="1" fill="#181b1a"/><rect y="7" width="22" height="2" rx="1" fill="#181b1a"/><rect y="14" width="22" height="2" rx="1" fill="#181b1a"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Warnell School of Forestry &amp; Natural Resources</div>
+    <h1>Evaristo Critical Zone Hydrology Lab</h1>
+    <p class="hero-subtitle">Tracing the movement of water through landscapes using stable isotopes, environmental tracers, and quantitative hydrology — from forest canopies to deep aquifers.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">Isotope Geochemistry</span>
+      <span class="hero-tag">Hydrology</span>
+      <span class="hero-tag">Water Resources</span>
+      <span class="hero-tag">Critical Zone Science</span>
+    </div>
+    <div class="hero-cta">
+      <a class="btn btn-white" onclick="showPage('research')">Our Research →</a>
+      <a class="btn btn-ghost" onclick="showPage('publications')">Publications</a>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════ HOME ═══════ -->
+<div class="page active" id="page-home">
+  <div class="section">
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-num">36</div><div class="stat-label">Publications</div></div>
+      <div class="stat"><div class="stat-num">4</div><div class="stat-label">Lab Members</div></div>
+      <div class="stat"><div class="stat-num">5</div><div class="stat-label">Courses</div></div>
+      <div class="stat"><div class="stat-num">4</div><div class="stat-label">Research Themes</div></div>
+    </div>
+  </div>
+  <div class="section" style="padding-top:0">
+    <div class="section-head"><h2>Latest Publications</h2><p>Recent peer-reviewed work from the lab</p></div>
+    <div class="latest-grid">
+      <a href="https://wires.onlinelibrary.wiley.com/doi/10.1002/wat2.70053" target="_blank" class="latest-card">
+        <div class="latest-card-img"><span>WIREs Water</span></div>
+        <div class="latest-card-body"><span class="year-badge">2026</span><h4>Left High and Dry: Deep Soil Water Depletion and Ecohydrological Resilience on China's Loess Plateau</h4><span class="journal">WIREs Water</span></div>
+      </a>
+      <a href="https://onlinelibrary.wiley.com/doi/10.1002/eco.70182" target="_blank" class="latest-card">
+        <div class="latest-card-img" style="background:#2a6b4a"><span>Ecohydrology</span></div>
+        <div class="latest-card-body"><span class="year-badge">2026</span><h4>Tracer Labeling and Transit Time Modeling in Soil-Plant Systems</h4><span class="journal">Ecohydrology</span></div>
+      </a>
+      <a href="https://iopscience.iop.org/article/10.1088/3033-4942/ae2653" target="_blank" class="latest-card">
+        <div class="latest-card-img" style="background:#1a4a2e"><span>Env. Res.: Water</span></div>
+        <div class="latest-card-body"><span class="year-badge">2025</span><h4>Not So Isolated: Okefenokee Swamp–Floridan Aquifer Vertical Connectivity</h4><span class="journal">Environmental Research: Water</span></div>
+      </a>
+    </div>
+    <p style="text-align:center; margin-top:1.5rem;"><a onclick="showPage('publications')" style="font-size:0.85rem; font-weight:600; cursor:pointer;">View all 36 publications →</a></p>
+  </div>
+  <div class="section" style="padding-top:0">
+    <div class="section-head"><h2>Research Themes</h2></div>
+    <div class="theme-grid">
+      <div class="course-card" onclick="showPage('research')" style="cursor:pointer;"><div class="course-code">Theme 01</div><h3>Vadose Zone Processes &amp; Land Use</h3><p class="course-desc">Multi-tracer approaches to understand groundwater recharge mechanisms in thick unsaturated zones and the role of land use change.</p></div>
+      <div class="course-card" onclick="showPage('research')" style="cursor:pointer;"><div class="course-code">Theme 02</div><h3>Watershed Ecohydrology</h3><p class="course-desc">Understanding how trees interact with soil and water — the "two water worlds" hypothesis and tree-groundwater interactions.</p></div>
+      <div class="course-card" onclick="showPage('research')" style="cursor:pointer;"><div class="course-code">Theme 03</div><h3>Rhizosphere &amp; Pore-Scale Processes</h3><p class="course-desc">Image-based and pore-scale modeling of rhizosphere water dynamics, and clay mineral isotope paleothermometry.</p></div>
+      <div class="course-card" onclick="showPage('research')" style="cursor:pointer;"><div class="course-code">Theme 04</div><h3>Water Quality: Headwaters to Coasts</h3><p class="course-desc">Multi-tracer assessment of water quality across environments — rivers, mangroves, volcanic coastlines, and urban streams.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PEOPLE ═══════ -->
+<div class="page" id="page-people">
+  <div class="section">
+    <div class="section-head"><h2>Lab Members</h2><p>Evaristo Critical Zone Hydrology Lab</p></div>
+    <div class="person-card"><div class="person-photo"><img src="images/Evaristo_JaivimeLinkedIn_2025.jpg" alt="Jaivime Evaristo" style="width:100%;height:100%;object-fit:cover"></div><div class="person-info"><div class="person-role">Principal Investigator</div><h3>Jaivime Evaristo, Ph.D., P.H.</h3><div class="person-bio"><p>Jaivime is an Assistant Professor at the Warnell School of Forestry and Natural Resources, University of Georgia. A full-blooded Filipino geoscientist with a non-traditional career path, he earned an undergraduate degree in Cell Biology from the University of the Philippines before spending a decade in industry and management consulting. He later pursued an MS in Geosciences (hydrogeology concentration) at the University of Pennsylvania, followed by a PhD at the Global Institute for Water Security, University of Saskatchewan. From 2019 to 2024, he was a tenured Assistant Professor at Utrecht University.</p><p style="margin-top:0.6rem;">His research focuses on the critical zone and uses tools in hydrology, water resources, and isotope geochemistry to characterize the influence of natural and anthropogenic processes on matter and energy exchange across the hydrosphere, geosphere, and atmosphere.</p><p style="margin-top:0.6rem;">Outside of work, he loves spending time with his wife and two kids!</p></div></div></div>
+    <div class="section-label">Current Graduate Students</div>
+    <div class="person-card"><div class="person-photo"><img src="images/MarieJessicaGabriel_photo.JPG" alt="Maria Jessica Gabriel" style="width:100%;height:100%;object-fit:cover"></div><div class="person-info"><div class="person-role">PhD Student (expected 2029)</div><h3>Maria Jessica Gabriel, M.S.</h3><div class="person-bio"><p>Jessica is a PhD student at Warnell and an assistant professor at the University of the Philippines Los Baños. She finished an Erasmus Mundus Joint Masters Program in Sustainable Tropical Forestry (SUTROFOR) at Bangor University, UK and the University of Copenhagen, Denmark. She is particularly interested in understanding the relationships between rooting depths and forest disturbance from hurricanes and droughts.</p><p class="funding">Funding: U.S. Forest Service</p></div></div></div>
+    <div class="person-card"><div class="person-photo"><img src="images/Headshot_AudraWerley.jpg" alt="Audra Werley" style="width:100%;height:100%;object-fit:cover"></div><div class="person-info"><div class="person-role">MS Student (expected 2027)</div><h3>Audra Werley</h3><div class="person-bio"><p>Audra is a recent graduate of the College of Coastal Georgia with a BS in Environmental Science. She has experience as an environmental consultant and is passionate about wetland conservation and management. She is interested in surface and groundwater interaction using environmental tracers and numerical modeling.</p><p class="funding">Funding: The Chemours Company; U.S. Geological Survey</p></div></div></div>
+    <div class="section-label">Current Undergraduate Students</div>
+    <div class="person-card"><div class="person-photo"><img src="images/maxton_moreland_photo.jpg" alt="Maxton Moreland" style="width:100%;height:100%;object-fit:cover"></div><div class="person-info"><div class="person-role">Summer 2026 Hydrology &amp; Water Resources Intern</div><h3>Maxton Moreland</h3><div class="person-bio"><p>Maxton joins the lab as Summer 2026 Hydrology and Water Resources Intern. He is interested in understanding how natural disasters impact the stability of forest and coastal ecosystems. Maxton is a prospective 2028 graduate of Warnell for a degree in Natural Resource Management and Sustainability with a concentration in Water and Soil Resources.</p></div></div></div>
+  </div>
+</div>
+
+<!-- ═══════ RESEARCH ═══════ -->
+<div class="page" id="page-research">
+  <div class="section">
+    <div class="section-head"><h2>Research</h2><p>Exploring the critical zone through isotope geochemistry and hydrology</p></div>
+    <div class="research-block"><div class="research-text"><h3>Vadose Zone Processes &amp; Land Use</h3><p>Deep vadose (partially saturated) zones cover over 50% of the Earth's land surface. This research uses a multi-tracer approach, employing stable and radioactive isotopes to unravel groundwater recharge mechanisms in thick vadose zones — identifying the contributions of piston and preferential flows while elucidating the role of land use change on recharge rates and water sustainability.</p><div class="research-pubs"><strong>Key publications:</strong> Huang, Evaristo, Li (2019); Xiang, Evaristo, Li (2020); Zhao et al. (2021); Shi et al. (2021); Tao, Evaristo, et al. (2023); Zhao et al. (2024); Huang, Evaristo, et al. (2024, <em>Vadose Zone J.</em>)</div></div></div>
+    <div class="research-block"><div class="research-text"><h3>Watershed Ecohydrology</h3><p>Trees are not just plants but engineers of the ground they grow in and the water they take up. We examine how trees interact with soil and water across different climates and forest types — and even what kinds of water trees prefer. Yes, trees can be picky about their water!</p><div class="research-pubs"><strong>Two water worlds:</strong> Evaristo et al. (2015, <em>Nature</em>); Evaristo et al. (2016); Berry et al. (2017); Evaristo et al. (2019, <em>WRR</em>); Evaristo et al. (2021, <em>PNAS</em>)<br><strong>Trees in the critical zone:</strong> Brantley et al. (2017); Evaristo &amp; McDonnell (2017, <em>Sci. Rep.</em>); Knighton et al. (2020, 2021, <em>GRL</em>)</div></div></div>
+    <div class="research-block"><div class="research-text"><h3>Rhizosphere &amp; Pore-Scale Processes</h3><p>Advances in image-based modeling have enabled new views of water dynamics around plant roots. Meanwhile, advances in clay mineral isotope paleothermometry challenge preexisting assumptions about Earth's climate history by incorporating soil water evaporation and temperature variability.</p><div class="research-pubs"><strong>Paleothermometry:</strong> Ibarra &amp; Evaristo (2024, <em>Commun. Earth Environ.</em>)<br><strong>Rhizosphere:</strong> Daly et al. (2017)</div></div></div>
+    <div class="research-block"><div class="research-text"><h3>Water Quality: Headwaters to Coastal Reefs</h3><p>This research examines water systems across environments — from semi-arid rivers to mangrove forests, volcanic coastlines, and urban streams. Using multi-tracer approaches, we find that both natural processes and human activities can significantly impact water quality and ecosystem integrity.</p><div class="research-pubs"><strong>Nitrate tracing:</strong> Li et al. (2019); Taillardat et al. (2019); Matiatos et al. (2023)<br><strong>SGD:</strong> Cardenas et al. (2020, <em>GRL</em>)<br><strong>Acidic streams:</strong> Ramchunder et al. (2022)</div></div></div>
+  </div>
+</div>
+
+<!-- ═══════ PUBLICATIONS ═══════ -->
+<div class="page" id="page-publications">
+  <div class="section">
+    <div class="section-head"><h2>Publications</h2><p>Peer-reviewed (* = equal contributions / co-lead / co-corresponding)</p></div>
+    <div class="pub-year">2026</div>
+    <div class="pub-item"><span class="pub-num">36.</span><div>Sidle, R.C., Ziegler, A.D., Mosquera, G.M., <strong>Evaristo, J.</strong>, Farrick, K.K., Isaev, E. "Transdisciplinary catchment management in the developing tropics: bridging scientific enquiry with societal needs". <em>Hydrol. Sci. J.</em> <a href="https://www.tandfonline.com/doi/full/10.1080/02626667.2026.2647891" target="_blank">DOI: 10.1080/02626667.2026.2647891</a></div></div>
+    <div class="pub-item"><span class="pub-num">35.</span><div><strong>Evaristo, J.</strong> "Left High and Dry: Deep Soil Water Depletion and Ecohydrological Resilience on China's Loess Plateau". <em>WIREs Water</em>. <a href="https://wires.onlinelibrary.wiley.com/doi/10.1002/wat2.70053" target="_blank">DOI: 10.1002/wat2.70053</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-item"><span class="pub-num">34.</span><div><strong>Evaristo, J.</strong>, Wright, C.W., Bauser, H., Knighton, J.K., Johnson, D., Kim, M. "Tracer Labeling and Transit Time Modeling in Soil-Plant Systems…" <em>Ecohydrology</em>. <a href="https://onlinelibrary.wiley.com/doi/10.1002/eco.70182" target="_blank">DOI: 10.1002/eco.70182</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-year">2025</div>
+    <div class="pub-item"><span class="pub-num">33.</span><div><strong>Evaristo, J.</strong>, Jackson, C.R., Rasmussen, T.C. "Not so isolated: isotopic and hydraulic evidence of vertical connectivity between the Okefenokee Swamp and Floridan Aquifer." <em>Environ. Res.: Water</em>. <a href="https://iopscience.iop.org/article/10.1088/3033-4942/ae2653" target="_blank">DOI: 10.1088/3033-4942/ae2653</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-year">2024</div>
+    <div class="pub-item"><span class="pub-num">32.</span><div>Huang, Y., *<strong>Evaristo, J.</strong>, *Li, Z., et al. "The nature and extent of bomb tritium remaining in vadose zones: a synthesis and prognosis". <em>Vadose Zone J.</em> <a href="https://acsess.onlinelibrary.wiley.com/doi/full/10.1002/vzj2.20304" target="_blank">DOI: 10.1002/vzj2.20304</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-item"><span class="pub-num">31.</span><div>*Ibarra, D.E., *<strong>Evaristo, J.</strong> "Soil pore water evaporation and temperature influences on clay mineral paleothermometry". <em>Commun. Earth Environ.</em> <a href="https://www.nature.com/articles/s43247-024-01201-4" target="_blank">Link</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-item"><span class="pub-num">30.</span><div>Zhao, Y., et al., *<strong>Evaristo, J.</strong> "Dynamic hydrological niches: how plants compete for water in a seasonally-dry ecosystem". <em>J. Hydrol.</em> <a href="https://doi.org/10.1016/j.jhydrol.2024.130677" target="_blank">DOI: 10.1016/j.jhydrol.2024.130677</a></div></div>
+    <div class="pub-item"><span class="pub-num">29.</span><div>Shipley, O.N. … <strong>Evaristo, J.</strong> … "IsoBank: a centralized repository for isotopic data". <em>PLOS ONE</em> 19(9) <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0295662" target="_blank">DOI: 10.1371/journal.pone.0295662</a></div></div>
+    <div class="pub-year">2023</div>
+    <div class="pub-item"><span class="pub-num">28.</span><div><strong>Evaristo, J.</strong>, et al. "Water woes: institutional challenges in achieving SDG 6". <em>Sustain. Earth Rev.</em> 6, 13 <a href="https://sustainableearthreviews.biomedcentral.com/articles/10.1186/s42055-023-00067-2" target="_blank">DOI: 10.1186/s42055-023-00067-2</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-item"><span class="pub-num">27.</span><div>Matiatos, I., et al., <strong>Evaristo, J.</strong>, et al. "Nitrate isotopes in catchment hydrology…" <em>J. Hydrol.</em> <a href="https://doi.org/10.1016/j.jhydrol.2023.130326" target="_blank">DOI: 10.1016/j.jhydrol.2023.130326</a></div></div>
+    <div class="pub-item"><span class="pub-num">26.</span><div>Tao, Z., *<strong>Evaristo, J.</strong>, et al. "Tritium and trees: bomb peak perspective on soil water dynamics…" <em>Catena</em> 232 <a href="https://doi.org/10.1016/j.catena.2023.107474" target="_blank">DOI: 10.1016/j.catena.2023.107474</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-year">2022</div>
+    <div class="pub-item"><span class="pub-num">25.</span><div>Ramchunder, S.J., et al., <strong>Evaristo, J.</strong>, et al. "Flowpath influence on stream acid events in tropical urban streams". <em>Hydrol. Process.</em> 36(1) <a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/hyp.14467" target="_blank">DOI: 10.1002/hyp.14467</a></div></div>
+    <div class="pub-year">2021</div>
+    <div class="pub-item"><span class="pub-num">24.</span><div>*Knighton, J., et al., *<strong>Evaristo, J.</strong>, et al. "Phylogenetic Underpinning of Groundwater Use by Trees". <em>GRL</em> 48 <a href="https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2021GL093858" target="_blank">DOI: 10.1029/2021GL093858</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-item"><span class="pub-num">23.</span><div><strong>Evaristo, J.</strong>, Jameel, Y., Chun, K.P. "Implication of stem water cryogenic extraction…" <em>PNAS</em> <a href="https://www.pnas.org/doi/10.1073/pnas.2100365118" target="_blank">DOI: 10.1073/pnas.2100365118</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-item"><span class="pub-num">22.</span><div>Shi, P., et al., <strong>Evaristo, J.</strong>, Li, Z. "Impacts of deep-rooted fruit trees on deep soil water recharge…" <em>Agric. For. Meteorol.</em> <a href="https://www.sciencedirect.com/science/article/abs/pii/S0168192321000083" target="_blank">DOI: S0168192321000083</a></div></div>
+    <div class="pub-item"><span class="pub-num">21.</span><div>Zhao, Y., et al., <strong>Evaristo, J.</strong>, Wassen, M. "Contrasting adaptive strategies in a semiarid revegetated ecosystem". <em>Agric. For. Meteorol.</em> <a href="https://www.sciencedirect.com/science/article/abs/pii/S016819232100006X" target="_blank">DOI: S016819232100006X</a></div></div>
+    <div class="pub-year">2020</div>
+    <div class="pub-item"><span class="pub-num">20.</span><div>Xiang, W., <strong>Evaristo, J.</strong>, Li, Z. "Recharge mechanisms of deep soil water revealed by water isotopes…" <em>Geoderma</em> 369 <a href="https://www.sciencedirect.com/science/article/abs/pii/S0016706119324498" target="_blank">DOI: S0016706119324498</a></div></div>
+    <div class="pub-item"><span class="pub-num">19.</span><div>Knighton, J., Singh, K., <strong>Evaristo, J.</strong> "Understanding Catchment-Scale Forest Root Water Uptake…" <em>GRL</em> <a href="https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2019GL085937" target="_blank">DOI: 10.1029/2019GL085937</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-item"><span class="pub-num">18.</span><div>Cardenas, M.B., et al., <strong>Evaristo, J.</strong> "Submarine groundwater and vent discharge…" <em>GRL</em> <a href="https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2019GL085730" target="_blank">DOI: 10.1029/2019GL085730</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-year">2019 &amp; Earlier</div>
+    <div class="pub-item"><span class="pub-num">17.</span><div>Zhi, L., <strong>Evaristo, J.</strong>, et al. "Spatiotemporal variations in hydrochemical characteristics…" <em>Environ. Pollut.</em> 254 <a href="https://www.sciencedirect.com/science/article/abs/pii/S0269749119316677" target="_blank">DOI: S0269749119316677</a></div></div>
+    <div class="pub-item"><span class="pub-num">16.</span><div><strong>Evaristo, J.</strong>, et al. "Characterizing fluxes and age distribution of soil water, plant water, and deep percolation…" <em>WRR</em> 55, 3307–3327 <a href="https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018WR023265" target="_blank">DOI: 10.1029/2018WR023265</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-item"><span class="pub-num">15.</span><div>Taillardat, P., et al., <strong>Evaristo, J.</strong> "Assessing nutrient dynamics in mangrove porewater…" <em>Mar. Chem.</em> 214 <a href="https://www.sciencedirect.com/science/article/abs/pii/S0304420319300489" target="_blank">DOI: S0304420319300489</a></div></div>
+    <div class="pub-item"><span class="pub-num">14.</span><div>Huang, Y., <strong>Evaristo, J.</strong>, Li, Z. "Multiple tracers reveal different groundwater recharge mechanisms…" <em>Geoderma</em> 353 <a href="https://www.sciencedirect.com/science/article/abs/pii/S0016706119300783" target="_blank">DOI: S0016706119300783</a></div></div>
+    <div class="pub-item"><span class="pub-num">12.</span><div>McDonnell, J.J., <strong>Evaristo, J.</strong> +14 co-authors. "Water sustainability and watershed storage". <em>Nat. Sustain.</em> 1, 378 (2018) <a href="https://www.nature.com/articles/s41893-018-0099-8" target="_blank">Link</a></div></div>
+    <div class="pub-item"><span class="pub-num">7.</span><div><strong>Evaristo, J.</strong> &amp; McDonnell, J.J. "Prevalence and magnitude of groundwater use by vegetation: a global stable isotope meta-analysis". <em>Sci. Rep.</em> 7, 44110 (2017) <a href="https://www.nature.com/articles/srep44110" target="_blank">Link</a> <span class="pub-badge">Open Access</span></div></div>
+    <div class="pub-item"><span class="pub-num">3.</span><div><strong>Evaristo, J.</strong>, Jasechko, S., McDonnell, J.J. "Isotopic composition of plant water sources". <em>Nature</em> 536, E3 (2016) <a href="https://www.nature.com/articles/nature18947" target="_blank">Link</a></div></div>
+    <div class="pub-item"><span class="pub-num">1.</span><div><strong>Evaristo, J.</strong>, Jasechko, S., McDonnell, J.J. "Global separation of plant transpiration from groundwater and streamflow". <em>Nature</em> 525, 91-94 (2015) <a href="https://www.nature.com/articles/nature14983" target="_blank">Link</a></div></div>
+  </div>
+</div>
+
+<!-- ═══════ TEACHING ═══════ -->
+<div class="page" id="page-teaching">
+  <div class="section">
+    <div class="section-head"><h2>Teaching</h2><p>University of Georgia</p></div>
+    <div class="course-card"><div class="course-code">WASR 4500/6500</div><h3>Quantitative Methods in Hydrology</h3><div class="course-meta"><span>3 credits</span><span>Senior &amp; Graduate</span><span>Fall semester</span></div><p class="course-desc">Advanced analysis of hydrologic processes — precipitation, evapotranspiration, streamflow, groundwater occurrence and movement, and soil zone flow and transport. Emphasis on quantitative methods with field and laboratory data.</p></div>
+    <div class="course-card"><div class="course-code">WASR 6200</div><h3>Rates and Dates: Hydrological Methods and Applications</h3><div class="course-meta"><span>3 credits</span><span>Senior &amp; Graduate</span><span>Fall semester</span></div><p class="course-desc">Explore how scientists use environmental tracers — like isotopes and chemistry — to unravel the movement of water above and belowground, track pollution, and date water and contaminant sources using cutting-edge tools and data science.</p></div>
+    <div class="course-card"><div class="course-code">WASR 8200</div><h3>Hillslope Hydrology</h3><div class="course-meta"><span>3 credits</span><span>Graduate only</span><span>Spring semester</span></div><p class="course-desc">Intensive, literature-driven and field-based exploration of hillslope hydrology. Students complete a journal-style critical review and collaborative field project synthesizing course concepts.</p></div>
+    <div class="course-card"><div class="course-code">CRSS/FANR 3060</div><h3>Soils and Hydrology</h3><div class="course-meta"><span>3 credits</span><span>Junior</span><span>Spring semester</span></div><p class="course-desc">Soil formation and morphology, physical and chemical properties, soil-water interactions, hydrologic processes, and water quality. Co-taught with Matt Levi (Soils).</p></div>
+    <div class="course-card"><div class="course-code">FYOS 1001</div><h3>Fingerprinting Your Water and Stuff!</h3><div class="course-meta"><span>1 credit</span><span>Freshman</span><span>Fall &amp; Spring</span></div><p class="course-desc">Hands-on introduction to stable and radioactive isotopes as natural "fingerprints" that trace the origins of water and other materials. First-Year Odyssey Seminar.</p></div>
+  </div>
+</div>
+
+<!-- ═══════ SERVICE ═══════ -->
+<div class="page" id="page-service">
+  <div class="section">
+    <div class="section-head"><h2>Service</h2><p>Professional and institutional service</p></div>
+    <div class="service-group"><h3>Editorial Roles</h3><ul class="service-list"><li><strong>Associate Editor</strong> (Jan 2024–), <a href="https://acsess.onlinelibrary.wiley.com/journal/15391663" target="_blank">Vadose Zone Journal</a></li><li><strong>Associate Editor</strong> (Dec 2023–), <a href="https://sustainableearthreviews.biomedcentral.com/" target="_blank">Sustainable Earth Reviews</a></li><li><strong>Editorial Board</strong> (Apr 2026–), <a href="https://iopscience.iop.org/journal/3033-4942" target="_blank">Environmental Research: Water</a></li></ul></div>
+    <div class="service-group"><h3>Grant Review</h3><ul class="service-list"><li><strong>Panels:</strong> US National Science Foundation; Dutch Research Council (NWO)</li><li><strong>Ad hoc:</strong> Swiss NSF; US NSF; Leverhulme Trust (UK); ANID (Chile); NParks Singapore</li></ul></div>
+    <div class="service-group"><h3>Peer Review</h3><ul class="service-list"><li>Nature · Nature Geoscience · Nature Water · Science · Water Resources Research · Geophysical Research Letters · Journal of Hydrology · Hydrological Processes · WIREs Water · Ecohydrology · Environmental Research Letters · Scientific Reports · New Phytologist · and 20+ additional journals</li></ul></div>
+    <div class="service-group"><h3>Institutional</h3><ul class="service-list"><li><strong>Graduate Program Faculty</strong> (Sep 2024–), Graduate Council, University of Georgia</li><li><strong>Advisory Board</strong> (Jan 2022–), <a href="https://www.gradmap.ph/" target="_blank">GradMAP Philippines</a></li><li>Staff Representative, Faculty Council, Utrecht University (2023–24)</li><li>Education Committee, Water Science &amp; Management MSc, Utrecht University (2021–24)</li></ul></div>
+  </div>
+</div>
+
+
+
+<!-- ═══════ SUBMIT SAMPLES ═══════ -->
+<div class="page" id="page-samples">
+  <div class="section">
+    <div class="section-head"><h2>Submit Samples</h2><p>Stable isotope analysis services for water and other liquid samples</p></div>
+
+    <div class="section-label" style="margin-top:0;">Lab Facilities</div>
+    <div class="course-card">
+      <h3>Picarro L2140-<em>i</em> Cavity Ring-Down Spectrometer</h3>
+      <p class="course-desc">Our Picarro L2140-<em>i</em> consistently outperforms factory specifications, achieving δ<sup>18</sup>O and δD precision approximately <strong>three times better</strong> than the manufacturer's guaranteed values. The instrument supports high-throughput, high-precision analysis of water isotopes for hydrology, ecology, and water resources applications.</p>
+    </div>
+
+    <div class="section-label">Rates</div>
+    <div class="course-card">
+      <h3>Sample Analysis Pricing</h3>
+      <p class="course-desc" style="margin-bottom:1rem;">Per-sample rates by isotope analysis, sample type, volume tier, and UGA affiliation.</p>
+      <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:0.85rem; min-width:560px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--accent);">
+            <th rowspan="2" style="text-align:left; padding:0.6rem 0.5rem; color:var(--ink); vertical-align:bottom;">Isotope analysis</th>
+            <th rowspan="2" style="text-align:left; padding:0.6rem 0.5rem; color:var(--ink); vertical-align:bottom;">Sample type</th>
+            <th colspan="2" style="text-align:center; padding:0.6rem 0.5rem; color:var(--ink); border-bottom:1px solid var(--rule-light);">UGA rate / sample</th>
+            <th colspan="2" style="text-align:center; padding:0.6rem 0.5rem; color:var(--ink); border-bottom:1px solid var(--rule-light);">Outside UGA rate / sample</th>
+          </tr>
+          <tr style="border-bottom:1px solid var(--rule-light);">
+            <th style="text-align:right; padding:0.4rem 0.5rem; color:var(--muted); font-weight:500; font-size:0.78rem;">1–200 samples</th>
+            <th style="text-align:right; padding:0.4rem 0.5rem; color:var(--muted); font-weight:500; font-size:0.78rem;">200+ samples</th>
+            <th style="text-align:right; padding:0.4rem 0.5rem; color:var(--muted); font-weight:500; font-size:0.78rem;">1–200 samples</th>
+            <th style="text-align:right; padding:0.4rem 0.5rem; color:var(--muted); font-weight:500; font-size:0.78rem;">200+ samples</th>
+          </tr>
+        </thead>
+        <tbody style="font-family:var(--mono); font-size:0.82rem;">
+          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem; font-family:var(--sans);"><sup>2</sup>H, <sup>18</sup>O</td><td style="padding:0.6rem 0.5rem; font-family:var(--sans);">Water</td><td style="text-align:right; padding:0.6rem 0.5rem;">$8.82</td><td style="text-align:right; padding:0.6rem 0.5rem;">$8.82</td><td style="text-align:right; padding:0.6rem 0.5rem;">$9.41</td><td style="text-align:right; padding:0.6rem 0.5rem;">$8.82</td></tr>
+          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem; font-family:var(--sans);"><sup>2</sup>H, <sup>18</sup>O, <sup>17</sup>O</td><td style="padding:0.6rem 0.5rem; font-family:var(--sans);">Water</td><td style="text-align:right; padding:0.6rem 0.5rem;">$10.29</td><td style="text-align:right; padding:0.6rem 0.5rem;">$10.29</td><td style="text-align:right; padding:0.6rem 0.5rem;">$10.98</td><td style="text-align:right; padding:0.6rem 0.5rem;">$10.29</td></tr>
+          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem; font-family:var(--sans);"><sup>2</sup>H, <sup>18</sup>O</td><td style="padding:0.6rem 0.5rem; font-family:var(--sans);">Other liquids*</td><td style="text-align:right; padding:0.6rem 0.5rem;">$26.45</td><td style="text-align:right; padding:0.6rem 0.5rem;">$26.45</td><td style="text-align:right; padding:0.6rem 0.5rem;">$28.23</td><td style="text-align:right; padding:0.6rem 0.5rem;">$26.45</td></tr>
+          <tr style="border-bottom:1px solid var(--rule-light);"><td style="padding:0.6rem 0.5rem; font-family:var(--sans);"><sup>2</sup>H, <sup>18</sup>O, <sup>17</sup>O</td><td style="padding:0.6rem 0.5rem; font-family:var(--sans);">Other liquids*</td><td style="text-align:right; padding:0.6rem 0.5rem;">$30.86</td><td style="text-align:right; padding:0.6rem 0.5rem;">$30.86</td><td style="text-align:right; padding:0.6rem 0.5rem;">$32.94</td><td style="text-align:right; padding:0.6rem 0.5rem;">$30.86</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="course-desc" style="margin-top:1rem; font-size:0.78rem; color:var(--muted);">*Other liquids = liquids with high total dissolved solids (e.g., plant leaves, stems, juices). <strong style="color:var(--ink);">Note:</strong> Analysis of brackish or brine samples may incur higher rates due to greater consumption of consumables (syringes, septa, salt liners). Please contact us for a custom quote on non-standard sample types.</p>
+    </div>
+
+    <div class="section-label">How to Submit</div>
+    <div class="course-card">
+      <h3>Get in Touch Before Sending Samples</h3>
+      <p class="course-desc">Please contact Dr. Evaristo for detailed information <strong>prior to sample collection</strong> and before sending your samples to our lab. This ensures we can advise on appropriate sampling protocols, container types, shipment logistics, and turnaround times for your specific project.</p>
+      <p class="course-desc" style="margin-top:1rem;"><strong>Email:</strong> evaristo@uga.edu<br><strong>Address:</strong> Warnell School of Forestry &amp; Natural Resources, University of Georgia, Athens, GA 30602, USA</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════ UTRECHT UNIVERSITY ═══════ -->
+<div class="page" id="page-utrecht">
+  <div class="section">
+    <div class="section-head"><h2>Utrecht University</h2><p>2019 – 2024 · Tenured Assistant Professor</p></div>
+    <p style="font-size:0.95rem; color:#3a3d3b; line-height:1.75; margin-bottom:2rem;">From 2019 to 2024, I was a tenured Assistant Professor at Utrecht University in the Netherlands. This page archives my teaching and graduate supervision from that period.</p>
+
+    <div class="section-label" style="margin-top:0;">Teaching at Utrecht</div>
+
+    <div class="course-card"><div class="course-code">GEO4-6009</div><h3>Sustainable Water Resources Management</h3><div class="course-meta"><span>7.5 ECTS</span><span>Master</span><span>Main Instructor</span></div><p class="course-desc">Fundamental understanding of catchment functions (partition, storage, release) and hydrological processes in natural and built environments. Students explore sustainable strategies for water resources management using critical thinking, quantitative skills, and management methodologies.</p></div>
+
+    <div class="course-card"><div class="course-code">GEO4-6008</div><h3>Research in Water Science and Management</h3><div class="course-meta"><span>7.5 ECTS</span><span>Master</span><span>Main Instructor</span></div><p class="course-desc">Considerations, methods, and research best practices in water science and management. Prepares future water sector professionals to formulate and implement reasonable courses of action for complex water issues. Partly prepares students for their master thesis.</p></div>
+
+    <div class="course-card"><div class="course-code">GEO2-2131</div><h3>Ecohydrology</h3><div class="course-meta"><span>7.5 ECTS</span><span>Bachelor</span><span>Co-instructor</span></div><p class="course-desc">Scientific analysis of the processes governing the interaction between biota and the hydrological cycle. Practical application through computer modeling of ecohydrological systems at different scales.</p></div>
+
+    <div class="course-card"><div class="course-code">GEO1-2412</div><h3>Natural Processes</h3><div class="course-meta"><span>7.5 ECTS</span><span>Bachelor</span><span>Co-instructor</span></div><p class="course-desc">Earth's energy balance, the hydrological cycle, and the elemental cycles of carbon, nitrogen and phosphorus. Major stocks of energy, water, and elements across the atmosphere, hydrosphere, lithosphere, and biosphere.</p></div>
+
+    <div class="section-label">Graduate Supervision</div>
+    <p style="font-size:0.88rem; color:var(--muted); margin-bottom:1.5rem;">Total theses supervised at Utrecht: <strong style="color:var(--ink);">11 Masters</strong> and <strong style="color:var(--ink);">9 Bachelors</strong>.</p>
+
+    <div class="service-group"><h3>Master's Theses</h3><ul class="service-list">
+      <li><strong>Joren van Os</strong> (2023) — <em>Using flexible power in Dutch water pumping stations to balance the energy system</em></li>
+      <li><strong>Roos Peeters</strong> (2022) <span class="pub-badge">Cum Laude</span> — <em>Social Cost-Benefit Analysis of Mangrove Restoration in Mozambique</em>. <a href="https://studenttheses.uu.nl/handle/20.500.12932/42837" target="_blank">Thesis</a>. Now Community Engagement Officer at Van Oord.</li>
+      <li><strong>Peter Beemster</strong> (2022) — <em>The SLAMDAM mobile flood barrier as an adaptive measure for building climate resilience against flooding in Sub-Saharan Africa</em></li>
+      <li><strong>Daniel Peregrina Gonzalez</strong> (2022) — <em>Model-based urban drought hazard assessment using global open data</em>. <a href="https://studenttheses.uu.nl/handle/20.500.12932/42844" target="_blank">Thesis</a></li>
+      <li><strong>Alice Ampolini</strong> (2022) — <em>Inclusion of resilience and flood protection measures to the Urban Climate Risk Index (UCRI)</em>. Now Assistant Project Manager at BT Geoconsult.</li>
+      <li><strong>Jasper van Lieshout</strong> (2021) — <em>Modelling alternative drinking water extraction strategies for the sandy Pleistocene regions of the Netherlands</em>. <a href="https://studenttheses.uu.nl/handle/20.500.12932/41055" target="_blank">Thesis</a>. Now at Nelen &amp; Schuurmans.</li>
+      <li><strong>Nathalie van Tricht</strong> (2021) — <em>A pro-active regional control system framework for the polder "De Eendragt" in the Netherlands</em>. <a href="https://studenttheses.uu.nl/handle/20.500.12932/41099" target="_blank">Thesis</a></li>
+      <li><strong>Joey Ewals</strong> (2020) — <em>Modelling the effects of the Maaswerken on the drinking water production near Roosteren</em>. <a href="https://studenttheses.uu.nl/handle/20.500.12932/37026" target="_blank">Thesis</a>. Now Hydrologist at Waterschap Limburg.</li>
+      <li><strong>Maureen van Rijn</strong> (2020) — <em>Rainproof urban water management in the municipality of Heemskerk</em>. Now Strategy Trainee at Dunea Drinking Water.</li>
+      <li><strong>Adam Noctor</strong> (2020, MSc Sustainable Development) — <em>Identifying the sources of nitrate in surface and ground waters using stable isotopes: A global overview</em>. <a href="https://studenttheses.uu.nl/handle/20.500.12932/37025" target="_blank">Thesis</a></li>
+      <li><strong>Theresa O'Halloran*</strong> (2018, University of Nevada Reno) — <em>Impacts of forest management on hydrologic processes</em>. <a href="http://hdl.handle.net/11714/4864" target="_blank">Thesis</a>. *Committee Member.</li>
+    </ul></div>
+
+    <div class="service-group"><h3>Honors Students</h3><ul class="service-list">
+      <li><strong>Michele Joie Prawiromaruto</strong> (MSc Sustainable Development) — <em>Aggregate Confusion of ESG Ratings in the Water Sector</em>. Funded by Bright Minds Assistantships (Apr–Nov 2023).</li>
+      <li><strong>Mira van Meteren</strong> (BSc Global Sustainability Science) — <em>Sights and Sounds of the Unseen: An Audio-Visual Project on Submarine Groundwater Discharge</em></li>
+    </ul></div>
+
+  </div>
+</div>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div><div class="footer-brand">Evaristo CZ Hydrology Lab</div><div style="font-size:0.75rem; margin-top:0.3rem;">Warnell School of Forestry &amp; Natural Resources · University of Georgia</div></div>
+    <div class="footer-links"><a onclick="showPage('home')">Home</a><a onclick="showPage('people')">People</a><a onclick="showPage('research')">Research</a><a onclick="showPage('publications')">Publications</a><a onclick="showPage('teaching')">Teaching</a><a onclick="showPage('samples')">Samples</a><a onclick="showPage('utrecht')">Utrecht</a></div>
+  </div>
+</footer>
+
+<script>
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.dataset.page === id);
+  });
+  document.getElementById('navLinks').classList.remove('open');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+window.addEventListener('scroll', () => {
+  document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 10);
+});
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }});
+}, { threshold: 0.08 });
+document.querySelectorAll('.person-card, .course-card, .research-block, .pub-item, .latest-card, .stat').forEach(el => {
+  el.style.opacity='0'; el.style.transform='translateY(16px)';
+  el.style.transition='opacity 0.5s ease, transform 0.5s ease';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>
