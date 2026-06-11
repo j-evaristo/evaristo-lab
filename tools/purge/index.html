@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#14431f">
+<title>Well Purge Calculator</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+<style>
+  :root{
+    --pine:#14431f; --pine-deep:#0c2e14; --moss:#3e7a4a; --fern:#dfeadf;
+    --paper:#f7f6f0; --ink:#1d241d; --amber:#b3640a; --red:#a52a1a;
+    --card:#ffffff; --line:#d8ddd5;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{font-size:17px}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:var(--paper); color:var(--ink); padding-bottom:3rem; min-height:100vh}
+  header{background:linear-gradient(160deg,var(--pine-deep),var(--pine)); color:#fff;
+         padding:1.1rem 1rem .9rem; position:sticky; top:0; z-index:10;
+         display:flex; justify-content:space-between; align-items:center}
+  header h1{font-size:1.05rem; font-weight:700}
+  header .sub{font-size:.7rem; opacity:.75; margin-top:.15rem; letter-spacing:.05em; text-transform:uppercase}
+  .unit-toggle{display:flex; border:1px solid rgba(255,255,255,.4); border-radius:.5rem; overflow:hidden}
+  .unit-toggle button{padding:.35rem .7rem; font-size:.78rem; font-weight:600; border:none;
+                      background:transparent; color:#cfe2cf; cursor:pointer}
+  .unit-toggle button.on{background:#fff; color:var(--pine)}
+  main{padding:0 .8rem; max-width:520px; margin:0 auto}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:.9rem; padding:1rem; margin:.8rem 0}
+  .card h2{font-size:.72rem; text-transform:uppercase; letter-spacing:.09em; color:var(--moss); margin-bottom:.5rem}
+  label{display:block; font-size:.78rem; font-weight:600; margin:.65rem 0 .25rem}
+  label span{font-weight:400; color:#6b756b}
+  input[type=number],input[type=text],select{
+    width:100%; font-size:1.15rem; padding:.5rem .65rem; border:1.5px solid var(--line);
+    border-radius:.6rem; background:#fdfdfa; font-family:"SF Mono",ui-monospace,Menlo,monospace}
+  input[type=text]{font-family:inherit; font-size:1rem}
+  input:focus,select:focus{outline:none; border-color:var(--moss)}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:.6rem}
+  .dia-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:.35rem; margin-top:.25rem}
+  .dia-btn{border:1.5px solid var(--line); background:var(--card); border-radius:.55rem;
+           padding:.5rem .1rem; font-size:.85rem; font-weight:600; cursor:pointer}
+  .dia-btn.active{background:var(--pine); border-color:var(--pine); color:#fff}
+  details{margin-top:.7rem}
+  summary{font-size:.8rem; font-weight:600; color:var(--moss); cursor:pointer}
+  .vol-grid{display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-top:.3rem}
+  .vol{border-radius:.7rem; padding:.7rem .6rem; text-align:center; background:var(--fern)}
+  .vol.hi{background:var(--pine); color:#fff}
+  .vol .n{font-size:1.5rem; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums}
+  .vol .u{font-size:.62rem; text-transform:uppercase; letter-spacing:.07em; opacity:.8; margin-top:.15rem}
+  .meta{display:flex; justify-content:space-between; font-size:.78rem; color:#444c44;
+        margin-top:.6rem; flex-wrap:wrap; gap:.3rem}
+  .meta b{font-variant-numeric:tabular-nums}
+  .times{display:flex; gap:.5rem; margin-top:.5rem}
+  .times .t{flex:1; text-align:center; border:1px dashed var(--line); border-radius:.6rem; padding:.5rem}
+  .times .t .n{font-size:1.1rem; font-weight:700}
+  .times .t .u{font-size:.62rem; color:#6b756b; text-transform:uppercase; letter-spacing:.06em}
+  .flag{border-radius:.6rem; padding:.6rem .7rem; font-size:.8rem; line-height:1.4; margin-top:.6rem}
+  .flag.warn{background:#fdf2e3; color:var(--amber); border:1px solid #ecd4ae}
+  .flag.bad{background:#fbeae7; color:var(--red); border:1px solid #ecc4bc}
+  .helper-out{font-size:.95rem; margin-top:.5rem; color:#444c44}
+  .helper-out b{font-size:1.2rem; color:var(--pine)}
+  button.apply,button.save{margin-top:.55rem; width:100%; padding:.6rem; font-size:.85rem; font-weight:600;
+    background:var(--fern); color:var(--pine); border:1px solid var(--moss); border-radius:.6rem; cursor:pointer}
+  .lib-item{display:flex; align-items:center; gap:.5rem; padding:.5rem 0; border-bottom:1px solid var(--line); font-size:.85rem}
+  .lib-item:last-child{border-bottom:none}
+  .lib-item .nm{flex:1; font-weight:600}
+  .lib-item button{border:none; background:none; font-size:.78rem; font-weight:600; cursor:pointer; padding:.3rem .5rem}
+  .lib-item .load{color:var(--pine)} .lib-item .del{color:var(--red)}
+  .lib-empty{font-size:.8rem; color:#6b756b}
+  footer{font-size:.66rem; color:#7d867d; padding:1rem 1.2rem; text-align:center; line-height:1.5; max-width:520px; margin:0 auto}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Well Purge Calculator</h1>
+    <div class="sub">Evaristo Critical Zone Hydrology Lab</div>
+  </div>
+  <div class="unit-toggle">
+    <button id="uUS" class="on">ft / gal</button>
+    <button id="uSI">m / L</button>
+  </div>
+</header>
+<main>
+
+  <div class="card">
+    <h2>Well geometry</h2>
+    <label>Casing / screen inner diameter</label>
+    <div class="dia-grid" id="diaGrid"></div>
+    <label style="margin-top:.5rem">Custom diameter <span id="diaUnit">(in)</span></label>
+    <input type="number" id="dia" inputmode="decimal" placeholder="e.g. 2">
+    <div class="row2">
+      <div>
+        <label>Total depth <span id="tdUnit">(ft, below land surface)</span></label>
+        <input type="number" id="td" inputmode="decimal">
+      </div>
+      <div>
+        <label>Reported yield <span id="yUnit">(gpm, optional)</span></label>
+        <input type="number" id="yld" inputmode="decimal" placeholder="if known">
+      </div>
+    </div>
+    <details id="adv">
+      <summary>Two-segment well (different casing ID above screen / open hole)</summary>
+      <div class="row2">
+        <div>
+          <label>Casing depth <span id="cdUnit">(ft bls)</span></label>
+          <input type="number" id="cd" inputmode="decimal" placeholder="bottom of casing">
+        </div>
+        <div>
+          <label>Casing ID <span id="cidUnit">(in)</span></label>
+          <input type="number" id="cid" inputmode="decimal">
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Field inputs</h2>
+    <div class="row2">
+      <div>
+        <label>Depth to water <span id="dtwUnit">(ft, from measuring point)</span></label>
+        <input type="number" id="dtw" inputmode="decimal" placeholder="blank = at surface">
+      </div>
+      <div>
+        <label>Stickup <span id="stUnit">(ft, MP above ground)</span></label>
+        <input type="number" id="stick" inputmode="decimal" placeholder="0">
+      </div>
+    </div>
+    <label>Pump rate <span id="rUnit">(gpm, verified)</span></label>
+    <input type="number" id="rate" inputmode="decimal">
+  </div>
+
+  <div class="card">
+    <h2>Purge volumes</h2>
+    <div class="vol-grid">
+      <div class="vol"><div class="n" id="v1a">&ndash;</div><div class="u" id="v1au">1 volume &middot; gal</div></div>
+      <div class="vol"><div class="n" id="v1b">&ndash;</div><div class="u" id="v1bu">1 volume &middot; L</div></div>
+      <div class="vol hi"><div class="n" id="v3">&ndash;</div><div class="u" id="v3u">3 volumes &middot; gal</div></div>
+      <div class="vol hi"><div class="n" id="v5">&ndash;</div><div class="u" id="v5u">5 volumes &middot; gal</div></div>
+    </div>
+    <div class="meta">
+      <span>DTW bls: <b id="dtwbls">&ndash;</b></span>
+      <span>Water column: <b id="wcol">&ndash;</b></span>
+    </div>
+    <div class="times">
+      <div class="t"><div class="n" id="t3">&ndash;</div><div class="u">time to 3 V</div></div>
+      <div class="t"><div class="n" id="t5">&ndash;</div><div class="u">time to 5 V</div></div>
+    </div>
+    <div id="flags"></div>
+  </div>
+
+  <div class="card">
+    <h2>Bucket &amp; stopwatch &mdash; rate check</h2>
+    <div class="row2">
+      <div>
+        <label>Volume collected <span>(L)</span></label>
+        <input type="number" id="bktL" inputmode="decimal" placeholder="e.g. 4">
+      </div>
+      <div>
+        <label>Fill time <span>(s)</span></label>
+        <input type="number" id="bktS" inputmode="decimal" placeholder="e.g. 30">
+      </div>
+    </div>
+    <div class="helper-out" id="bktOut">Enter both to compute the measured rate.</div>
+    <button class="apply" id="bktApply" style="display:none">Use this rate</button>
+  </div>
+
+  <div class="card">
+    <h2>Saved wells <span style="font-weight:400;color:#6b756b;text-transform:none;letter-spacing:0">(stored on this device)</span></h2>
+    <label>Well name</label>
+    <input type="text" id="wellName" placeholder="e.g. MW-3, Smith Farm">
+    <button class="save" id="saveBtn">Save current well</button>
+    <div id="lib" style="margin-top:.7rem"></div>
+  </div>
+
+</main>
+<footer>
+  V = &pi;/4 &times; d&sup2; &times; h of standing water, summed over cased + screened/open segments.
+  US: gal = 0.0408 &times; d(in)&sup2; &times; h(ft). SI: L = 0.000785 &times; d(mm)&sup2; &times; h(m).
+  DTW from the measuring point is corrected to below-land-surface using the stickup.
+  Filter-pack porosity excluded (standard casing-volume convention).
+  Sample at low flow (&le;0.4&ndash;1 L/min) after purging; never let the pump cavitate for gas-sensitive analytes.
+  Low-yield wells that dewater before 3 volumes: evacuate once, allow recovery, sample fresh inflow &mdash; or use low-flow sampling with field-parameter stabilization.
+</footer>
+<script>
+const $ = id => document.getElementById(id);
+let SI = false;
+
+// ---- units ----
+// internal: diameter in inches, depths in ft, volumes in gal, rate in gpm
+const IN2MM = 25.4, FT2M = 0.3048, GAL2L = 3.78541;
+const GPF = d_in => 7.480519 * Math.PI/4 * Math.pow(d_in/12,2);
+
+const US_DIAS = [1,2,4,6,8], SI_DIAS = [25,50,100,150,200];
+
+function buildDiaGrid(){
+  const dias = SI ? SI_DIAS : US_DIAS;
+  $("diaGrid").innerHTML = "";
+  dias.forEach(d=>{
+    const b=document.createElement("button");
+    b.className="dia-btn"; b.textContent = d + (SI?" mm":"\u2033");
+    b.onclick=()=>{ $("dia").value=d; render(); };
+    $("diaGrid").appendChild(b);
+  });
+}
+
+function setUnitLabels(){
+  $("diaUnit").textContent = SI?"(mm)":"(in)";
+  $("tdUnit").textContent  = SI?"(m, below land surface)":"(ft, below land surface)";
+  $("cdUnit").textContent  = SI?"(m bls)":"(ft bls)";
+  $("cidUnit").textContent = SI?"(mm)":"(in)";
+  $("dtwUnit").textContent = SI?"(m, from measuring point)":"(ft, from measuring point)";
+  $("stUnit").textContent  = SI?"(m, MP above ground)":"(ft, MP above ground)";
+  $("rUnit").textContent   = SI?"(L/min, verified)":"(gpm, verified)";
+  $("yUnit").textContent   = SI?"(L/min, optional)":"(gpm, optional)";
+  $("v1au").textContent = "1 volume \u00B7 " + (SI?"L":"gal");
+  $("v1bu").textContent = "1 volume \u00B7 " + (SI?"gal":"L");
+  $("v3u").textContent  = "3 volumes \u00B7 " + (SI?"L":"gal");
+  $("v5u").textContent  = "5 volumes \u00B7 " + (SI?"L":"gal");
+}
+
+function convertFields(toSI){
+  const conv = (id, f) => { const v=parseFloat($(id).value); if(!isNaN(v)) $(id).value = +(v*f).toPrecision(5); };
+  if(toSI){
+    conv("dia",IN2MM); conv("cid",IN2MM);
+    conv("td",FT2M); conv("cd",FT2M); conv("dtw",FT2M); conv("stick",FT2M);
+    conv("rate",GAL2L); conv("yld",GAL2L);
+  } else {
+    conv("dia",1/IN2MM); conv("cid",1/IN2MM);
+    conv("td",1/FT2M); conv("cd",1/FT2M); conv("dtw",1/FT2M); conv("stick",1/FT2M);
+    conv("rate",1/GAL2L); conv("yld",1/GAL2L);
+  }
+}
+
+$("uUS").onclick=()=>{ if(SI){ convertFields(false); SI=false; $("uUS").classList.add("on"); $("uSI").classList.remove("on"); buildDiaGrid(); setUnitLabels(); render(); } };
+$("uSI").onclick=()=>{ if(!SI){ convertFields(true); SI=true; $("uSI").classList.add("on"); $("uUS").classList.remove("on"); buildDiaGrid(); setUnitLabels(); render(); } };
+
+// ---- core calc (everything converted to internal US units first) ----
+function val(id){ const v=parseFloat($(id).value); return isNaN(v)?null:v; }
+function toIn(x){ return SI? x/IN2MM : x; }
+function toFt(x){ return SI? x/FT2M : x; }
+function toGpm(x){ return SI? x/GAL2L : x; }
+
+function fmt(x,d){ return x.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function fmtVol(gal){ // returns [primary, secondary] per unit mode
+  const L = gal*GAL2L;
+  const p = SI? L : gal, s = SI? gal : L;
+  const dp = p<20?1:0, ds = s<20?1:0;
+  return [fmt(p,dp), fmt(s,ds)];
+}
+function fmtTime(min){
+  if(!isFinite(min)||min<=0) return "&ndash;";
+  if(min<90) return fmt(min,0)+"<span style='font-size:.7em'> min</span>";
+  if(min<2880) return fmt(min/60,1)+"<span style='font-size:.7em'> h</span>";
+  return fmt(min/1440,1)+"<span style='font-size:.7em'> d</span>";
+}
+
+function render(){
+  document.querySelectorAll(".dia-btn").forEach(b=>{
+    const d = parseFloat(b.textContent);
+    b.classList.toggle("active", val("dia")===d);
+  });
+  const dia = val("dia")!=null? toIn(val("dia")) : null;
+  const td  = val("td")!=null?  toFt(val("td"))  : null;
+  const flags=[];
+  if(dia==null || td==null){
+    ["v1a","v1b","v3","v5"].forEach(id=>$(id).textContent="\u2013");
+    $("dtwbls").textContent="\u2013"; $("wcol").textContent="\u2013";
+    $("t3").innerHTML="&ndash;"; $("t5").innerHTML="&ndash;";
+    $("flags").innerHTML="<div class='flag warn'>Enter a diameter and total depth to begin.</div>";
+    return;
+  }
+  const stick = val("stick")!=null? toFt(val("stick")) : 0;
+  const dtwMP = val("dtw")!=null? toFt(val("dtw")) : null;
+  const dtwBls = dtwMP==null? 0 : Math.max(0, dtwMP - stick);
+  const col = Math.max(0, td - dtwBls);
+
+  const cd  = val("cd")!=null?  toFt(val("cd"))  : null;
+  const cid = val("cid")!=null? toIn(val("cid")) : null;
+  let v1;
+  if(cd!=null && cid!=null && cd>0 && cd<td){
+    const cased = Math.max(0, Math.min(td,cd) - dtwBls);
+    const open  = Math.max(0, td - Math.max(dtwBls, cd));
+    v1 = cased*GPF(cid) + open*GPF(dia);
+  } else {
+    v1 = col*GPF(dia);
+  }
+
+  const [p1,s1]=fmtVol(v1), [p3]=fmtVol(3*v1), [p5]=fmtVol(5*v1);
+  $("v1a").textContent=p1; $("v1b").textContent=s1; $("v3").textContent=p3; $("v5").textContent=p5;
+  const lf = SI? x=>fmt(x*FT2M,1)+" m" : x=>fmt(x,1)+" ft";
+  $("dtwbls").textContent = dtwMP==null? "0 (assumed)" : lf(dtwBls);
+  $("wcol").textContent = lf(col);
+
+  const rate = val("rate")!=null? toGpm(val("rate")) : null;
+  $("t3").innerHTML = rate>0? fmtTime(3*v1/rate) : "&ndash;";
+  $("t5").innerHTML = rate>0? fmtTime(5*v1/rate) : "&ndash;";
+
+  if(dtwMP==null) flags.push(["warn","No DTW entered \u2014 volumes assume the water table at land surface (maximum case)."]);
+  const yld = val("yld")!=null? toGpm(val("yld")) : null;
+  if(yld!=null && rate!=null && rate>yld) flags.push(["bad","Pump rate exceeds reported yield \u2014 the well will dewater. Throttle down, or evacuate once, let recover, and sample fresh inflow."]);
+  if(yld!=null && rate!=null && yld>0 && (3*v1/yld)>480) flags.push(["warn","At this yield, 3 volumes takes &gt;8 h \u2014 3\u20135 volumes is impractical. Consider low-flow sampling with field-parameter stabilization (EC, T, DO, pH) instead."]);
+  if(dtwMP!=null && dtwBls>295) flags.push(["bad","Water level deeper than ~295 ft (90 m): beyond the Redi-Flo2 / MP 1 maximum lift."]);
+  $("flags").innerHTML = flags.map(f=>"<div class='flag "+f[0]+"'>"+f[1]+"</div>").join("");
+}
+
+["dia","td","cd","cid","dtw","stick","rate","yld"].forEach(id=>$(id).addEventListener("input",render));
+
+// ---- bucket & stopwatch ----
+function bucket(){
+  const L=parseFloat($("bktL").value), S=parseFloat($("bktS").value);
+  if(L>0 && S>0){
+    const lpm = L/S*60, gpm = lpm/GAL2L;
+    $("bktOut").innerHTML="Measured rate: <b>"+(SI?lpm.toFixed(1)+" L/min":gpm.toFixed(2)+" gpm")+"</b> ("+(SI?gpm.toFixed(2)+" gpm":lpm.toFixed(1)+" L/min")+")";
+    $("bktApply").style.display="block";
+    $("bktApply").onclick=()=>{ $("rate").value = SI? lpm.toFixed(1) : gpm.toFixed(2); render(); };
+  } else { $("bktOut").textContent="Enter both to compute the measured rate."; $("bktApply").style.display="none"; }
+}
+$("bktL").addEventListener("input",bucket);
+$("bktS").addEventListener("input",bucket);
+
+// ---- saved wells (localStorage; degrades gracefully if unavailable) ----
+const KEY="purgecalc.wells";
+function loadLib(){ try{ return JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ return null; } }
+function saveLib(lib){ try{ localStorage.setItem(KEY,JSON.stringify(lib)); return true; }catch(e){ return false; } }
+function renderLib(){
+  const lib = loadLib();
+  if(lib===null){ $("lib").innerHTML="<div class='lib-empty'>Saving isn\u2019t available in this viewer \u2014 the calculator still works; just re-enter geometry each time.</div>"; return; }
+  if(lib.length===0){ $("lib").innerHTML="<div class='lib-empty'>No saved wells yet. Enter geometry above, name it, and save \u2014 it will be here next trip.</div>"; return; }
+  $("lib").innerHTML="";
+  lib.forEach((w,i)=>{
+    const div=document.createElement("div"); div.className="lib-item";
+    div.innerHTML="<span class='nm'>"+w.name+"</span><span style='font-size:.72rem;color:#6b756b'>"+w.summary+"</span>";
+    const lb=document.createElement("button"); lb.className="load"; lb.textContent="Load";
+    lb.onclick=()=>{
+      if(w.si!==SI){ if(w.si){$("uSI").click();}else{$("uUS").click();} }
+      ["dia","td","cd","cid","stick","yld"].forEach(k=>$(k).value = w[k]??"");
+      $("dtw").value=""; render(); window.scrollTo({top:0,behavior:"smooth"});
+    };
+    const db=document.createElement("button"); db.className="del"; db.textContent="\u00D7";
+    db.onclick=()=>{ lib.splice(i,1); saveLib(lib); renderLib(); };
+    div.appendChild(lb); div.appendChild(db);
+    $("lib").appendChild(div);
+  });
+}
+$("saveBtn").onclick=()=>{
+  const name=$("wellName").value.trim();
+  if(!name){ $("wellName").placeholder="Name required"; return; }
+  if(val("dia")==null||val("td")==null){ alert("Enter at least a diameter and total depth first."); return; }
+  const lib=loadLib(); if(lib===null){ renderLib(); return; }
+  const summary = $("dia").value+(SI?" mm":"\u2033")+" \u00D7 "+$("td").value+(SI?" m":" ft");
+  lib.push({name, si:SI, summary, dia:$("dia").value, td:$("td").value, cd:$("cd").value, cid:$("cid").value, stick:$("stick").value, yld:$("yld").value});
+  saveLib(lib); $("wellName").value=""; renderLib();
+};
+
+buildDiaGrid(); setUnitLabels(); render(); renderLib();
+</script>
+</body>
+</html>
