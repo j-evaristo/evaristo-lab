@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Isotope Explorer — Water Stable Isotope Visualizer</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+  :root{
+    /* Deep-water palette anchored on a field-lab forest green */
+    --abyss:#0a1410;        /* near-black green, page base */
+    --deep:#0f1f18;         /* panel base */
+    --moss:#16302440;       /* translucent panel fill */
+    --line:#23463688;       /* hairline rule */
+    --pine:#1d6b4f;         /* primary forest green */
+    --spring:#3fbf86;       /* bright meteoric-water accent */
+    --foam:#7fe7c4;         /* light highlight */
+    --mineral:#d8c98f;      /* warm mineral/sediment accent */
+    --copper:#d98a5a;       /* secondary warm accent (LMWL) */
+    --paper:#eef4f0;        /* primary text */
+    --muted:#8fb4a3;        /* secondary text */
+    --faint:#5d7d6f;        /* tertiary text */
+    --grid:#1c3a2c;         /* plot gridlines */
+    --shadow:0 18px 50px -22px rgba(0,0,0,.8);
+    --r:14px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 700px at 80% -10%, #11271d 0%, transparent 55%),
+      radial-gradient(900px 600px at -5% 100%, #0d2018 0%, transparent 50%),
+      var(--abyss);
+    color:var(--paper);
+    font-family:"Inter","Helvetica Neue",Arial,sans-serif;
+    font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .mono{font-family:"IBM Plex Mono","SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;}
+
+  /* Force a curved lowercase delta glyph (δ) instead of the angular
+     monospace form that reads as a triangle. Greek set via a serif italic.
+     text-transform:none is critical — an uppercasing parent (field labels,
+     table headers) would otherwise convert lowercase delta into capital. */
+  .dx{
+    font-family:"Cambria Math","STIX Two Math","Times New Roman",Georgia,serif;
+    font-style:italic; font-weight:500;
+    text-transform:none !important;
+    letter-spacing:0; padding-right:.02em;
+  }
+
+  /* ---------- Header ---------- */
+  header.masthead{
+    position:relative;
+    padding:42px clamp(20px,5vw,64px) 30px;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  header.masthead::before{
+    /* faint GMWL diagonal motif behind the title */
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(118deg, transparent 0 46%, var(--line) 46% 46.25%, transparent 46.25%);
+    opacity:.55; pointer-events:none;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px; letter-spacing:.34em; text-transform:uppercase;
+    color:var(--spring); margin:0 0 14px;
+  }
+  h1.title{
+    margin:0; font-weight:300; letter-spacing:-.018em;
+    font-size:clamp(30px,5.4vw,52px); line-height:1.02;
+  }
+  h1.title b{font-weight:650;}
+  h1.title .delta{color:var(--spring); font-style:italic; font-weight:400;}
+  .subtitle{
+    margin:16px 0 0; max-width:62ch; color:var(--muted);
+    font-size:clamp(14px,1.6vw,16px);
+  }
+  .lab-tag{
+    margin-top:18px; font-family:"IBM Plex Mono",monospace; font-size:12px;
+    color:var(--faint); letter-spacing:.04em;
+  }
+  .lab-tag span{color:var(--mineral);}
+
+  /* ---------- Layout ---------- */
+  main{padding:clamp(22px,4vw,40px) clamp(20px,5vw,64px) 80px;}
+  .panel{
+    background:linear-gradient(180deg, var(--deep), #0c1a14);
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    box-shadow:var(--shadow);
+  }
+  .panel-pad{padding:clamp(20px,3vw,30px);}
+
+  .section-label{
+    font-family:"IBM Plex Mono",monospace; font-size:11px;
+    letter-spacing:.26em; text-transform:uppercase; color:var(--faint);
+    display:flex; align-items:center; gap:12px; margin:0 0 18px;
+  }
+  .section-label::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  /* ---------- Dropzone ---------- */
+  .drop{
+    border:1.5px dashed var(--line);
+    border-radius:var(--r);
+    padding:clamp(34px,6vw,60px) 28px;
+    text-align:center;
+    transition:.22s border-color,.22s background,.22s transform;
+    cursor:pointer; position:relative;
+    background:radial-gradient(600px 200px at 50% 0%, #12271d55, transparent 70%);
+  }
+  .drop:hover,.drop.drag{
+    border-color:var(--spring);
+    background:radial-gradient(600px 200px at 50% 0%, #16352655, transparent 70%);
+  }
+  .drop.drag{transform:scale(1.006);}
+  .drop .drip{
+    width:46px; height:46px; margin:0 auto 18px; position:relative; display:block;
+  }
+  .drop .drip svg{width:100%;height:100%; display:block; overflow:visible;}
+  .drop h3{margin:0 0 6px; font-weight:500; font-size:19px; letter-spacing:-.01em;}
+  .drop p{margin:0; color:var(--muted); font-size:14px;}
+  .drop .formats{
+    margin-top:14px; font-family:"IBM Plex Mono",monospace; font-size:11px;
+    color:var(--faint); letter-spacing:.12em;
+  }
+  input[type=file]{display:none;}
+
+  .filechip{
+    display:inline-flex; align-items:center; gap:10px; margin-top:18px;
+    background:var(--moss); border:1px solid var(--line); border-radius:999px;
+    padding:7px 8px 7px 16px; font-size:13px; color:var(--paper);
+  }
+  .filechip .x{
+    cursor:pointer; width:24px;height:24px;border-radius:50%;
+    display:grid;place-items:center; background:#0000; color:var(--muted);
+    border:1px solid var(--line); transition:.15s;
+  }
+  .filechip .x:hover{color:var(--paper); border-color:var(--spring);}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    appearance:none; cursor:pointer; font-family:inherit; font-size:13.5px;
+    border-radius:10px; padding:11px 18px; border:1px solid var(--line);
+    background:#11241b; color:var(--paper); letter-spacing:.01em;
+    transition:.16s transform,.16s border-color,.16s background; font-weight:500;
+  }
+  .btn:hover{border-color:var(--spring); transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn.primary{
+    background:linear-gradient(180deg,var(--pine),#155139);
+    border-color:#2c7a5a; color:#eafff5; font-weight:600;
+  }
+  .btn.primary:hover{box-shadow:0 8px 22px -10px var(--pine);}
+  .btn.ghost{background:#0000;}
+  .btn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+  .btn-row{display:flex; flex-wrap:wrap; gap:10px;}
+
+  /* ---------- Column mapper ---------- */
+  .map-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:16px 22px;
+  }
+  .field label{
+    display:block; font-family:"IBM Plex Mono",monospace; font-size:10.5px;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin-bottom:7px;
+  }
+  .field label .req{color:var(--spring);}
+  .field label .opt{color:var(--faint); text-transform:none; letter-spacing:.02em; font-size:10px;}
+  select,input[type=text],input[type=number]{
+    width:100%; font-family:inherit; font-size:14px;
+    background:#0b1812; color:var(--paper);
+    border:1px solid var(--line); border-radius:9px; padding:10px 12px;
+    transition:.15s border-color; appearance:none;
+  }
+  select{
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 17px,calc(100% - 13px) 17px;
+    background-size:5px 5px,5px 5px; background-repeat:no-repeat;
+    padding-right:34px;
+  }
+  select:focus,input:focus{outline:none; border-color:var(--spring);}
+  .auto-note{
+    font-size:12.5px; color:var(--faint); margin-top:4px;
+  }
+  .auto-note b{color:var(--foam); font-weight:500;}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:22px; flex-wrap:wrap;}
+  .tab{
+    appearance:none; background:none; border:none; cursor:pointer;
+    font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--faint); padding:12px 16px;
+    border-bottom:2px solid transparent; transition:.16s; margin-bottom:-1px;
+  }
+  .tab:hover{color:var(--muted);}
+  .tab.active{color:var(--foam); border-bottom-color:var(--spring);}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- Plot ---------- */
+  .plot-wrap{position:relative; width:100%;}
+  #plot{width:100%; height:auto; display:block; border-radius:10px; background:#0a1611;}
+  .plot-toolbar{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    margin-bottom:16px; justify-content:space-between;
+  }
+  .toggle-group{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+  .chk{
+    display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+    font-size:13px; color:var(--muted); user-select:none;
+    padding:6px 12px; border:1px solid var(--line); border-radius:8px;
+    background:#0b1812; transition:.15s;
+  }
+  .chk:hover{border-color:var(--faint);}
+  .chk input{accent-color:var(--spring); width:15px; height:15px; cursor:pointer;}
+  .chk.on{border-color:#2c7a5a; color:var(--paper);}
+  .swatch{width:11px;height:11px;border-radius:2px;display:inline-block;}
+
+  /* ---------- Stats ---------- */
+  .stats-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:1px; background:var(--line); border:1px solid var(--line);
+    border-radius:12px; overflow:hidden;
+  }
+  .stat{background:linear-gradient(180deg,#0e1d16,#0b1812); padding:18px 20px;}
+  .stat .k{
+    font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:8px;
+  }
+  .stat .v{font-size:24px; font-weight:350; letter-spacing:-.01em; font-family:"IBM Plex Mono",monospace;}
+  .stat .v small{font-size:13px; color:var(--muted); margin-left:3px;}
+  .stat .u{font-size:11px; color:var(--faint); margin-top:3px;}
+
+  .reg-box{
+    margin-top:18px; padding:18px 20px; border:1px solid var(--line);
+    border-radius:12px; background:#0c1a1480;
+  }
+  .reg-box h4{
+    margin:0 0 14px; font-family:"IBM Plex Mono",monospace; font-size:11px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--muted);
+  }
+  .reg-line{
+    display:flex; flex-wrap:wrap; gap:8px 28px; align-items:baseline;
+    font-family:"IBM Plex Mono",monospace; font-size:14px;
+  }
+  .reg-line .eq{color:var(--foam); font-size:15px;}
+  .reg-line span b{color:var(--paper); font-weight:600;}
+  .reg-line span{color:var(--faint);}
+
+  /* ---------- Map ---------- */
+  #map{width:100%; height:560px; border-radius:10px; border:1px solid var(--line); background:#0a1611;}
+  .map-legend{
+    margin-top:14px; display:flex; flex-wrap:wrap; gap:16px; align-items:center;
+    font-size:12.5px; color:var(--muted);
+  }
+  .map-legend .ramp{
+    height:11px; width:160px; border-radius:6px; border:1px solid var(--line);
+    background:linear-gradient(90deg,#2c5fa8,#3fbf86,#d8c98f,#d98a5a,#b5462f);
+  }
+  .leaflet-popup-content-wrapper{
+    background:#0e1d16; color:var(--paper); border:1px solid var(--pine); border-radius:10px;
+  }
+  .leaflet-popup-tip{background:#0e1d16; border:1px solid var(--pine);}
+  .leaflet-popup-content{margin:14px 16px; font-size:13px; line-height:1.5;}
+  .popup-id{font-family:"IBM Plex Mono",monospace; font-weight:700; color:var(--foam); font-size:14px; letter-spacing:.02em;}
+  .popup-row{display:flex; justify-content:space-between; gap:18px; margin-top:5px;}
+  .popup-row .pk{color:var(--muted);}
+  .popup-row .pv{font-family:"IBM Plex Mono",monospace;}
+  .popup-note{margin-top:8px; padding-top:8px; border-top:1px solid var(--line); color:var(--mineral); font-size:12px; font-style:italic;}
+  .leaflet-bar a{background:#0e1d16; color:var(--paper); border-color:var(--line);}
+  .leaflet-bar a:hover{background:#16302a;}
+  .leaflet-control-attribution{background:#0a1611cc!important; color:var(--faint)!important;}
+  .leaflet-control-attribution a{color:var(--muted)!important;}
+
+  /* ---------- LMWL controls ---------- */
+  .lmwl-panel{
+    margin-top:20px; border:1px solid var(--line); border-radius:12px;
+    overflow:hidden;
+  }
+  .lmwl-head{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:14px 18px; background:#0c1a14; cursor:pointer;
+  }
+  .lmwl-head .lt{display:flex; align-items:center; gap:11px;}
+  .lmwl-head h4{margin:0; font-size:14px; font-weight:550; letter-spacing:-.01em;}
+  .lmwl-head .desc{font-size:12.5px; color:var(--faint);}
+  .lmwl-body{padding:18px; display:none; border-top:1px solid var(--line);}
+  .lmwl-body.open{display:block;}
+  .lmwl-mode{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
+  .seg{
+    font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.08em;
+    padding:8px 14px; border:1px solid var(--line); border-radius:8px;
+    background:#0b1812; color:var(--muted); cursor:pointer; transition:.15s;
+  }
+  .seg.active{background:var(--copper); border-color:var(--copper); color:#1a0f08; font-weight:600;}
+  .lmwl-inputs{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px;}
+  .switch{
+    position:relative; width:38px; height:21px; flex:0 0 auto;
+    border-radius:999px; background:#1a352800; border:1px solid var(--line);
+    transition:.18s; cursor:pointer;
+  }
+  .switch.on{background:var(--copper); border-color:var(--copper);}
+  .switch::after{
+    content:""; position:absolute; top:2px; left:2px; width:15px; height:15px;
+    border-radius:50%; background:var(--muted); transition:.18s;
+  }
+  .switch.on::after{background:#1a0f08; transform:translateX(17px);}
+
+  /* ---------- Data table ---------- */
+  .table-scroll{overflow:auto; border:1px solid var(--line); border-radius:12px; max-height:560px;}
+  table.data{border-collapse:collapse; width:100%; font-size:13px;}
+  table.data th{
+    position:sticky; top:0; background:#0e1d16; text-align:left; padding:11px 14px;
+    font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--line);
+    white-space:nowrap; z-index:2;
+  }
+  table.data td{padding:10px 14px; border-bottom:1px solid #16302a55; color:var(--paper); white-space:nowrap;}
+  table.data tr:hover td{background:#11241b66;}
+  table.data td.num{font-family:"IBM Plex Mono",monospace; text-align:right;}
+
+  /* ---------- Messages ---------- */
+  .alert{
+    border-radius:11px; padding:14px 18px; font-size:13.5px; margin-bottom:18px;
+    border:1px solid; display:flex; gap:12px; align-items:flex-start;
+  }
+  .alert.warn{background:#2a1c0c66; border-color:#7a5a2c; color:var(--mineral);}
+  .alert.info{background:#0c1a2466; border-color:#2c5a7a; color:#9cc7e7;}
+  .alert .alert-icon{flex:0 0 auto; font-family:"IBM Plex Mono",monospace; font-weight:700;}
+
+  .hidden{display:none!important;}
+  .spacer{height:clamp(22px,4vw,34px);}
+  footer{
+    padding:30px clamp(20px,5vw,64px); border-top:1px solid var(--line);
+    color:var(--faint); font-size:12.5px; display:flex; justify-content:space-between;
+    flex-wrap:wrap; gap:10px;
+  }
+  footer .mono{color:var(--muted);}
+
+  ::-webkit-scrollbar{width:11px; height:11px;}
+  ::-webkit-scrollbar-track{background:#0a1611;}
+  ::-webkit-scrollbar-thumb{background:#1c3a2c; border-radius:6px; border:2px solid #0a1611;}
+  ::-webkit-scrollbar-thumb:hover{background:#2c5a44;}
+
+  @media (max-width:640px){
+    #map{height:420px;}
+    .stat .v{font-size:20px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important; animation:none!important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <p class="eyebrow">Stable Isotope Hydrology · Field Sample Visualizer</p>
+  <h1 class="title">Isotope <b>Explorer</b></h1>
+  <p class="subtitle">Upload a results spreadsheet from any lab run and read it in two ways: as points on the landscape, or as a signature in <span class="delta">δ²H–δ¹⁸O</span> space against the Global Meteoric Water Line. Columns are detected automatically, whatever your file's layout.</p>
+  <p class="lab-tag mono">EVARISTO CRITICAL ZONE HYDROLOGY LAB · <span>δ¹⁸O / δ²H / d-excess</span></p>
+</header>
+
+<main>
+
+  <!-- ============ STEP 1 — UPLOAD ============ -->
+  <section class="panel panel-pad" id="uploadPanel">
+    <p class="section-label">01 — Load a results file</p>
+
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload spreadsheet">
+      <span class="drip" aria-hidden="true">
+        <svg viewBox="0 0 40 52">
+          <path d="M20 2 C20 2 4 22 4 34 a16 16 0 0 0 32 0 C36 22 20 2 20 2 Z"
+            fill="none" stroke="var(--spring)" stroke-width="1.6"/>
+          <path d="M14 33 a6 6 0 0 0 6 6" fill="none" stroke="var(--foam)" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <h3>Drop a spreadsheet here</h3>
+      <p>or click to browse — your file is read entirely in the browser and never uploaded anywhere</p>
+      <p class="formats mono">.XLSX · .XLS · .CSV · .TSV</p>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.tsv,.txt">
+
+    <div id="fileMeta"></div>
+
+    <div id="sheetPick" class="hidden" style="margin-top:18px;">
+      <div class="field" style="max-width:340px;">
+        <label>Worksheet</label>
+        <select id="sheetSelect"></select>
+      </div>
+    </div>
+  </section>
+
+  <div class="spacer"></div>
+
+  <!-- ============ STEP 2 — MAP COLUMNS ============ -->
+  <section class="panel panel-pad hidden" id="mapPanel">
+    <p class="section-label">02 — Confirm the columns</p>
+    <p style="margin:-6px 0 20px; color:var(--muted); font-size:13.5px; max-width:70ch;">
+      Best guesses are filled in below from your header names. Override any of them if a guess is off.
+      Only the two isotope columns are required; everything else sharpens the result.
+    </p>
+
+    <div class="map-grid" id="mapper"></div>
+
+    <div id="mapWarn"></div>
+
+    <div class="btn-row" style="margin-top:26px;">
+      <button class="btn primary" id="renderBtn">Visualize data</button>
+      <button class="btn ghost" id="resetBtn">Start over</button>
+    </div>
+  </section>
+
+  <div class="spacer"></div>
+
+  <!-- ============ STEP 3 — RESULTS ============ -->
+  <section class="panel panel-pad hidden" id="resultPanel">
+    <div class="tabs" id="tabs"></div>
+
+    <!-- MAP VIEW -->
+    <div class="view" id="view-map">
+      <div id="map"></div>
+      <div class="map-legend">
+        <span class="mono" style="letter-spacing:.1em; font-size:11px; color:var(--faint);">MARKER FILL ENCODES</span>
+        <span id="rampLabel" style="color:var(--paper);">δ¹⁸O</span>
+        <span class="ramp" id="ramp"></span>
+        <span class="mono" id="rampMin">—</span>
+        <span style="color:var(--faint);">→</span>
+        <span class="mono" id="rampMax">—</span>
+        <span style="margin-left:auto; color:var(--faint);">Click a marker for sample detail</span>
+      </div>
+      <div class="field" style="max-width:280px; margin-top:18px;">
+        <label>Color markers by</label>
+        <select id="colorBy"></select>
+      </div>
+    </div>
+
+    <!-- PLOT VIEW -->
+    <div class="view" id="view-plot">
+      <div class="plot-toolbar">
+        <div class="toggle-group" id="plotToggles"></div>
+        <div class="btn-row">
+          <button class="btn ghost" id="dlPlotPNG">Download PNG</button>
+          <button class="btn ghost" id="dlPlotSVG">Download SVG</button>
+        </div>
+      </div>
+      <div class="plot-wrap"><div id="plotHost"></div></div>
+
+      <!-- LMWL -->
+      <div class="lmwl-panel">
+        <div class="lmwl-head" id="lmwlHead">
+          <div class="lt">
+            <span class="switch" id="lmwlSwitch" role="switch" aria-checked="false"></span>
+            <div>
+              <h4>Add your Local Meteoric Water Line</h4>
+              <div class="desc">Plot an LMWL by typing its slope &amp; intercept, or fit one to a precipitation dataset</div>
+            </div>
+          </div>
+          <span class="mono" style="color:var(--faint); font-size:11px;" id="lmwlState">OFF</span>
+        </div>
+        <div class="lmwl-body" id="lmwlBody">
+          <div class="lmwl-mode">
+            <span class="seg active" data-mode="manual">Enter slope &amp; intercept</span>
+            <span class="seg" data-mode="fit">Fit to precipitation data</span>
+          </div>
+
+          <div id="lmwlManual">
+            <div class="lmwl-inputs">
+              <div class="field">
+                <label>Slope <span class="opt">(a)</span></label>
+                <input type="number" id="lmwlSlope" step="0.01" value="7.50" inputmode="decimal">
+              </div>
+              <div class="field">
+                <label>Intercept <span class="opt">(b)</span></label>
+                <input type="number" id="lmwlInt" step="0.1" value="6.0" inputmode="decimal">
+              </div>
+              <div class="field">
+                <label>Label <span class="opt">on legend</span></label>
+                <input type="text" id="lmwlLabel" value="LMWL" maxlength="32">
+              </div>
+            </div>
+            <p class="auto-note" style="margin-top:12px;">Defines δ²H = <b id="mEqA">7.50</b> · δ¹⁸O + <b id="mEqB">6.0</b></p>
+          </div>
+
+          <div id="lmwlFit" class="hidden">
+            <p class="auto-note" style="margin-top:0; margin-bottom:14px;">
+              Paste precipitation pairs (one per line: <span class="mono">δ¹⁸O, δ²H</span> — comma, tab, or space separated). An ordinary least-squares line is fit to them.
+            </p>
+            <textarea id="lmwlData" rows="6" placeholder="-6.21, -38.4&#10;-8.05, -54.1&#10;-4.92, -29.7&#10;..." style="width:100%; font-family:'IBM Plex Mono',monospace; font-size:13px; background:#0b1812; color:var(--paper); border:1px solid var(--line); border-radius:9px; padding:12px;"></textarea>
+            <div class="btn-row" style="margin-top:12px;">
+              <button class="btn" id="fitBtn">Fit line</button>
+              <span id="fitResult" class="mono" style="align-self:center; font-size:12.5px; color:var(--foam);"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS VIEW -->
+    <div class="view" id="view-stats">
+      <div id="statsHost"></div>
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div class="view" id="view-table">
+      <div class="btn-row" style="margin-bottom:16px; justify-content:flex-end;">
+        <button class="btn ghost" id="dlData">Download parsed CSV</button>
+      </div>
+      <div class="table-scroll"><table class="data" id="dataTable"></table></div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <span>Isotope Explorer · client-side spreadsheet visualizer for water stable isotopes</span>
+  <span class="mono">δ²H = 8 · δ¹⁸O + 10 &nbsp;·&nbsp; GMWL (Craig 1961)</span>
+</footer>
+
+<script>
+"use strict";
+
+/* ============================================================
+   GLOBAL STATE
+   ============================================================ */
+const STATE = {
+  workbook:null,
+  rows:[],          // array of row objects keyed by header
+  headers:[],       // header strings
+  mapping:{},       // role -> header
+  parsed:[],        // cleaned records for plotting/mapping
+  map:null,
+  markerLayer:null,
+  lmwl:{on:false, mode:"manual", slope:7.5, intercept:6.0, label:"LMWL"},
+  colorField:null
+};
+
+const GMWL = {slope:8, intercept:10};
+
+/* ============================================================
+   COLUMN AUTO-DETECTION
+   The tool must ingest arbitrarily-organised sheets, so role
+   detection is driven by scored keyword patterns on header
+   names plus value-range sanity checks.
+   ============================================================ */
+const ROLE_PATTERNS = {
+  id:      {label:"Sample / Field ID", required:false,
+            kw:[/\bfield[_\s-]?id\b/i,/\bsample[_\s-]?id\b/i,/\bsample[_\s-]?name\b/i,/\bsite[_\s-]?id\b/i,/\bstation\b/i,/\bvial\b/i,/\bbottle\b/i,/\bwell[_\s-]?id\b/i,/\bsample\b/i,/\bspecimen\b/i,/\b(id|name|code|label)\b/i]},
+  d18o:    {label:"δ¹⁸O", required:true,
+            kw:[/d.?18.?o/i,/δ.?18.?o/i,/o[_\s-]?18/i,/oxygen.?18/i,/18o/i,/\bd18\b/i]},
+  d2h:     {label:"δ²H", required:true,
+            kw:[/d.?2.?h/i,/δ.?2.?h/i,/deuterium/i,/d2h/i,/\bdD\b/,/\b2h\b/i,/hydrogen.?2/i]},
+  lat:     {label:"Latitude", required:false,
+            kw:[/lat/i,/y[_\s-]?lat/i,/\by[_\s-]?coord/i,/northing/i]},
+  lon:     {label:"Longitude", required:false,
+            kw:[/lon/i,/lng/i,/long/i,/x[_\s-]?coord/i,/easting/i]},
+  date:    {label:"Sample date", required:false,
+            kw:[/date/i,/time/i,/collected/i,/sampling/i]},
+  elev:    {label:"Elevation", required:false,
+            kw:[/elev/i,/altitude/i,/\balt\b/i,/\bz\b/i,/height/i,/masl/i,/m[_\s-]?corrected/i]},
+  loc:     {label:"Location / description", required:false,
+            kw:[/location/i,/descr/i,/type/i,/place/i,/site[_\s-]?name/i,/comment/i]},
+  notes:   {label:"Notes", required:false,
+            kw:[/note/i,/remark/i,/flag/i]}
+};
+const ROLE_ORDER = ["id","d18o","d2h","lat","lon","date","elev","loc","notes"];
+
+function isNumericColumn(header){
+  let n=0,ok=0;
+  for(const r of STATE.rows){
+    const v=r[header];
+    if(v===null||v===undefined||v==="") continue;
+    n++;
+    if(typeof v==="number" || (typeof v==="string" && v.trim()!=="" && isFinite(parseFloat(v.replace(/,/g,".")))) ) ok++;
+  }
+  return n>0 && ok/n>=0.6;
+}
+function colNumericRange(header){
+  const vals=[];
+  for(const r of STATE.rows){
+    const v=toNum(r[header]);
+    if(v!==null) vals.push(v);
+  }
+  if(!vals.length) return null;
+  return {min:Math.min(...vals),max:Math.max(...vals),
+          mean:vals.reduce((a,b)=>a+b,0)/vals.length, n:vals.length};
+}
+
+function scoreHeader(header, role){
+  const pat=ROLE_PATTERNS[role];
+  let best=0;
+  pat.kw.forEach((rx,i)=>{
+    if(rx.test(header)){
+      // earlier (more specific) patterns score higher
+      best=Math.max(best, pat.kw.length-i);
+    }
+  });
+  return best;
+}
+
+function autoDetect(){
+  const used=new Set();
+  const result={};
+  // For lat/lon also use coordinate range checks to disambiguate.
+  for(const role of ROLE_ORDER){
+    let bestH=null,bestS=0;
+    for(const h of STATE.headers){
+      if(used.has(h)) continue;
+      let s=scoreHeader(h,role);
+      // numeric-role guards
+      if((role==="d18o"||role==="d2h"||role==="lat"||role==="lon"||role==="elev") && s>0){
+        if(!isNumericColumn(h)) s=0;
+      }
+      // isotope columns are δ-values: reject ranges that clearly look like coordinates/elevations
+      if(role==="d18o" && s>0){const r=colNumericRange(h); if(r && (r.min< -60 || r.max>30)) s=0;}
+      if(role==="d2h" && s>0){
+        const r=colNumericRange(h);
+        // δ²H spans roughly -450..+50; a tightly-clustered all-positive column is almost certainly a coordinate
+        if(r && (r.min< -480 || r.max>60)) s=0;
+        if(r && r.min>=0 && (r.max-r.min)<5) s=0;
+      }
+      // coordinate range plausibility
+      if(role==="lat" && s>0){const r=colNumericRange(h); if(r && (r.min< -91||r.max>91)) s=0;}
+      if(role==="lon" && s>0){const r=colNumericRange(h); if(r && (r.min< -181||r.max>181)) s=0;}
+      if(s>bestS){bestS=s; bestH=h;}
+    }
+    if(bestH){result[role]=bestH; used.add(bestH);}
+  }
+
+  // Fallback: detect δ18O / δ2H purely by value range if header names failed.
+  if(!result.d18o || !result.d2h){
+    const candidates=STATE.headers.filter(h=>!used.has(h) && isNumericColumn(h));
+    const ranges=candidates.map(h=>({h,r:colNumericRange(h)})).filter(x=>x.r);
+    // δ18O typically -25..+5 ; δ2H typically -200..+30
+    if(!result.d18o){
+      const c=ranges.find(x=>x.r.min>=-30 && x.r.max<=15 && (x.r.max-x.r.min)<60);
+      if(c){result.d18o=c.h; used.add(c.h);}
+    }
+    if(!result.d2h){
+      const c=ranges.find(x=>x.h!==result.d18o && x.r.min>=-260 && x.r.max<=60 && (x.r.max-x.r.min)>=40);
+      if(c){result.d2h=c.h; used.add(c.h);}
+    }
+  }
+  return result;
+}
+
+/* ============================================================
+   PARSING HELPERS
+   ============================================================ */
+function toNum(v){
+  if(v===null||v===undefined||v==="") return null;
+  if(typeof v==="number") return isFinite(v)?v:null;
+  if(typeof v==="string"){
+    const c=v.replace(/[^0-9eE+\-.,]/g,"").replace(/,/g,".");
+    const f=parseFloat(c);
+    return isFinite(f)?f:null;
+  }
+  if(v instanceof Date) return null;
+  return null;
+}
+function fmtDate(v){
+  if(v instanceof Date && !isNaN(v)) return v.toISOString().slice(0,10);
+  if(typeof v==="number" && v>20000 && v<60000){
+    // Excel serial date
+    const d=new Date(Math.round((v-25569)*86400*1000));
+    if(!isNaN(d)) return d.toISOString().slice(0,10);
+  }
+  if(typeof v==="string"){const d=new Date(v); if(!isNaN(d)&&/\d/.test(v)) return d.toISOString().slice(0,10);}
+  return v==null?"":String(v);
+}
+
+/* ============================================================
+   FILE INTAKE
+   ============================================================ */
+const drop=document.getElementById("drop");
+const fileInput=document.getElementById("fileInput");
+
+drop.addEventListener("click",()=>fileInput.click());
+drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fileInput.click();}});
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("drag");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("drag");}));
+drop.addEventListener("drop",e=>{const f=e.dataTransfer.files[0]; if(f) handleFile(f);});
+fileInput.addEventListener("change",e=>{const f=e.target.files[0]; if(f) handleFile(f);});
+
+function handleFile(file){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=new Uint8Array(ev.target.result);
+      const wb=XLSX.read(data,{type:"array",cellDates:true});
+      STATE.workbook=wb;
+      document.getElementById("fileMeta").innerHTML=
+        `<div class="filechip"><span class="mono">${escapeHtml(file.name)}</span>`+
+        `<span style="color:var(--faint);font-size:12px;">${(file.size/1024).toFixed(0)} KB · ${wb.SheetNames.length} sheet${wb.SheetNames.length>1?"s":""}</span>`+
+        `<span class="x" id="clearFile" title="Remove">✕</span></div>`;
+      document.getElementById("clearFile").onclick=resetAll;
+
+      const sel=document.getElementById("sheetSelect");
+      sel.innerHTML=wb.SheetNames.map(n=>`<option>${escapeHtml(n)}</option>`).join("");
+      document.getElementById("sheetPick").classList.toggle("hidden",wb.SheetNames.length<=1);
+      sel.onchange=()=>loadSheet(sel.value);
+      loadSheet(wb.SheetNames[0]);
+    }catch(err){
+      document.getElementById("fileMeta").innerHTML=
+        `<div class="alert warn" style="margin-top:18px;"><span class="alert-icon">!</span><div>Couldn't read that file. Make sure it's a valid .xlsx, .xls, .csv, or .tsv. <br><span style="opacity:.7">${escapeHtml(err.message)}</span></div></div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function loadSheet(name){
+  const ws=STATE.workbook.Sheets[name];
+  // header:1 then locate the header row (first row with >=2 non-empty cells & some text)
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,blankrows:false});
+  if(!aoa.length){flagNoData(); return;}
+  let hdrIdx=0;
+  for(let i=0;i<Math.min(aoa.length,15);i++){
+    const row=aoa[i]||[];
+    const nonEmpty=row.filter(c=>c!==null&&c!==undefined&&String(c).trim()!=="").length;
+    const hasText=row.some(c=>typeof c==="string"&&/[a-zA-Z]/.test(c));
+    if(nonEmpty>=2&&hasText){hdrIdx=i;break;}
+  }
+  let headers=(aoa[hdrIdx]||[]).map((h,i)=> (h===null||h===undefined||String(h).trim()==="")?`Column ${i+1}`:String(h).trim());
+  // de-duplicate
+  const seen={};
+  headers=headers.map(h=>{if(seen[h]!==undefined){seen[h]++;return `${h} (${seen[h]})`;}seen[h]=0;return h;});
+
+  const rows=[];
+  for(let i=hdrIdx+1;i<aoa.length;i++){
+    const r=aoa[i]||[];
+    if(r.every(c=>c===null||c===undefined||String(c).trim()==="")) continue;
+    const obj={};
+    headers.forEach((h,j)=>obj[h]=r[j]===undefined?null:r[j]);
+    rows.push(obj);
+  }
+  STATE.headers=headers;
+  STATE.rows=rows;
+  if(!rows.length){flagNoData(); return;}
+  STATE.mapping=autoDetect();
+  buildMapper();
+  document.getElementById("mapPanel").classList.remove("hidden");
+  document.getElementById("resultPanel").classList.add("hidden");
+  document.getElementById("mapPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function flagNoData(){
+  document.getElementById("fileMeta").insertAdjacentHTML("beforeend",
+    `<div class="alert warn" style="margin-top:18px;"><span class="alert-icon">!</span><div>That worksheet has no readable rows. Pick another sheet or check the file.</div></div>`);
+}
+
+/* ============================================================
+   COLUMN MAPPER UI
+   ============================================================ */
+function buildMapper(){
+  const host=document.getElementById("mapper");
+  const opts=h=>`<option value="">— none —</option>`+
+    STATE.headers.map(c=>`<option value="${escapeHtml(c)}" ${STATE.mapping[role]===c?"selected":""}>${escapeHtml(c)}</option>`).join("");
+  let html="";
+  for(var role of ROLE_ORDER){
+    const pat=ROLE_PATTERNS[role];
+    const cur=STATE.mapping[role]||"";
+    const detected=cur?`<div class="auto-note">auto-matched → <b>${escapeHtml(cur)}</b></div>`
+                       :`<div class="auto-note">not found</div>`;
+    html+=`<div class="field" data-role="${role}">
+      <label>${pat.label} ${pat.required?'<span class="req">*</span>':'<span class="opt">optional</span>'}</label>
+      <select data-role="${role}">${optsFor(role,cur)}</select>
+      ${detected}
+    </div>`;
+  }
+  host.innerHTML=html;
+  host.querySelectorAll("select").forEach(s=>{
+    s.onchange=()=>{STATE.mapping[s.dataset.role]=s.value||null; validateMapping();};
+  });
+  validateMapping();
+  styleDeltas(host);
+}
+function optsFor(role,cur){
+  return `<option value="">— none —</option>`+
+    STATE.headers.map(c=>`<option value="${escapeHtml(c)}" ${cur===c?"selected":""}>${escapeHtml(c)}</option>`).join("");
+}
+function validateMapping(){
+  const warn=document.getElementById("mapWarn");
+  const btn=document.getElementById("renderBtn");
+  const miss=[];
+  if(!STATE.mapping.d18o) miss.push("δ¹⁸O");
+  if(!STATE.mapping.d2h) miss.push("δ²H");
+  if(miss.length){
+    warn.innerHTML=`<div class="alert warn" style="margin-top:20px;"><span class="alert-icon">!</span><div>Select the <b>${miss.join("</b> and <b>")}</b> column${miss.length>1?"s":""} to continue. These are the two measured isotope ratios.</div></div>`;
+    btn.disabled=true;
+  }else{
+    const hasGeo=STATE.mapping.lat&&STATE.mapping.lon;
+    warn.innerHTML=`<div class="alert info" style="margin-top:20px;"><span class="alert-icon">→</span><div>${hasGeo?
+      "Coordinates found — your samples will open on a <b>map</b>, with the dual-isotope plot and statistics alongside.":
+      "No coordinates detected — samples will be shown in <b>δ²H–δ¹⁸O space</b> with the GMWL and descriptive statistics. Add an LMWL on the plot tab if you have one."}</div></div>`;
+    btn.disabled=false;
+  }
+  styleDeltas(warn);
+}
+
+/* ============================================================
+   BUILD PARSED RECORDS
+   ============================================================ */
+function buildParsed(){
+  const m=STATE.mapping;
+  const out=[];
+  STATE.rows.forEach((r,i)=>{
+    const d18=toNum(r[m.d18o]);
+    const d2=toNum(r[m.d2h]);
+    if(d18===null||d2===null) return; // need both isotopes
+    const rec={
+      _i:i+1,
+      id: m.id? String(r[m.id]??"").trim() : `#${i+1}`,
+      d18o:d18, d2h:d2,
+      dexcess: d2 - 8*d18,
+      lat: m.lat? toNum(r[m.lat]) : null,
+      lon: m.lon? toNum(r[m.lon]) : null,
+      date: m.date? fmtDate(r[m.date]) : "",
+      elev: m.elev? toNum(r[m.elev]) : null,
+      loc: m.loc? String(r[m.loc]??"").trim() : "",
+      notes: m.notes? String(r[m.notes]??"").trim() : ""
+    };
+    out.push(rec);
+  });
+  STATE.parsed=out;
+}
+
+/* ============================================================
+   STATISTICS
+   ============================================================ */
+function stats(arr){
+  const n=arr.length;
+  if(!n) return null;
+  const s=[...arr].sort((a,b)=>a-b);
+  const mean=arr.reduce((a,b)=>a+b,0)/n;
+  const variance=n>1?arr.reduce((a,b)=>a+(b-mean)**2,0)/(n-1):0;
+  const sd=Math.sqrt(variance);
+  const q=p=>{const idx=(n-1)*p; const lo=Math.floor(idx),hi=Math.ceil(idx);
+    return lo===hi? s[lo] : s[lo]+(s[hi]-s[lo])*(idx-lo);};
+  return {n,mean,sd,min:s[0],max:s[n-1],median:q(.5),q1:q(.25),q3:q(.75)};
+}
+function ols(xs,ys){
+  const n=xs.length;
+  if(n<2) return null;
+  const mx=xs.reduce((a,b)=>a+b,0)/n, my=ys.reduce((a,b)=>a+b,0)/n;
+  let sxx=0,sxy=0,syy=0;
+  for(let i=0;i<n;i++){sxx+=(xs[i]-mx)**2; sxy+=(xs[i]-mx)*(ys[i]-my); syy+=(ys[i]-my)**2;}
+  if(sxx===0) return null;
+  const slope=sxy/sxx, intercept=my-slope*mx;
+  const r2= syy===0?1:(sxy*sxy)/(sxx*syy);
+  // standard errors
+  let sse=0; for(let i=0;i<n;i++){const pred=slope*xs[i]+intercept; sse+=(ys[i]-pred)**2;}
+  const seSlope = n>2? Math.sqrt((sse/(n-2))/sxx) : NaN;
+  const seInt = n>2? Math.sqrt((sse/(n-2))*(1/n + mx*mx/sxx)) : NaN;
+  return {slope,intercept,r2,n,seSlope,seInt};
+}
+
+/* ============================================================
+   ISOTOPE PLOT (SVG, exportable, themed)
+   ============================================================ */
+const PLOT={
+  showGMWL:true, showLMWL:false, showReg:true, showLabels:false, colorByDexcess:true
+};
+function renderPlot(){
+  const host=document.getElementById("plotHost");
+  const data=STATE.parsed;
+  if(!data.length){host.innerHTML="<p style='color:var(--muted)'>No valid isotope pairs to plot.</p>";return;}
+
+  const W=940,H=620, m={t:34,r:166,b:64,l:74};
+  const pw=W-m.l-m.r, ph=H-m.t-m.b;
+
+  const xs=data.map(d=>d.d18o), ys=data.map(d=>d.d2h);
+  let xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);
+  // include GMWL endpoints in range so the line spans the frame
+  const padx=(xmax-xmin||2)*0.10, pady=(ymax-ymin||10)*0.10;
+  xmin-=padx; xmax+=padx; ymin-=pady; ymax+=pady;
+  // make sure GMWL is visible across x-range
+  const gy1=GMWL.slope*xmin+GMWL.intercept, gy2=GMWL.slope*xmax+GMWL.intercept;
+  ymin=Math.min(ymin,gy1,gy2); ymax=Math.max(ymax,gy1,gy2);
+
+  const sx=v=>m.l+(v-xmin)/(xmax-xmin)*pw;
+  const sy=v=>m.t+(ymax-v)/(ymax-ymin)*ph;
+
+  const xticks=niceTicks(xmin,xmax,6), yticks=niceTicks(ymin,ymax,6);
+
+  // color ramp by d-excess
+  const dxs=data.map(d=>d.dexcess);
+  const dxMin=Math.min(...dxs),dxMax=Math.max(...dxs);
+  const ramp=t=>{ // blue->green->sand->copper->rust
+    const stops=[[44,95,168],[63,191,134],[216,201,143],[217,138,90],[181,70,47]];
+    const x=Math.max(0,Math.min(1,t))*(stops.length-1);
+    const i=Math.floor(x),f=x-i,a=stops[i],b=stops[Math.min(i+1,stops.length-1)];
+    return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+  };
+
+  let svg=`<svg id="plot" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">`;
+  svg+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#0a1611"/>`;
+  // plot frame
+  svg+=`<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="#0b1812" stroke="#23463688"/>`;
+
+  // gridlines + ticks
+  xticks.forEach(t=>{
+    const x=sx(t);
+    svg+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ph}" stroke="#1c3a2c" stroke-width="1"/>`;
+    svg+=`<text x="${x}" y="${m.t+ph+22}" fill="#8fb4a3" font-size="13" text-anchor="middle">${(+t.toFixed(2))}</text>`;
+  });
+  yticks.forEach(t=>{
+    const y=sy(t);
+    svg+=`<line x1="${m.l}" y1="${y}" x2="${m.l+pw}" y2="${y}" stroke="#1c3a2c" stroke-width="1"/>`;
+    svg+=`<text x="${m.l-12}" y="${y+4}" fill="#8fb4a3" font-size="13" text-anchor="end">${(+t.toFixed(0))}</text>`;
+  });
+
+  // axis titles
+  // axis titles — delta drawn in a serif italic so the lowercase δ is curved, not triangular
+  const DXF='font-family="Cambria Math, STIX Two Math, Times New Roman, Georgia, serif" font-style="italic"';
+  svg+=`<text x="${m.l+pw/2}" y="${H-18}" fill="#eef4f0" font-size="15" text-anchor="middle"><tspan ${DXF} font-size="17">δ</tspan><tspan>¹⁸O  (‰ VSMOW)</tspan></text>`;
+  svg+=`<text x="22" y="${m.t+ph/2}" fill="#eef4f0" font-size="15" text-anchor="middle" transform="rotate(-90 22 ${m.t+ph/2})"><tspan ${DXF} font-size="17">δ</tspan><tspan>²H  (‰ VSMOW)</tspan></text>`;
+
+  // GMWL
+  if(PLOT.showGMWL){
+    const x1=xmin,x2=xmax;
+    svg+=`<line x1="${sx(x1)}" y1="${sy(GMWL.slope*x1+GMWL.intercept)}" x2="${sx(x2)}" y2="${sy(GMWL.slope*x2+GMWL.intercept)}" stroke="#7fe7c4" stroke-width="2" stroke-dasharray="2 5" opacity="0.9"/>`;
+  }
+  // LMWL
+  if(STATE.lmwl.on){
+    const a=STATE.lmwl.slope,b=STATE.lmwl.intercept;
+    const x1=xmin,x2=xmax;
+    svg+=`<line x1="${sx(x1)}" y1="${sy(a*x1+b)}" x2="${sx(x2)}" y2="${sy(a*x2+b)}" stroke="#d98a5a" stroke-width="2.2" opacity="0.95"/>`;
+  }
+  // sample regression (OLS of the data itself)
+  const reg=ols(xs,ys);
+  if(PLOT.showReg && reg){
+    const x1=xmin,x2=xmax;
+    svg+=`<line x1="${sx(x1)}" y1="${sy(reg.slope*x1+reg.intercept)}" x2="${sx(x2)}" y2="${sy(reg.slope*x2+reg.intercept)}" stroke="#3fbf86" stroke-width="2" opacity="0.85"/>`;
+  }
+
+  // points
+  data.forEach(d=>{
+    const cx=sx(d.d18o),cy=sy(d.d2h);
+    const fill=PLOT.colorByDexcess? ramp((d.dexcess-dxMin)/((dxMax-dxMin)||1)) : "#3fbf86";
+    svg+=`<circle cx="${cx}" cy="${cy}" r="5.2" fill="${fill}" fill-opacity="0.92" stroke="#0a1611" stroke-width="1"><title>${escapeHtml(d.id)}  (δ¹⁸O ${d.d18o.toFixed(2)}, δ²H ${d.d2h.toFixed(1)}, d ${d.dexcess.toFixed(1)})</title></circle>`;
+    if(PLOT.showLabels){
+      svg+=`<text x="${cx+8}" y="${cy-7}" fill="#cfe6db" font-size="10">${escapeHtml(d.id)}</text>`;
+    }
+  });
+
+  // legend
+  let lx=m.l+pw+18, ly=m.t+6;
+  const leg=(color,label,dash)=>{
+    let s=`<line x1="${lx}" y1="${ly}" x2="${lx+24}" y2="${ly}" stroke="${color}" stroke-width="2.2" ${dash?`stroke-dasharray="${dash}"`:""}/>`+
+          `<text x="${lx+30}" y="${ly+4}" fill="#cfe6db" font-size="11.5">${label}</text>`;
+    ly+=22; return s;
+  };
+  if(PLOT.showGMWL) svg+=leg("#7fe7c4","GMWL","2 5");
+  if(STATE.lmwl.on) svg+=leg("#d98a5a",escapeHtml(STATE.lmwl.label||"LMWL"));
+  if(PLOT.showReg && reg) svg+=leg("#3fbf86","Sample LSF");
+  // point swatch
+  svg+=`<circle cx="${lx+12}" cy="${ly}" r="5" fill="#3fbf86"/><text x="${lx+30}" y="${ly+4}" fill="#cfe6db" font-size="11.5">Samples · n=${data.length}</text>`;
+  ly+=26;
+  if(PLOT.colorByDexcess){
+    svg+=`<text x="${lx}" y="${ly}" fill="#8fb4a3" font-size="10">d-excess</text>`; ly+=8;
+    const gw=24,gh=80;
+    let grad=`<defs><linearGradient id="dxg" x1="0" y1="1" x2="0" y2="0">`;
+    [0,.25,.5,.75,1].forEach(t=>grad+=`<stop offset="${t*100}%" stop-color="${ramp(t)}"/>`);
+    grad+=`</linearGradient></defs>`;
+    svg+=grad+`<rect x="${lx}" y="${ly}" width="${gw}" height="${gh}" fill="url(#dxg)" stroke="#23463688"/>`;
+    svg+=`<text x="${lx+gw+6}" y="${ly+8}" fill="#8fb4a3" font-size="10">${dxMax.toFixed(1)}</text>`;
+    svg+=`<text x="${lx+gw+6}" y="${ly+gh}" fill="#8fb4a3" font-size="10">${dxMin.toFixed(1)}</text>`;
+  }
+
+  svg+=`</svg>`;
+  host.innerHTML=svg;
+}
+
+function niceTicks(min,max,count){
+  const span=max-min; if(span<=0) return [min];
+  const step0=span/count;
+  const mag=Math.pow(10,Math.floor(Math.log10(step0)));
+  const norm=step0/mag;
+  let step;
+  if(norm<1.5)step=1;else if(norm<3)step=2;else if(norm<7)step=5;else step=10;
+  step*=mag;
+  const start=Math.ceil(min/step)*step;
+  const out=[];
+  for(let v=start; v<=max+step*0.001; v+=step) out.push(v);
+  return out;
+}
+
+/* ============================================================
+   STATS VIEW
+   ============================================================ */
+function renderStats(){
+  const host=document.getElementById("statsHost");
+  const data=STATE.parsed;
+  const s18=stats(data.map(d=>d.d18o));
+  const s2=stats(data.map(d=>d.d2h));
+  const sdx=stats(data.map(d=>d.dexcess));
+  const reg=ols(data.map(d=>d.d18o),data.map(d=>d.d2h));
+
+  const card=(label,st,unit,dec)=>`
+    <div class="reg-box" style="margin-top:0;">
+      <h4>${label}</h4>
+      <div class="stats-grid">
+        ${statCell("n",st.n,"")}
+        ${statCell("mean",st.mean.toFixed(dec),unit)}
+        ${statCell("std dev",st.sd.toFixed(dec),unit)}
+        ${statCell("min",st.min.toFixed(dec),unit)}
+        ${statCell("median",st.median.toFixed(dec),unit)}
+        ${statCell("max",st.max.toFixed(dec),unit)}
+      </div>
+    </div>`;
+
+  let html=`<div style="display:grid; gap:18px;">`;
+  html+=card("δ¹⁸O  (‰ VSMOW)",s18,"‰",2);
+  html+=card("δ²H  (‰ VSMOW)",s2,"‰",1);
+  html+=card("d-excess = δ²H − 8·δ¹⁸O  (‰)",sdx,"‰",1);
+
+  if(reg){
+    const seA=isFinite(reg.seSlope)?` ± ${reg.seSlope.toFixed(2)}`:"";
+    const seB=isFinite(reg.seInt)?` ± ${reg.seInt.toFixed(1)}`:"";
+    html+=`<div class="reg-box">
+      <h4>Sample evaporation / mixing line — ordinary least squares</h4>
+      <div class="reg-line">
+        <span class="eq">δ²H = ${reg.slope.toFixed(2)} · δ¹⁸O + ${reg.intercept.toFixed(1)}</span>
+      </div>
+      <div class="reg-line" style="margin-top:12px;">
+        <span>slope&nbsp; <b>${reg.slope.toFixed(2)}${seA}</b></span>
+        <span>intercept&nbsp; <b>${reg.intercept.toFixed(1)}${seB}</b></span>
+        <span>r²&nbsp; <b>${reg.r2.toFixed(3)}</b></span>
+        <span>n&nbsp; <b>${reg.n}</b></span>
+      </div>
+      <p class="auto-note" style="margin-top:14px;">
+        A slope below the GMWL's 8 is the classic fingerprint of evaporative enrichment; the further below, the drier the history.
+        ${STATE.lmwl.on?`Your LMWL (slope ${STATE.lmwl.slope.toFixed(2)}, intercept ${STATE.lmwl.intercept.toFixed(1)}) is drawn on the plot for comparison.`:""}
+      </p>
+    </div>`;
+  }
+  html+=`</div>`;
+  host.innerHTML=html;
+  styleDeltas(host);
+}
+function statCell(k,v,u){
+  return `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="u">${u||"&nbsp;"}</div></div>`;
+}
+
+/* ============================================================
+   MAP VIEW
+   ============================================================ */
+function renderMap(){
+  const data=STATE.parsed.filter(d=>d.lat!==null&&d.lon!==null && Math.abs(d.lat)<=90 && Math.abs(d.lon)<=180);
+  if(!data.length) return;
+
+  if(!STATE.map){
+    STATE.map=L.map("map",{scrollWheelZoom:true});
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
+      attribution:'&copy; OpenStreetMap &copy; CARTO', maxZoom:19, subdomains:"abcd"
+    }).addTo(STATE.map);
+    STATE.map.on("popupopen",e=>{ if(e.popup && e.popup.getElement) styleDeltas(e.popup.getElement()); });
+  }
+  if(STATE.markerLayer) STATE.markerLayer.remove();
+  STATE.markerLayer=L.layerGroup().addTo(STATE.map);
+
+  // color field options
+  buildColorBy();
+  const field=STATE.colorField||"d18o";
+  const vals=data.map(d=>d[field]).filter(v=>typeof v==="number"&&isFinite(v));
+  const vmin=Math.min(...vals),vmax=Math.max(...vals);
+  const ramp=t=>{
+    const stops=[[44,95,168],[63,191,134],[216,201,143],[217,138,90],[181,70,47]];
+    const x=Math.max(0,Math.min(1,t))*(stops.length-1);
+    const i=Math.floor(x),f=x-i,a=stops[i],b=stops[Math.min(i+1,stops.length-1)];
+    return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+  };
+  const labels={d18o:"δ¹⁸O (‰)",d2h:"δ²H (‰)",dexcess:"d-excess (‰)",elev:"Elevation (m)"};
+  document.getElementById("rampLabel").textContent=labels[field]||field;
+  document.getElementById("rampMin").textContent=isFinite(vmin)?vmin.toFixed(field==="d2h"||field==="elev"?0:1):"—";
+  document.getElementById("rampMax").textContent=isFinite(vmax)?vmax.toFixed(field==="d2h"||field==="elev"?0:1):"—";
+
+  const bounds=[];
+  data.forEach(d=>{
+    const v=d[field];
+    const t=(typeof v==="number"&&isFinite(v)&&vmax>vmin)?(v-vmin)/(vmax-vmin):0.5;
+    const col=ramp(t);
+    const mk=L.circleMarker([d.lat,d.lon],{
+      radius:8, color:"#0a1611", weight:1.5, fillColor:col, fillOpacity:0.9
+    });
+    let html=`<div class="popup-id">${escapeHtml(d.id)}</div>`;
+    html+=`<div class="popup-row"><span class="pk">δ¹⁸O</span><span class="pv">${d.d18o.toFixed(2)} ‰</span></div>`;
+    html+=`<div class="popup-row"><span class="pk">δ²H</span><span class="pv">${d.d2h.toFixed(1)} ‰</span></div>`;
+    html+=`<div class="popup-row"><span class="pk">d-excess</span><span class="pv">${d.dexcess.toFixed(1)} ‰</span></div>`;
+    if(d.elev!==null) html+=`<div class="popup-row"><span class="pk">elevation</span><span class="pv">${d.elev} m</span></div>`;
+    if(d.date) html+=`<div class="popup-row"><span class="pk">date</span><span class="pv">${escapeHtml(d.date)}</span></div>`;
+    if(d.loc) html+=`<div class="popup-note">${escapeHtml(d.loc)}</div>`;
+    if(d.notes) html+=`<div class="popup-note">${escapeHtml(d.notes)}</div>`;
+    mk.bindPopup(html);
+    mk.addTo(STATE.markerLayer);
+    bounds.push([d.lat,d.lon]);
+  });
+  if(bounds.length){
+    STATE.map.fitBounds(bounds,{padding:[40,40],maxZoom:13});
+  }
+  setTimeout(()=>STATE.map.invalidateSize(),150);
+  document.getElementById("ramp").style.background="linear-gradient(90deg,rgb(44,95,168),rgb(63,191,134),rgb(216,201,143),rgb(217,138,90),rgb(181,70,47))";
+  styleDeltas(document.getElementById("view-map"));
+}
+function buildColorBy(){
+  const sel=document.getElementById("colorBy");
+  const opts=[["d18o","δ¹⁸O"],["d2h","δ²H"],["dexcess","d-excess"]];
+  if(STATE.parsed.some(d=>d.elev!==null)) opts.push(["elev","Elevation"]);
+  if(!STATE.colorField) STATE.colorField="d18o";
+  sel.innerHTML=opts.map(([v,l])=>`<option value="${v}" ${STATE.colorField===v?"selected":""}>${l}</option>`).join("");
+  sel.onchange=()=>{STATE.colorField=sel.value; renderMap();};
+}
+
+/* ============================================================
+   DATA TABLE
+   ============================================================ */
+function renderTable(){
+  const data=STATE.parsed;
+  const hasGeo=data.some(d=>d.lat!==null);
+  const cols=[["id","Sample ID"],["d18o","δ¹⁸O ‰"],["d2h","δ²H ‰"],["dexcess","d-excess ‰"]];
+  if(hasGeo){cols.push(["lat","Lat"],["lon","Lon"]);}
+  if(data.some(d=>d.elev!==null)) cols.push(["elev","Elev m"]);
+  if(data.some(d=>d.date)) cols.push(["date","Date"]);
+  if(data.some(d=>d.loc)) cols.push(["loc","Location"]);
+  if(data.some(d=>d.notes)) cols.push(["notes","Notes"]);
+
+  const numCols=new Set(["d18o","d2h","dexcess","lat","lon","elev"]);
+  let html="<thead><tr>"+cols.map(([k,l])=>`<th>${l}</th>`).join("")+"</tr></thead><tbody>";
+  data.forEach(d=>{
+    html+="<tr>"+cols.map(([k])=>{
+      let v=d[k];
+      if(v===null||v===undefined) v="";
+      if(typeof v==="number"){
+        v= k==="d18o"||k==="dexcess"? v.toFixed(2) : k==="d2h"? v.toFixed(1) : (k==="lat"||k==="lon")? v.toFixed(5) : v;
+      }
+      return `<td class="${numCols.has(k)?'num':''}">${escapeHtml(String(v))}</td>`;
+    }).join("")+"</tr>";
+  });
+  html+="</tbody>";
+  document.getElementById("dataTable").innerHTML=html;
+  styleDeltas(document.getElementById("dataTable"));
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+function buildTabs(hasGeo){
+  const tabs=document.getElementById("tabs");
+  const defs=[];
+  if(hasGeo) defs.push(["map","Map"]);
+  defs.push(["plot","Dual-isotope plot"],["stats","Statistics"],["table","Data table"]);
+  tabs.innerHTML=defs.map((d,i)=>`<button class="tab ${i===0?'active':''}" data-view="${d[0]}">${d[1]}</button>`).join("");
+  tabs.querySelectorAll(".tab").forEach(t=>{
+    t.onclick=()=>switchView(t.dataset.view,t);
+  });
+  // show first
+  switchView(defs[0][0], tabs.querySelector(".tab"));
+}
+function switchView(view,btn){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+view).classList.add("active");
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  if(view==="map" && STATE.map) setTimeout(()=>STATE.map.invalidateSize(),120);
+}
+
+/* ============================================================
+   PLOT TOGGLES + LMWL CONTROLS
+   ============================================================ */
+function buildPlotToggles(){
+  const host=document.getElementById("plotToggles");
+  const items=[
+    ["showGMWL","GMWL","#7fe7c4"],
+    ["showReg","Sample fit line","#3fbf86"],
+    ["colorByDexcess","Color by d-excess",""],
+    ["showLabels","Sample labels",""]
+  ];
+  host.innerHTML=items.map(([k,l,c])=>
+    `<label class="chk ${PLOT[k]?'on':''}" data-k="${k}">
+       ${c?`<span class="swatch" style="background:${c}"></span>`:""}
+       <input type="checkbox" ${PLOT[k]?'checked':''}> ${l}
+     </label>`).join("");
+  host.querySelectorAll(".chk").forEach(c=>{
+    const inp=c.querySelector("input");
+    inp.onchange=()=>{PLOT[c.dataset.k]=inp.checked; c.classList.toggle("on",inp.checked); renderPlot();};
+  });
+}
+
+function wireLMWL(){
+  const head=document.getElementById("lmwlHead");
+  const body=document.getElementById("lmwlBody");
+  const sw=document.getElementById("lmwlSwitch");
+  const state=document.getElementById("lmwlState");
+  function setOn(on){
+    STATE.lmwl.on=on;
+    sw.classList.toggle("on",on); sw.setAttribute("aria-checked",on);
+    state.textContent=on?"ON":"OFF";
+    body.classList.toggle("open",on);
+    renderPlot();
+    if(document.getElementById("view-stats").classList.contains("active")) renderStats();
+  }
+  sw.onclick=e=>{e.stopPropagation(); setOn(!STATE.lmwl.on);};
+  head.onclick=()=>{ if(!STATE.lmwl.on){setOn(true);} else {body.classList.toggle("open");} };
+
+  // mode segments
+  document.querySelectorAll(".seg").forEach(s=>{
+    s.onclick=()=>{
+      document.querySelectorAll(".seg").forEach(x=>x.classList.remove("active"));
+      s.classList.add("active");
+      const mode=s.dataset.mode;
+      STATE.lmwl.mode=mode;
+      document.getElementById("lmwlManual").classList.toggle("hidden",mode!=="manual");
+      document.getElementById("lmwlFit").classList.toggle("hidden",mode!=="fit");
+    };
+  });
+
+  const slope=document.getElementById("lmwlSlope");
+  const intc=document.getElementById("lmwlInt");
+  const lab=document.getElementById("lmwlLabel");
+  function syncManual(){
+    STATE.lmwl.slope=parseFloat(slope.value)||0;
+    STATE.lmwl.intercept=parseFloat(intc.value)||0;
+    STATE.lmwl.label=lab.value||"LMWL";
+    document.getElementById("mEqA").textContent=STATE.lmwl.slope.toFixed(2);
+    document.getElementById("mEqB").textContent=STATE.lmwl.intercept.toFixed(1);
+    if(STATE.lmwl.on){renderPlot(); if(document.getElementById("view-stats").classList.contains("active")) renderStats();}
+  }
+  [slope,intc,lab].forEach(el=>el.oninput=syncManual);
+
+  // fit
+  document.getElementById("fitBtn").onclick=()=>{
+    const txt=document.getElementById("lmwlData").value.trim();
+    const xs=[],ys=[];
+    txt.split(/\n+/).forEach(line=>{
+      const parts=line.trim().split(/[\s,;\t]+/).map(parseFloat).filter(v=>isFinite(v));
+      if(parts.length>=2){xs.push(parts[0]); ys.push(parts[1]);}
+    });
+    const out=document.getElementById("fitResult");
+    if(xs.length<2){out.textContent="Need at least 2 valid pairs."; out.style.color="var(--copper)"; return;}
+    const reg=ols(xs,ys);
+    STATE.lmwl.slope=reg.slope; STATE.lmwl.intercept=reg.intercept; STATE.lmwl.label="LMWL (fit)";
+    out.style.color="var(--foam)";
+    out.textContent=`δ²H = ${reg.slope.toFixed(2)}·δ¹⁸O + ${reg.intercept.toFixed(1)}  ·  r²=${reg.r2.toFixed(3)}  ·  n=${reg.n}`;
+    if(!STATE.lmwl.on){sw.click();} else {renderPlot();}
+  };
+}
+
+/* ============================================================
+   EXPORTS
+   ============================================================ */
+function downloadBlob(content,name,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function wireExports(){
+  document.getElementById("dlPlotSVG").onclick=()=>{
+    const svg=document.getElementById("plot");
+    if(!svg) return;
+    const xml='<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(svg);
+    downloadBlob(xml,"isotope_plot.svg","image/svg+xml");
+  };
+  document.getElementById("dlPlotPNG").onclick=()=>{
+    const svg=document.getElementById("plot");
+    if(!svg) return;
+    const xml=new XMLSerializer().serializeToString(svg);
+    const img=new Image();
+    const svg64="data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(xml)));
+    img.onload=()=>{
+      const scale=2.5;
+      const c=document.createElement("canvas");
+      c.width=940*scale; c.height=620*scale;
+      const ctx=c.getContext("2d");
+      ctx.fillStyle="#0a1611"; ctx.fillRect(0,0,c.width,c.height);
+      ctx.drawImage(img,0,0,c.width,c.height);
+      c.toBlob(b=>{const url=URL.createObjectURL(b);const a=document.createElement("a");a.href=url;a.download="isotope_plot.png";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+    };
+    img.src=svg64;
+  };
+  document.getElementById("dlData").onclick=()=>{
+    const data=STATE.parsed;
+    const cols=["id","d18o","d2h","dexcess","lat","lon","elev","date","loc","notes"];
+    const head=["Sample_ID","d18O_permil","d2H_permil","d_excess_permil","Latitude","Longitude","Elevation_m","Date","Location","Notes"];
+    const esc=s=>{s=s==null?"":String(s); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+    let csv=head.join(",")+"\n";
+    data.forEach(d=>{
+      csv+=cols.map(k=>{let v=d[k]; if(typeof v==="number")v=+v.toFixed(6); return esc(v);}).join(",")+"\n";
+    });
+    downloadBlob(csv,"parsed_isotope_data.csv","text/csv");
+  };
+}
+
+/* ============================================================
+   MAIN RENDER ORCHESTRATION
+   ============================================================ */
+document.getElementById("renderBtn").onclick=()=>{
+  buildParsed();
+  if(!STATE.parsed.length){
+    document.getElementById("mapWarn").innerHTML=
+      `<div class="alert warn" style="margin-top:20px;"><span class="alert-icon">!</span><div>No rows had valid numeric values in both isotope columns. Double-check the column selections above.</div></div>`;
+    return;
+  }
+  const hasGeo=STATE.parsed.some(d=>d.lat!==null&&d.lon!==null);
+  document.getElementById("resultPanel").classList.remove("hidden");
+  buildTabs(hasGeo);
+  buildPlotToggles();
+  renderPlot();
+  renderStats();
+  renderTable();
+  if(hasGeo) renderMap();
+  styleDeltas(document.getElementById("resultPanel"));
+  document.getElementById("resultPanel").scrollIntoView({behavior:"smooth",block:"start"});
+};
+document.getElementById("resetBtn").onclick=resetAll;
+
+function resetAll(){
+  STATE.workbook=null; STATE.rows=[]; STATE.headers=[]; STATE.mapping={}; STATE.parsed=[];
+  STATE.colorField=null;
+  if(STATE.map){STATE.map.remove(); STATE.map=null; STATE.markerLayer=null;}
+  STATE.lmwl={on:false,mode:"manual",slope:7.5,intercept:6.0,label:"LMWL"};
+  document.getElementById("fileMeta").innerHTML="";
+  document.getElementById("sheetPick").classList.add("hidden");
+  document.getElementById("mapPanel").classList.add("hidden");
+  document.getElementById("resultPanel").classList.add("hidden");
+  fileInput.value="";
+  document.getElementById("uploadPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* Wrap every lowercase delta (δ) in the rendered HTML so it renders as a
+   curved isotope-delta glyph rather than the angular monospace triangle.
+   Runs over text nodes only, skips inputs/SVG (SVG handled via font attrs),
+   and is idempotent (won't re-wrap already-styled deltas). */
+function styleDeltas(root){
+  root=root||document.body;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
+    acceptNode(node){
+      if(!node.nodeValue || node.nodeValue.indexOf("\u03b4")===-1) return NodeFilter.FILTER_REJECT;
+      const p=node.parentNode;
+      if(!p) return NodeFilter.FILTER_REJECT;
+      const tag=p.nodeName;
+      if(tag==="SCRIPT"||tag==="STYLE"||tag==="TEXTAREA"||tag==="OPTION") return NodeFilter.FILTER_REJECT;
+      if(p.classList && p.classList.contains("dx")) return NodeFilter.FILTER_REJECT;
+      if(p.closest && p.closest("svg")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const targets=[];
+  let n; while(n=walker.nextNode()) targets.push(n);
+  targets.forEach(node=>{
+    const frag=document.createDocumentFragment();
+    const parts=node.nodeValue.split("\u03b4");
+    parts.forEach((part,i)=>{
+      if(part) frag.appendChild(document.createTextNode(part));
+      if(i<parts.length-1){
+        const span=document.createElement("span");
+        span.className="dx";
+        span.textContent="\u03b4";
+        frag.appendChild(span);
+      }
+    });
+    node.parentNode.replaceChild(frag,node);
+  });
+}
+
+// init wiring that doesn't depend on data
+wireLMWL();
+wireExports();
+styleDeltas(document.body);
+</script>
+</body>
+</html>
