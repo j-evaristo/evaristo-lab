@@ -230,6 +230,7 @@ img { max-width:100%; display:block; }
       <a data-page="publications" onclick="showPage('publications')">Publications</a>
       <a data-page="teaching" onclick="showPage('teaching')">Teaching</a>
       <a data-page="samples" onclick="showPage('samples')">Submit Samples</a>
+      <a data-page="streamflow" onclick="showPage('streamflow')">Streamflow</a>
       <a data-page="service" onclick="showPage('service')">Service</a>
       <a data-page="utrecht" onclick="showPage('utrecht')">Utrecht</a>
     </div>
@@ -448,6 +449,19 @@ img { max-width:100%; display:block; }
   </div>
 </div>
 
+<!-- ═══════ STREAMFLOW ═══════ -->
+<div class="page" id="page-streamflow">
+  <div class="section">
+    <div class="section-head"><h2>Georgia Streamflow Explorer</h2><p>Interactive daily discharge records for every USGS gaging station in Georgia</p></div>
+    <div class="course-card">
+      <h3>Every Georgia Gage, 1883 to Present</h3>
+      <p class="course-desc">Explore daily streamflow from 499 U.S. Geological Survey gaging stations across Georgia — more than 5.4 million daily discharge values spanning 1883 to the present. Search or map-select a station, zoom through its full period of record, and examine seasonal flow regimes, flow duration curves, and annual water-year trends. The dataset refreshes automatically every morning from the USGS National Water Information System, so the record shown is always current.</p>
+      <p style="margin-top:0.8rem;"><a href="https://j-evaristo.github.io/ga-streamflow/" target="_blank" style="font-size:0.82rem; font-weight:600;">Open in a new tab →</a></p>
+    </div>
+    <iframe src="https://j-evaristo.github.io/ga-streamflow/" style="width:100%; height:850px; border:1px solid var(--rule-light); border-radius:10px; margin-top:1.2rem; background:#fcfcfb;" loading="lazy" title="Georgia Streamflow Explorer"></iframe>
+  </div>
+</div>
+
 <!-- ═══════ UTRECHT UNIVERSITY ═══════ -->
 <div class="page" id="page-utrecht">
   <div class="section">
@@ -493,7 +507,7 @@ img { max-width:100%; display:block; }
 <footer class="footer">
   <div class="footer-inner">
     <div><div class="footer-brand">Evaristo CZ Hydrology Lab</div><div style="font-size:0.75rem; margin-top:0.3rem;">University of Georgia</div></div>
-    <div class="footer-links"><a onclick="showPage('home')">Home</a><a onclick="showPage('people')">People</a><a onclick="showPage('research')">Research</a><a onclick="showPage('publications')">Publications</a><a onclick="showPage('teaching')">Teaching</a><a onclick="showPage('samples')">Samples</a><a onclick="showPage('utrecht')">Utrecht</a></div>
+    <div class="footer-links"><a onclick="showPage('home')">Home</a><a onclick="showPage('people')">People</a><a onclick="showPage('research')">Research</a><a onclick="showPage('publications')">Publications</a><a onclick="showPage('teaching')">Teaching</a><a onclick="showPage('samples')">Samples</a><a onclick="showPage('streamflow')">Streamflow</a><a onclick="showPage('utrecht')">Utrecht</a></div>
   </div>
 </footer>
 
