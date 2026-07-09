@@ -152,6 +152,13 @@ img { max-width:100%; display:block; }
 .section-label { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin:2rem 0 1rem; padding-top:1rem; border-top:1px solid var(--rule-light); }
 
 /* ═══════ RESEARCH ═══════ */
+.subnav { display:flex; gap:2px; margin-bottom:1.5rem; padding-bottom:0.6rem; border-bottom:1px solid var(--rule-light); }
+.subnav a {
+  font-size:0.76rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--muted); padding:0.45rem 0.8rem; border-radius:6px; cursor:pointer;
+  transition:all .25s var(--ease);
+}
+.subnav a:hover, .subnav a.active { color:var(--accent); background:var(--accent-pale); }
 .research-block { display:block; padding:2.5rem 0; border-bottom:1px solid var(--rule-light); max-width:780px; }
 .research-block:nth-child(even) { direction:rtl; }
 .research-block:nth-child(even) > * { direction:ltr; }
@@ -227,7 +234,6 @@ img { max-width:100%; display:block; }
       <a class="active" data-page="home" onclick="showPage('home')">Home</a>
       <a data-page="people" onclick="showPage('people')">People</a>
       <a data-page="research" onclick="showPage('research')">Research</a>
-      <a data-page="publications" onclick="showPage('publications')">Publications</a>
       <a data-page="teaching" onclick="showPage('teaching')">Teaching</a>
       <a data-page="samples" onclick="showPage('samples')">Submit Samples</a>
       <a data-page="streamflow" onclick="showPage('streamflow')">Streamflow</a>
@@ -315,6 +321,7 @@ img { max-width:100%; display:block; }
 <div class="page" id="page-research">
   <div class="section">
     <div class="section-head"><h2>Research</h2><p>Exploring the critical zone through isotope geochemistry and hydrology</p></div>
+    <div class="subnav"><a class="active" onclick="showPage('research')">Themes</a><a onclick="showPage('publications')">Publications</a></div>
     <div class="research-block"><div class="research-text"><h3>Vadose Zone Processes &amp; Land Use</h3><p>Deep vadose (partially saturated) zones cover over 50% of the Earth's land surface. This research uses a multi-tracer approach, employing stable and radioactive isotopes to unravel groundwater recharge mechanisms in thick vadose zones — identifying the contributions of piston and preferential flows while elucidating the role of land use change on recharge rates and water sustainability.</p><div class="research-pubs"><strong>Key publications:</strong> Huang, Evaristo, Li (2019); Xiang, Evaristo, Li (2020); Zhao et al. (2021); Shi et al. (2021); Tao, Evaristo, et al. (2023); Zhao et al. (2024); Huang, Evaristo, et al. (2024, <em>Vadose Zone J.</em>)</div></div></div>
     <div class="research-block"><div class="research-text"><h3>Watershed Ecohydrology</h3><p>Trees are not just plants but engineers of the ground they grow in and the water they take up. We examine how trees interact with soil and water across different climates and forest types — and even what kinds of water trees prefer. Yes, trees can be picky about their water!</p><div class="research-pubs"><strong>Two water worlds:</strong> Evaristo et al. (2015, <em>Nature</em>); Evaristo et al. (2016); Berry et al. (2017); Evaristo et al. (2019, <em>WRR</em>); Evaristo et al. (2021, <em>PNAS</em>)<br><strong>Trees in the critical zone:</strong> Brantley et al. (2017); Evaristo &amp; McDonnell (2017, <em>Sci. Rep.</em>); Knighton et al. (2020, 2021, <em>GRL</em>)</div></div></div>
     <div class="research-block"><div class="research-text"><h3>Rhizosphere &amp; Pore-Scale Processes</h3><p>Advances in image-based modeling have enabled new views of water dynamics around plant roots. Meanwhile, advances in clay mineral isotope paleothermometry challenge preexisting assumptions about Earth's climate history by incorporating soil water evaporation and temperature variability.</p><div class="research-pubs"><strong>Paleothermometry:</strong> Ibarra &amp; Evaristo (2024, <em>Commun. Earth Environ.</em>)<br><strong>Rhizosphere:</strong> Daly et al. (2017)</div></div></div>
@@ -326,6 +333,7 @@ img { max-width:100%; display:block; }
 <div class="page" id="page-publications">
   <div class="section">
     <div class="section-head"><h2>Publications</h2><p>Peer-reviewed (* = equal contributions / co-lead / co-corresponding)</p></div>
+    <div class="subnav"><a onclick="showPage('research')">Themes</a><a class="active" onclick="showPage('publications')">Publications</a></div>
     <div class="pub-year">2026</div>
     <div class="pub-item"><span class="pub-num">36.</span><div>Sidle, R.C., Ziegler, A.D., Mosquera, G.M., <strong>Evaristo, J.</strong>, Farrick, K.K., Isaev, E. "Transdisciplinary catchment management in the developing tropics: bridging scientific enquiry with societal needs". <em>Hydrol. Sci. J.</em> <a href="https://www.tandfonline.com/doi/full/10.1080/02626667.2026.2647891" target="_blank">DOI: 10.1080/02626667.2026.2647891</a></div></div>
     <div class="pub-item"><span class="pub-num">35.</span><div><strong>Evaristo, J.</strong> "Left High and Dry: Deep Soil Water Depletion and Ecohydrological Resilience on China's Loess Plateau". <em>WIREs Water</em>. <a href="https://wires.onlinelibrary.wiley.com/doi/10.1002/wat2.70053" target="_blank">DOI: 10.1002/wat2.70053</a> <span class="pub-badge">Open Access</span></div></div>
@@ -516,7 +524,7 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   document.querySelectorAll('.nav-links a').forEach(a => {
-    a.classList.toggle('active', a.dataset.page === id);
+    a.classList.toggle('active', a.dataset.page === id || (id === 'publications' && a.dataset.page === 'research'));
   });
   document.getElementById('navLinks').classList.remove('open');
   window.scrollTo({ top: 0, behavior: 'smooth' });
