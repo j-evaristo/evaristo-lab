@@ -236,7 +236,7 @@ img { max-width:100%; display:block; }
       <a data-page="research" onclick="showPage('research')">Research</a>
       <a data-page="teaching" onclick="showPage('teaching')">Teaching</a>
       <a data-page="samples" onclick="showPage('samples')">Submit Samples</a>
-      <a data-page="streamflow" onclick="showPage('streamflow')">Streamflow</a>
+      <a data-page="streamflow" onclick="showPage('streamflow')">Data Tools</a>
       <a data-page="service" onclick="showPage('service')">Service</a>
       <a data-page="utrecht" onclick="showPage('utrecht')">Utrecht</a>
     </div>
@@ -461,12 +461,27 @@ img { max-width:100%; display:block; }
 <div class="page" id="page-streamflow">
   <div class="section">
     <div class="section-head"><h2>Georgia Streamflow Explorer</h2><p>Interactive daily discharge records for every USGS gaging station in Georgia</p></div>
+    <div class="subnav"><a class="active" onclick="showPage('streamflow')">Streamflow</a><a onclick="showPage('groundwater')">Groundwater</a></div>
     <div class="course-card">
       <h3>Every Georgia Gage, 1883 to Present</h3>
       <p class="course-desc">Explore daily streamflow from 499 U.S. Geological Survey gaging stations across Georgia — more than 5.4 million daily discharge values spanning 1883 to the present. Search or map-select a station, zoom through its full period of record, and examine seasonal flow regimes, flow duration curves, and annual water-year trends. The dataset refreshes automatically every morning from the USGS National Water Information System, so the record shown is always current.</p>
       <p style="margin-top:0.8rem;"><a href="https://j-evaristo.github.io/ga-streamflow/" target="_blank" style="font-size:0.82rem; font-weight:600;">Open in a new tab →</a></p>
     </div>
     <iframe src="https://j-evaristo.github.io/ga-streamflow/" style="width:100%; height:850px; border:1px solid var(--rule-light); border-radius:10px; margin-top:1.2rem; background:#fcfcfb;" loading="lazy" title="Georgia Streamflow Explorer"></iframe>
+  </div>
+</div>
+
+<!-- ═══════ GROUNDWATER ═══════ -->
+<div class="page" id="page-groundwater">
+  <div class="section">
+    <div class="section-head"><h2>Georgia Groundwater Explorer</h2><p>Interactive daily water-level records for every USGS recorder well in Georgia</p></div>
+    <div class="subnav"><a onclick="showPage('streamflow')">Streamflow</a><a class="active" onclick="showPage('groundwater')">Groundwater</a></div>
+    <div class="course-card">
+      <h3>Every Recorder Well, 1942 to Present</h3>
+      <p class="course-desc">Explore daily groundwater levels from more than 400 U.S. Geological Survey monitoring wells across Georgia — 2.6 million daily water-level readings plus 150,000 discrete field measurements, from the surficial aquifers of the coast to the Upper Floridan and the Piedmont crystalline rocks. Search or map-select a well, zoom through its full record with field measurements overlaid, and examine seasonal patterns, level duration curves, annual means, and water-table trends. The dataset refreshes automatically every morning from the USGS National Water Information System.</p>
+      <p style="margin-top:0.8rem;"><a href="https://j-evaristo.github.io/ga-groundwater/" target="_blank" style="font-size:0.82rem; font-weight:600;">Open in a new tab →</a></p>
+    </div>
+    <iframe src="https://j-evaristo.github.io/ga-groundwater/" style="width:100%; height:850px; border:1px solid var(--rule-light); border-radius:10px; margin-top:1.2rem; background:#fcfcfb;" loading="lazy" title="Georgia Groundwater Explorer"></iframe>
   </div>
 </div>
 
@@ -515,7 +530,7 @@ img { max-width:100%; display:block; }
 <footer class="footer">
   <div class="footer-inner">
     <div><div class="footer-brand">Evaristo CZ Hydrology Lab</div><div style="font-size:0.75rem; margin-top:0.3rem;">University of Georgia</div></div>
-    <div class="footer-links"><a onclick="showPage('home')">Home</a><a onclick="showPage('people')">People</a><a onclick="showPage('research')">Research</a><a onclick="showPage('publications')">Publications</a><a onclick="showPage('teaching')">Teaching</a><a onclick="showPage('samples')">Samples</a><a onclick="showPage('streamflow')">Streamflow</a><a onclick="showPage('utrecht')">Utrecht</a></div>
+    <div class="footer-links"><a onclick="showPage('home')">Home</a><a onclick="showPage('people')">People</a><a onclick="showPage('research')">Research</a><a onclick="showPage('publications')">Publications</a><a onclick="showPage('teaching')">Teaching</a><a onclick="showPage('samples')">Samples</a><a onclick="showPage('streamflow')">Streamflow</a><a onclick="showPage('groundwater')">Groundwater</a><a onclick="showPage('utrecht')">Utrecht</a></div>
   </div>
 </footer>
 
@@ -524,7 +539,9 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   document.querySelectorAll('.nav-links a').forEach(a => {
-    a.classList.toggle('active', a.dataset.page === id || (id === 'publications' && a.dataset.page === 'research'));
+    a.classList.toggle('active', a.dataset.page === id ||
+      (id === 'publications' && a.dataset.page === 'research') ||
+      (id === 'groundwater' && a.dataset.page === 'streamflow'));
   });
   document.getElementById('navLinks').classList.remove('open');
   window.scrollTo({ top: 0, behavior: 'smooth' });
