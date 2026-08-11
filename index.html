@@ -552,6 +552,9 @@ img { max-width:100%; display:block; }
 
 <script>
 function showPage(id) {
+  if (window.goatcounter && window.goatcounter.count) {
+    window.goatcounter.count({ path: '/evaristo-lab/tab/' + id });
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   document.querySelectorAll('.nav-links a').forEach(a => {
@@ -574,5 +577,7 @@ document.querySelectorAll('.person-card, .course-card, .research-block, .pub-ite
   obs.observe(el);
 });
 </script>
+<script data-goatcounter="https://evaristo.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
