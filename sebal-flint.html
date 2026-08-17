@@ -1,0 +1,1785 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>SEBAL over the Flint</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* ================= tokens ================= */
+:root{
+  --paper:#f5f7f2; --surface:#fdfdfb; --surface2:#edf1e8; --wash:#e6ece1;
+  --ink:#1b1e1a; --ink2:#49524a; --muted:#7d857d; --line:#d9dfd3; --hair:rgba(24,30,22,.13);
+  --pine:#176a4b; --pine-deep:#0e5038; --pine-wash:#e2efe7;
+  --hot:#bc4a1c; --hot-wash:#f7e5da; --cold:#2a6fd0; --cold-wash:#e0eaf9;
+  --gold:#9a7b1c;
+  --rn:#eb6834; --le:#2a78d6; --gg:#1baf7a;
+  --card-sh:0 1px 2px rgba(24,30,22,.06),0 6px 18px -8px rgba(24,30,22,.10);
+  --serif:Georgia,"Palatino Linotype",Palatino,"Times New Roman",serif;
+  --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:Consolas,"Cascadia Mono","Courier New",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#10130f; --surface:#181c17; --surface2:#20261e; --wash:#242b22;
+    --ink:#edf0e9; --ink2:#b5bfb2; --muted:#848c82; --line:#2b332a; --hair:rgba(240,244,236,.14);
+    --pine:#37a377; --pine-deep:#5cbd93; --pine-wash:#1b2b22;
+    --hot:#e0713c; --hot-wash:#33211732; --cold:#5b96e8; --cold-wash:#16233a;
+    --gold:#c9a53e;
+    --rn:#d95926; --le:#3987e5; --gg:#199e70;
+    --card-sh:0 1px 2px rgba(0,0,0,.4),0 6px 18px -8px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10130f; --surface:#181c17; --surface2:#20261e; --wash:#242b22;
+  --ink:#edf0e9; --ink2:#b5bfb2; --muted:#848c82; --line:#2b332a; --hair:rgba(240,244,236,.14);
+  --pine:#37a377; --pine-deep:#5cbd93; --pine-wash:#1b2b22;
+  --hot:#e0713c; --hot-wash:#33211732; --cold:#5b96e8; --cold-wash:#16233a;
+  --gold:#c9a53e;
+  --rn:#d95926; --le:#3987e5; --gg:#199e70;
+  --card-sh:0 1px 2px rgba(0,0,0,.4),0 6px 18px -8px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+/* ================= base ================= */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} *,*::before,*::after{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.62;-webkit-text-size-adjust:100%}
+p{margin:.55em 0 .9em; max-width:72ch}
+a{color:var(--pine);text-decoration-thickness:1px;text-underline-offset:2px}
+a:hover{color:var(--pine-deep)}
+strong{color:var(--ink)}
+h1,h2,h3,h4{font-family:var(--serif);line-height:1.16;text-wrap:balance;color:var(--ink)}
+button{font-family:var(--sans)}
+:focus-visible{outline:2px solid var(--pine);outline-offset:2px;border-radius:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 clamp(14px,4vw,36px)}
+.prose{max-width:74ch}
+.small{font-size:.82rem;color:var(--ink2)}
+.mono{font-family:var(--mono)}
+.nowrapnum{font-variant-numeric:tabular-nums}
+/* ================= hero ================= */
+header.hero{border-bottom:1px solid var(--line);background:
+  linear-gradient(180deg,var(--surface) 0%,var(--paper) 100%)}
+.hero .wrap{padding-top:clamp(26px,5vw,52px);padding-bottom:clamp(22px,4vw,44px)}
+.eyebrow{font-family:var(--sans);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--pine);font-weight:600;margin:0 0 10px}
+.hero h1{font-size:clamp(1.9rem,4.6vw,3.1rem);margin:0 0 .35em;font-weight:700}
+.hero h1 .thin{font-weight:400;font-style:italic;color:var(--ink2)}
+.hero .sub{font-size:clamp(1rem,1.9vw,1.18rem);color:var(--ink2);max-width:62ch;margin:0 0 1.4em}
+.hero-panel{display:flex;flex-wrap:wrap;gap:22px;align-items:stretch}
+.hero-maps{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.hero-map{display:flex;flex-direction:column;gap:6px}
+.hero-map canvas{width:min(232px,44vw);height:auto;border-radius:6px;border:1px solid var(--hair);image-rendering:pixelated;display:block}
+.hero-map .cap{font-family:var(--sans);font-size:.72rem;color:var(--ink2);letter-spacing:.02em}
+.hero-arrow{align-self:center;font-family:var(--sans);color:var(--muted);font-size:1.5rem;padding:0 2px}
+.hero-note{flex:1 1 250px;min-width:240px;align-self:center;font-size:.95rem;color:var(--ink2);border-left:3px solid var(--pine);padding-left:16px;max-width:40ch}
+/* ================= step nav ================= */
+nav.stepnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.stepnav .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:8px;padding-bottom:8px;scrollbar-width:thin}
+nav.stepnav a{flex:0 0 auto;font-family:var(--sans);font-size:.76rem;font-weight:600;color:var(--ink2);text-decoration:none;padding:5px 11px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+nav.stepnav a:hover{background:var(--surface2)}
+nav.stepnav a.on{background:var(--pine-wash);color:var(--pine-deep);border-color:color-mix(in srgb,var(--pine) 35%,transparent)}
+nav.stepnav a .k{font-family:var(--mono);font-weight:400;opacity:.75;margin-right:4px}
+/* ================= modules ================= */
+section.mod{padding:clamp(30px,5.5vw,60px) 0;border-bottom:1px solid var(--line)}
+section.mod:nth-of-type(even){background:color-mix(in srgb,var(--surface) 55%,var(--paper))}
+.modhead{display:flex;gap:18px;align-items:baseline;margin-bottom:6px}
+.stepno{flex:0 0 auto;font-family:var(--mono);font-size:.8rem;color:var(--paper);background:var(--pine);border-radius:6px;padding:3px 9px;letter-spacing:.06em;transform:translateY(-2px)}
+.stepno.alt{background:var(--ink2)}
+.modhead h2{font-size:clamp(1.35rem,2.8vw,1.9rem);margin:0}
+.modsub{font-family:var(--sans);color:var(--ink2);font-size:.95rem;margin:2px 0 18px;max-width:72ch}
+.mlx{font-family:var(--mono);font-size:.78rem;color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,transparent);border:1px solid color-mix(in srgb,var(--gold) 30%,transparent);padding:2px 8px;border-radius:5px;white-space:nowrap}
+/* ================= equations ================= */
+.eq{font-family:var(--serif);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:14px 0;overflow-x:auto;font-size:1.04rem;line-height:1.8;box-shadow:var(--card-sh)}
+.eq .tag{float:right;font-family:var(--mono);font-size:.75rem;color:var(--muted);margin-left:12px}
+.eq i{font-style:italic}
+.eq sub,.eq sup{font-size:.68em}
+.fr{display:inline-flex;flex-direction:column;text-align:center;vertical-align:-1.1em;margin:0 .15em;line-height:1.35}
+.fr>span{padding:0 .4em;display:block}
+.fr>span:first-child{border-bottom:1px solid currentColor}
+.eqnote{font-size:.85rem;color:var(--ink2)}
+/* ================= widgets ================= */
+.widget{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px 20px;margin:20px 0;box-shadow:var(--card-sh)}
+.widget h3{font-family:var(--sans);font-size:.95rem;margin:0 0 4px;letter-spacing:.01em}
+.widget .whint{font-family:var(--sans);font-size:.82rem;color:var(--ink2);margin:0 0 14px;max-width:80ch}
+.ctlrow{display:flex;flex-wrap:wrap;gap:14px 26px;margin:10px 0 6px}
+.ctl{display:flex;flex-direction:column;gap:3px;font-family:var(--sans);font-size:.78rem;color:var(--ink2);min-width:150px;flex:1 1 150px;max-width:230px}
+.ctl .lab{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctl .val{font-family:var(--mono);color:var(--ink);font-size:.8rem}
+.ctl input[type=range]{width:100%;accent-color:var(--pine);margin:2px 0 0}
+.cards{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px}
+.card{flex:1 1 130px;min-width:126px;max-width:210px;background:var(--surface2);border:1px solid var(--hair);border-radius:9px;padding:10px 13px}
+.card .v{font-family:var(--mono);font-size:1.22rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.card .n{font-family:var(--sans);font-size:.7rem;color:var(--ink2);letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
+.card.pos{background:var(--pine-wash)} .card.pos .v{color:var(--pine-deep)}
+.card.hotc{background:var(--hot-wash)} .card.hotc .v{color:var(--hot)}
+.card.coldc{background:var(--cold-wash)} .card.coldc .v{color:var(--cold)}
+.btn{font-family:var(--sans);font-size:.82rem;font-weight:600;color:var(--paper);background:var(--pine);border:none;border-radius:7px;padding:8px 15px;cursor:pointer}
+.btn:hover{background:var(--pine-deep)}
+.btn.ghost{background:transparent;color:var(--pine);border:1px solid var(--pine)}
+.btn.ghost:hover{background:var(--pine-wash);color:var(--pine-deep)}
+.btn.warn{background:var(--hot)}
+.btn:disabled{opacity:.45;cursor:default}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0 2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font-size:.8rem;font-weight:600;border:none;background:var(--surface);color:var(--ink2);padding:7px 14px;cursor:pointer}
+.seg button.on.coldm{background:var(--cold);color:#fff}
+.seg button.on.hotm{background:var(--hot);color:#fff}
+/* ================= maps ================= */
+.maps{display:flex;flex-wrap:wrap;gap:18px;margin:14px 0}
+.mapbox{display:flex;flex-direction:column;gap:6px;flex:0 1 auto}
+.mapbox canvas{width:min(300px,86vw);height:auto;border:1px solid var(--hair);border-radius:6px;image-rendering:pixelated;display:block;background:var(--surface2)}
+.mapbox canvas.px{cursor:crosshair}
+.mapbox .cap{font-family:var(--sans);font-size:.76rem;color:var(--ink2);display:flex;justify-content:space-between;gap:8px;align-items:center;max-width:min(300px,86vw)}
+.mapbox .cap b{color:var(--ink);font-weight:600}
+.cbar{height:8px;border-radius:4px;border:1px solid var(--hair);width:100%}
+.cbar-lab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.66rem;color:var(--muted)}
+.bigmapwrap{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+.bigmap canvas{width:min(430px,88vw)}
+.bigmap .cap{max-width:min(430px,88vw)}
+/* pixel inspector */
+#pxtip{position:fixed;z-index:90;pointer-events:none;background:color-mix(in srgb,var(--ink) 94%,transparent);color:var(--paper);font-family:var(--mono);font-size:.72rem;line-height:1.5;padding:8px 11px;border-radius:7px;max-width:270px;display:none;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+#pxtip .t{font-family:var(--sans);font-weight:600;letter-spacing:.02em;margin-bottom:2px}
+/* legend chips */
+.lcleg{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 2px;font-family:var(--sans);font-size:.74rem;color:var(--ink2)}
+.lcleg span{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--hair);border-radius:999px;padding:3px 10px 3px 5px}
+.lcleg i{width:13px;height:13px;border-radius:4px;display:inline-block;border:1px solid var(--hair)}
+/* ================= charts ================= */
+.chart{margin:10px 0}
+.chart svg{display:block;width:100%;height:auto;font-family:var(--sans)}
+.chart .axis text{font-size:10.5px;fill:var(--muted)}
+.chart .gtitle{font-size:12px;fill:var(--ink2);font-weight:600}
+.chartrow{display:flex;flex-wrap:wrap;gap:20px}
+.chartrow .chart{flex:1 1 300px;min-width:270px}
+/* ================= callouts ================= */
+.note{border-left:3px solid var(--pine);background:var(--pine-wash);border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;font-size:.92rem}
+.note.amber{border-left-color:var(--gold);background:color-mix(in srgb,var(--gold) 10%,var(--surface))}
+.note.hot{border-left-color:var(--hot);background:var(--hot-wash)}
+.note b.ttl{font-family:var(--sans);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px}
+.note p{margin:.3em 0;max-width:78ch}
+.note ul{margin:.4em 0 .2em;padding-left:20px}
+.note li{margin:.3em 0}
+details.deeper{border:1px dashed var(--line);border-radius:8px;padding:10px 16px;margin:14px 0;font-size:.92rem;background:var(--surface)}
+details.deeper summary{cursor:pointer;font-family:var(--sans);font-weight:600;font-size:.85rem;color:var(--pine)}
+details.deeper[open]{background:var(--surface)}
+/* ================= tables ================= */
+.tblwrap{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:9px}
+table.tb{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.84rem;min-width:640px}
+.tb th{font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);text-align:left;padding:9px 12px;background:var(--surface2);border-bottom:1px solid var(--line);white-space:nowrap}
+.tb td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tb tr:last-child td{border-bottom:none}
+.tb td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tb .revealbtn{font-size:.72rem;padding:3px 10px;border-radius:6px;border:1px solid var(--pine);background:transparent;color:var(--pine);cursor:pointer;font-weight:600}
+.tb .revealbtn:hover{background:var(--pine-wash)}
+.tb .hidden-val{display:none}
+.tb .shown .hidden-val{display:inline}
+.tb .shown .revealbtn{display:none}
+/* ================= stations map ================= */
+.stationwrap{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.gamap{flex:0 1 340px}
+.gamap svg{width:100%;height:auto}
+/* ================= quiz ================= */
+.quiz{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:16px 20px;margin:16px 0}
+.quiz .qq{font-weight:600;margin:0 0 10px;font-size:.98rem}
+.quiz label{display:flex;gap:9px;align-items:flex-start;font-family:var(--sans);font-size:.88rem;padding:7px 10px;border-radius:7px;cursor:pointer;border:1px solid transparent}
+.quiz label:hover{background:var(--surface2)}
+.quiz input{accent-color:var(--pine);margin-top:3px}
+.quiz .fb{display:none;margin-top:10px;font-size:.88rem;font-family:var(--sans);border-radius:7px;padding:10px 13px}
+.quiz .fb.ok{display:block;background:var(--pine-wash);color:var(--pine-deep)}
+.quiz .fb.no{display:block;background:var(--hot-wash);color:var(--hot)}
+/* ================= misc ================= */
+.statrow{display:flex;flex-wrap:wrap;gap:12px;margin:20px 0}
+.stat{flex:1 1 170px;min-width:160px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--card-sh)}
+.stat .v{font-family:var(--serif);font-size:1.6rem;font-weight:700;color:var(--pine-deep)}
+.stat .n{font-family:var(--sans);font-size:.76rem;color:var(--ink2);margin-top:3px;line-height:1.45}
+.pill{display:inline-block;font-family:var(--sans);font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;border-radius:999px;padding:2px 10px;background:var(--surface2);color:var(--ink2);vertical-align:middle;margin-left:8px}
+.pill.gold{background:color-mix(in srgb,var(--gold) 15%,transparent);color:var(--gold)}
+footer{padding:34px 0 56px;color:var(--ink2);font-size:.85rem;font-family:var(--sans)}
+footer .refs{margin-top:10px;font-size:.8rem;line-height:1.7;max-width:88ch}
+footer .refs i{color:var(--ink2)}
+.srconly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+kbd.var{font-family:var(--mono);font-size:.85em;background:var(--surface2);border:1px solid var(--hair);border-radius:4px;padding:0 5px}
+</style>
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">WASR 4500/6500 · Quantitative Methods in Hydrology · PBA 1 · Evaristo Critical Zone Hydrology Lab · University of Georgia</p>
+    <h1>SEBAL over the Flint <span class="thin">— turning one thermal image into a map of water</span></h1>
+    <p class="sub">A satellite measures temperature, not evaporation. This page walks the SEBAL algorithm
+      step by step — the same five modules as your MATLAB exercise — over a center-pivot landscape in the
+      Lower Flint River Basin of southwest Georgia. Every number here is computed live, with the equations
+      from the handout.</p>
+    <div class="hero-panel">
+      <div class="hero-maps">
+        <div class="hero-map"><canvas id="heroLST" width="96" height="96" role="img" aria-label="Surface temperature map of the study scene"></canvas><span class="cap">What the satellite sees: surface temperature (K)</span></div>
+        <div class="hero-arrow" aria-hidden="true">&#8594;</div>
+        <div class="hero-map"><canvas id="heroET" width="96" height="96" role="img" aria-label="Daily evapotranspiration map inferred by SEBAL"></canvas><span class="cap">What SEBAL infers: daily ET (mm d⁻¹)</span></div>
+      </div>
+      <p class="hero-note">Cool pixels are wet, hot pixels are dry — SEBAL turns that single idea,
+        calibrated by two anchor pixels, into a full evapotranspiration map. By the end of this page you
+        will have run the entire chain yourself.</p>
+    </div>
+  </div>
+</header>
+
+<nav class="stepnav" aria-label="Modules">
+  <div class="wrap">
+    <a href="#why"><span class="k">§0</span>Why ET</a>
+    <a href="#balance"><span class="k">§1</span>Energy balance</a>
+    <a href="#e1"><span class="k">E1</span>Reference ET</a>
+    <a href="#e2"><span class="k">E2</span>Anchors &amp; R<sub>n</sub></a>
+    <a href="#e3"><span class="k">E3</span>Initial H</a>
+    <a href="#e4"><span class="k">E4</span>Stability</a>
+    <a href="#e5"><span class="k">E5</span>ET maps</a>
+    <a href="#unc"><span class="k">§7</span>Uncertainty</a>
+    <a href="#stations"><span class="k">§8</span>Across Georgia</a>
+    <a href="#data"><span class="k">§9</span>Data sources</a>
+    <a href="#quiz"><span class="k">§10</span>Self-check</a>
+  </div>
+</nav>
+
+<!-- ============ 0 · WHY ============ -->
+<section class="mod" id="why">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno alt">§0</span><h2>Why evapotranspiration, and why here</h2></div>
+    <p class="modsub">The study region: the Lower Flint River Basin and the Dougherty Plain, southwest Georgia — the most intensively irrigated landscape in the state.</p>
+    <div class="prose">
+      <p>Evapotranspiration (ET) is the hardest term of the terrestrial water budget to measure. A rain gauge
+      catches rain and a stream gauge integrates runoff, but the water that leaves as vapor — from soil,
+      open water, and plant transpiration — crosses no weir. Yet in a Georgia summer it is the
+      <em>largest outgoing</em> term: on a June day a well-watered corn pivot returns 5–7&nbsp;mm of water to the
+      atmosphere, roughly 55,000 liters per hectare, every day.</p>
+      <p>In the Lower Flint Basin that flux is the heart of a three-decade water conflict. Several thousand
+      center pivots irrigate on the order of half a million acres of corn, cotton, and peanuts from the Upper
+      Floridan aquifer — a karst limestone aquifer lying within tens of feet of the surface here, in direct
+      hydraulic connection with the Flint River and its spring-fed creeks. Pumping shows up quickly as lost
+      baseflow: in the 2011 drought the USGS mapped roughly 300 miles of losing streams and 600 miles of dry
+      streambed in the lower basin. Those depleted flows sit at the center of the
+      Apalachicola–Chattahoochee–Flint (ACF) dispute, argued all the way to the U.S. Supreme Court
+      (<i>Florida&nbsp;v.&nbsp;Georgia</i>, decided 2021). Managing the system — the Flint River Drought Protection Act,
+      irrigation permits, aquifer models — requires knowing <strong>how much water the landscape actually
+      evaporates, field by field</strong>.</p>
+      <p>No network of flux towers can cover every field. But a satellite can see every field — in the thermal
+      infrared. A transpiring canopy is evaporatively cooled; a dry fallow field bakes. <strong>SEBAL</strong>
+      (Surface Energy Balance Algorithm for Land; Bastiaanssen et&nbsp;al., 1998) converts that temperature contrast
+      into an ET map using the surface energy balance, needing only one satellite scene and one weather station.</p>
+    </div>
+    <div class="statrow">
+      <div class="stat"><div class="v" id="statIrr">~½&nbsp;M</div><div class="n">acres under center-pivot irrigation in the Lower Flint Basin — one of the densest pivot concentrations in the eastern U.S.</div></div>
+      <div class="stat"><div class="v" id="statETo">5–6 mm d⁻¹</div><div class="n">typical June grass-reference ET in southwest Georgia (UGA weather network, FAO-56)</div></div>
+      <div class="stat"><div class="v">1–2 days</div><div class="n">MODIS revisit time — Terra crosses Georgia mid-morning to local noon every day</div></div>
+      <div class="stat"><div class="v">2</div><div class="n">calibration points SEBAL needs: one hot, dry pixel and one cold, wet pixel</div></div>
+    </div>
+    <div class="note">
+      <b class="ttl">The key principle, up front</b>
+      <p>SEBAL assumes the near-surface temperature difference <kbd class="var">dT&nbsp;=&nbsp;T<sub>s</sub>&nbsp;−&nbsp;T<sub>a</sub></kbd>
+      varies <strong>linearly</strong> with surface temperature <kbd class="var">T<sub>s</sub></kbd> across the image.
+      Two extreme pixels — a <span style="color:var(--hot);font-weight:600">hot, dry field</span> where all available energy
+      becomes sensible heat, and a <span style="color:var(--cold);font-weight:600">cold, wet crop</span> where nearly all of it
+      evaporates water — pin down that line. Everything else on this page is bookkeeping around that one idea.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1 · ENERGY BALANCE ============ -->
+<section class="mod" id="balance">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno alt">§1</span><h2>The surface energy balance</h2></div>
+    <p class="modsub">One conservation law does all the work: the energy arriving at the land surface must go somewhere.</p>
+    <div class="eq"><span class="tag">Eq. 1</span>
+      λ<i>ET</i> = <i>R<sub>n</sub></i> − <i>H</i> − <i>G</i>
+    </div>
+    <div class="prose">
+      <p>Net radiation <kbd class="var">R<sub>n</sub></kbd> is the energy supply. It is spent three ways:
+      warming the air (<kbd class="var">H</kbd>, sensible heat), warming the soil (<kbd class="var">G</kbd>, ground
+      heat), and evaporating water (<kbd class="var">λET</kbd>, latent heat — λ&nbsp;≈&nbsp;2.45&nbsp;MJ&nbsp;kg⁻¹ is the energy
+      to vaporize a kilogram of water). SEBAL measures nothing about water directly: it estimates
+      <kbd class="var">R<sub>n</sub></kbd>, <kbd class="var">G</kbd>, and <kbd class="var">H</kbd> from the satellite
+      image, and whatever energy is left over <em>must</em> have evaporated water. λET is a residual.</p>
+    </div>
+    <div class="widget">
+      <h3>Partition the energy yourself</h3>
+      <p class="whint">A clear June midday in Mitchell County delivers about 620 W&nbsp;m⁻² of net radiation. Drag
+      <b>H</b> and <b>G</b> and watch what is left for evaporation. Notice the residual logic — and what happens
+      if you claim more heating than the energy supply allows.</p>
+      <div class="ctlrow">
+        <label class="ctl"><span class="lab"><span>Sensible heat H</span><span class="val" id="vH">150 W/m²</span></span>
+          <input type="range" id="sH" min="0" max="620" step="5" value="150"></label>
+        <label class="ctl"><span class="lab"><span>Ground heat G</span><span class="val" id="vG">60 W/m²</span></span>
+          <input type="range" id="sG" min="0" max="300" step="5" value="60"></label>
+      </div>
+      <div class="chart" id="ebBar"></div>
+      <div class="cards" id="ebCards"></div>
+    </div>
+
+    <h3 style="font-family:var(--serif);font-size:1.15rem;margin:26px 0 4px">Where R<sub>n</sub> comes from</h3>
+    <div class="eq"><span class="tag">Eq. 2</span>
+      <i>R<sub>n</sub></i> = (1 − α)<i>R<sub>S↓</sub></i> + <i>R<sub>L↓</sub></i> − <i>R<sub>L↑</sub></i> − (1 − ε<sub>0</sub>)<i>R<sub>L↓</sub></i>
+    </div>
+    <div class="widget">
+      <h3>The radiation budget, live</h3>
+      <p class="whint">Four streams cross the surface: incoming and reflected shortwave (sun), incoming and
+      emitted longwave (thermal). The satellite supplies the two surface properties that control them — albedo
+      <b>α</b> (how reflective) and emissivity <b>ε₀</b> — plus the surface temperature that sets
+      <i>R<sub>L↑</sub></i>&nbsp;=&nbsp;ε₀σT<sub>s</sub>⁴. Slide them and watch the budget rebalance.</p>
+      <div class="ctlrow">
+        <label class="ctl"><span class="lab"><span>Albedo α</span><span class="val" id="vAlb">0.18</span></span>
+          <input type="range" id="sAlb" min="0.05" max="0.45" step="0.01" value="0.18"></label>
+        <label class="ctl"><span class="lab"><span>Emissivity ε₀</span><span class="val" id="vEmis">0.98</span></span>
+          <input type="range" id="sEmis" min="0.90" max="1.00" step="0.005" value="0.98"></label>
+        <label class="ctl"><span class="lab"><span>Surface temp T<sub>s</sub></span><span class="val" id="vTs">303 K</span></span>
+          <input type="range" id="sTs" min="295" max="325" step="1" value="303"></label>
+      </div>
+      <div class="chart" id="radSvg"></div>
+      <p class="small" id="radRead"></p>
+    </div>
+    <div class="note amber">
+      <b class="ttl">Reading it like a hydrologist</b>
+      <p>Bright surfaces (high α) reject solar energy; hot surfaces (high T<sub>s</sub>) shed longwave energy.
+      That is why the dry fallow field, despite receiving the same sun, ends up with <em>less</em> net radiation
+      than the irrigated pivot next door — and spends nearly all of what remains heating the air.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ E1 · REFERENCE ET ============ -->
+<section class="mod" id="e1">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno">E1</span><h2>Reference ET from a weather station</h2><span class="mlx">E1_ref_ET.mlx</span></div>
+    <p class="modsub">Before touching the satellite image, SEBAL needs the atmosphere's demand for water: hourly FAO-56 Penman–Monteith reference ET from a ground station.</p>
+    <div class="prose">
+      <p><kbd class="var">ET<sub>r</sub></kbd> is the ET of a hypothetical well-watered reference grass
+      (0.12&nbsp;m tall, surface resistance <i>r<sub>s</sub></i>&nbsp;=&nbsp;70&nbsp;s&nbsp;m⁻¹, albedo 0.23) — the Penman–Monteith
+      equation applied to a standard surface. In this Georgia edition the weather data come from the
+      <strong>UGA Weather Network</strong> station at <strong>Camilla, Mitchell County</strong> (31.280°N,
+      −84.292°E, 49&nbsp;m) — fittingly, it sits at UGA's Stripling Irrigation Research Park, in the middle of the
+      pivot country you will map below. The station records the same variables as the MATLAB exercise's
+      <span class="mono">meteodata.mat</span>: air temperature, humidity, wind at 2&nbsp;m, solar radiation, and
+      pressure — and the network even publishes its own computed daily ET you can check against.</p>
+    </div>
+    <div class="eq" style="font-size:1.02rem"><span class="tag">Eq. 8</span>
+      <i>ET<sub>r</sub></i> =
+      <span class="fr"><span>Δ(<i>R<sub>n</sub></i> − <i>G</i>) + ρ<sub>a</sub><i>c<sub>p</sub></i>(<i>e<sub>s</sub></i> − <i>e<sub>a</sub></i>)/<i>r<sub>ah</sub></i></span><span>Δ + γ(1 + <i>r<sub>s</sub></i>/<i>r<sub>ah</sub></i>)</span></span>
+      <span class="eqnote" style="margin-left:14px">energy term + demand term, throttled by two resistances</span>
+    </div>
+    <div class="widget">
+      <h3>A June day at Camilla — build it, then break it</h3>
+      <p class="whint">Defaults reproduce a clear 10&nbsp;June day (DOY 161) at Camilla. The engine generates the
+      diurnal weather, then computes hourly ET<sub>r</sub> exactly as <span class="mono">E1_ref_ET</span> does.
+      Try: a windless muggy day (wind ↓, humidity ↑) vs. a dry cold-front day (humidity ↓, wind ↑). Which lever
+      moves daily ET<sub>r</sub> most?</p>
+      <div class="ctlrow">
+        <label class="ctl"><span class="lab"><span>Max air temp</span><span class="val" id="vTmax">33 °C</span></span>
+          <input type="range" id="sTmax" min="26" max="40" step="0.5" value="33"></label>
+        <label class="ctl"><span class="lab"><span>Min air temp</span><span class="val" id="vTmin">21 °C</span></span>
+          <input type="range" id="sTmin" min="14" max="26" step="0.5" value="21"></label>
+        <label class="ctl"><span class="lab"><span>Afternoon RH</span><span class="val" id="vRH">52 %</span></span>
+          <input type="range" id="sRH" min="30" max="85" step="1" value="52"></label>
+        <label class="ctl"><span class="lab"><span>Wind at 2 m</span><span class="val" id="vU2">2.0 m/s</span></span>
+          <input type="range" id="sU2" min="0.5" max="5" step="0.1" value="2"></label>
+        <label class="ctl"><span class="lab"><span>Cloud cover</span><span class="val" id="vCloud">0 %</span></span>
+          <input type="range" id="sCloud" min="0" max="60" step="5" value="0"></label>
+      </div>
+      <div class="chartrow">
+        <div class="chart" id="chFlux"></div>
+        <div class="chart" id="chETr"></div>
+      </div>
+      <div class="cards" id="e1Cards"></div>
+      <p class="small">The dashed line marks the satellite overpass — the hour whose ET<sub>r</sub> becomes the
+      scaling reference in module E5. Reset any time by reloading the page.</p>
+    </div>
+    <details class="deeper"><summary>Code notes: what to watch for in E1_ref_ET.mlx</summary>
+      <ul>
+        <li><b>Ground heat under grass:</b> both this page and <span class="mono">E1_ref_ET</span> use the FAO-56
+        hourly convention <span class="mono">G&nbsp;=&nbsp;0.1·Rn</span> (daytime) and <span class="mono">0.5·Rn</span> (night).
+        Why is a fixed fraction defensible over a clipped reference grass — and for what surfaces would it fail?</li>
+        <li><b>Aerodynamic resistance:</b> <span class="mono">ra&nbsp;=&nbsp;208/u2</span> is the FAO-56 closed form for the
+        0.12-m reference grass — it is not valid for forest or bare soil.</li>
+        <li><b>Units discipline:</b> R<sub>n</sub> arrives in W&nbsp;m⁻², vapor pressures in kPa, ET leaves in mm&nbsp;h⁻¹ —
+        trace the 3600 and 10⁶ factors through Eq.&nbsp;8 once by hand, and confirm the aerodynamic term
+        ρ<sub>a</sub>c<sub>p</sub>(e<sub>s</sub>−e<sub>a</sub>)/r<sub>ah</sub> really is W&nbsp;m⁻² (c<sub>p</sub> in
+        J&nbsp;kg⁻¹&nbsp;°C⁻¹). Every SEBAL bug you will ever write is a unit bug.</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<!-- ============ E2 · SCENE + ANCHORS ============ -->
+<section class="mod" id="e2">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno">E2</span><h2>The scene, net radiation, and the two anchor pixels</h2><span class="mlx">E2_anchor_pixels.mlx</span></div>
+    <p class="modsub">Now the satellite: a MODIS-style scene of the Lower Flint landscape at the moment of overpass, and the two pixels that calibrate everything.</p>
+    <div class="prose">
+      <p>The scene below is a <strong>synthetic training landscape</strong> — generated by this page, but built to
+      the June statistics of Mitchell County: the Flint River and its cypress fringe on the east, loblolly-pine
+      blocks, dryland fields, the town of Camilla, and the tell-tale circles of center pivots pumping from the
+      Floridan aquifer. (Your MATLAB exercise does the same thing with a real MODIS scene; §9 shows where to
+      download one for Georgia.) Hover any map — every pixel carries the full set of MODIS variables.</p>
+    </div>
+    <div class="lcleg" id="lcLegend"></div>
+    <div class="maps" id="sceneMaps"></div>
+    <h3 style="font-family:var(--serif);font-size:1.15rem;margin:24px 0 4px">Choose the anchors</h3>
+    <div class="prose">
+      <p>The sensible-heat equation (E3) has two unknowns per pixel. SEBAL closes the problem with two boundary
+      conditions, taken at extreme <em>cropland</em> pixels in homogeneous neighborhoods:</p>
+    </div>
+    <div class="eq"><span class="tag">Eq. 6–7</span>
+      <span style="color:var(--hot)"><i>H</i><sub>hot</sub> = <i>R<sub>n</sub></i> − <i>G</i></span>
+      <span class="eqnote">(dry bare field: λET = 0)</span>
+      &nbsp;&nbsp;&nbsp;
+      <span style="color:var(--cold)"><i>H</i><sub>cold</sub> = <i>R<sub>n</sub></i> − <i>G</i> − 1.05·λ<i>ET<sub>r</sub></i></span>
+      <span class="eqnote">(irrigated crop: ET = 105% of reference)</span>
+    </div>
+    <div class="widget">
+      <h3>Pick a cold and a hot pixel <span class="pill gold">interactive</span></h3>
+      <p class="whint">Select a mode, then click the temperature map. The rules from
+      <span class="mono">E2_anchor_pixels</span>: the pixel and its 3×3 neighborhood must be
+      <b>cropland</b> (the river is colder than any field — and exactly the wrong choice; the widget will tell you why).
+      Or let the algorithm choose, as the script does: coldest and hottest homogeneous cropland pixels.
+      (Keyboard users: the algorithm's-picks button applies those same selection rules.)</p>
+      <div class="btnrow">
+        <span class="seg" role="group" aria-label="anchor mode">
+          <button id="modeCold" class="coldm" aria-pressed="false">Pick cold pixel</button>
+          <button id="modeHot" class="hotm" aria-pressed="false">Pick hot pixel</button>
+        </span>
+        <button class="btn ghost" id="autoAnchor">Use the algorithm's picks</button>
+        <span class="small" id="pickMsg" aria-live="polite"></span>
+      </div>
+      <div class="bigmapwrap">
+        <div class="mapbox bigmap">
+          <canvas id="pickMap" width="96" height="96" class="px" role="img" aria-label="Clickable land surface temperature map for anchor-pixel selection"></canvas>
+          <span class="cap"><b>Land surface temperature</b><span id="pickRange" class="mono"></span></span>
+          <div class="cbar" id="pickCbar"></div><div class="cbar-lab"><span id="pickLo"></span><span>K</span><span id="pickHi"></span></div>
+        </div>
+        <div style="flex:1 1 300px;min-width:280px">
+          <div class="cards" id="anchorCards"></div>
+          <div class="cards" id="rnCards"></div>
+          <p class="small" id="anchorNote"></p>
+        </div>
+      </div>
+      <div class="maps" id="rgMaps"></div>
+    </div>
+    <details class="deeper"><summary>Under the hood: R<sub>n</sub> and G pixel by pixel</summary>
+      <p>Shortwave in: <span class="mono">Rs↓ = G_sc·d_r·τ_sw·cos(θ_sz)</span> with transmissivity
+      <span class="mono">τ_sw = 0.75 + 2·10⁻⁵·z</span> from the DEM. Longwave out:
+      <span class="mono">RL↑ = ε₀σTs⁴</span>. Longwave in uses an air temperature tied to the cold pixel with a
+      lapse correction. Ground heat uses the Bastiaanssen relation (handout Eq. 3):</p>
+      <div class="eq" style="font-size:.98rem"><span class="tag">Eq. 3</span>
+        <i>G</i>/<i>R<sub>n</sub></i> = <span class="fr"><span><i>T<sub>s</sub></i>&thinsp;[°C]</span><span>α</span></span>(0.0038α + 0.0074α²)(1 − 0.98·<i>NDVI</i>⁴)
+      </div>
+      <p>Dense canopy (NDVI → 1) shuts G down; hot bare soil sends 20–30% of R<sub>n</sub> into the ground.
+      Check that your MATLAB implementation reproduces Eq. 3 exactly — including the division by α.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ============ E3 · INITIAL H ============ -->
+<section class="mod" id="e3">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno">E3</span><h2>The dT line and a first guess at H</h2><span class="mlx">E3_initial_H_calc.mlx</span></div>
+    <p class="modsub">Two anchor points define a line; the line gives every pixel a temperature difference; the temperature difference gives H.</p>
+    <div class="eq"><span class="tag">Eq. 5, 9</span>
+      <i>H</i> = <span class="fr"><span>ρ<sub>a</sub><i>c<sub>p</sub></i>·<i>dT</i></span><span><i>r<sub>ah</sub></i></span></span>
+      &nbsp;&nbsp;with&nbsp;&nbsp;
+      <i>dT</i> = <i>a</i>·<i>T<sub>s</sub></i> + <i>b</i>
+    </div>
+    <div class="prose">
+      <p>We cannot measure air temperature at every pixel, so SEBAL never uses <kbd class="var">dT</kbd> directly.
+      Instead: at the anchors we know <kbd class="var">H</kbd> (from E2), and we can compute the aerodynamic
+      resistance <kbd class="var">r<sub>ah</sub></kbd> from the wind profile — so we can <em>invert</em> Eq.&nbsp;5 for
+      <kbd class="var">dT</kbd> at exactly two points. A line through them (Eq.&nbsp;9) assigns dT to every other
+      pixel from its surface temperature alone. That is the entire trick of SEBAL.</p>
+      <p>Wind enters through a <strong>blending height</strong>: the station wind at 2&nbsp;m is projected up to
+      200&nbsp;m — high enough that the wind no longer feels individual fields — then brought back down over each
+      pixel using that pixel's roughness length <kbd class="var">z<sub>om</sub></kbd> (from land cover: tall pine is
+      rough, water is glassy smooth).</p>
+    </div>
+    <div class="widget">
+      <h3>The calibration line, drawn from your anchors</h3>
+      <p class="whint">This scatter shows every pixel of the scene in (T<sub>s</sub>,&nbsp;dT) space, with your anchors
+      as the two fixed points. Go back to E2 and move an anchor — the line, and therefore every H in the scene,
+      follows. (This is the first, <em>neutral-atmosphere</em> guess; E4 will bend it.)</p>
+      <div class="chartrow">
+        <div class="chart" id="chDT"></div>
+        <div style="flex:1 1 300px;min-width:270px">
+          <div class="cards" id="e3Cards"></div>
+          <div class="maps" style="margin-top:6px"><div class="mapbox" id="hInitBox"></div></div>
+        </div>
+      </div>
+    </div>
+    <details class="deeper"><summary>Roughness lengths by land cover (z<sub>om</sub>)</summary>
+      <div class="tblwrap"><table class="tb" id="zomTable"></table></div>
+      <p class="small">Cropland is dynamic: <span class="mono">z_om = 0.018·LAI</span> — a leafy pivot is ~15×
+      rougher than a freshly planted field. Note what this does to r<sub>ah</sub> over the pine blocks.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ============ E4 · STABILITY ============ -->
+<section class="mod" id="e4">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno">E4</span><h2>Stability corrections — the loop</h2><span class="mlx">E4_stability_correction.mlx · StabCorr.m</span></div>
+    <p class="modsub">On a June midday the air over a hot field boils upward. Monin–Obukhov theory corrects the resistances for that buoyancy — but the correction depends on H, which depends on the correction. So: iterate.</p>
+    <div class="eq"><span class="tag">M–O length</span>
+      <i>L</i> = <span class="fr"><span>−ρ<sub>a</sub><i>c<sub>p</sub></i>·<i>u</i><sub>*</sub>³·<i>T<sub>s</sub></i></span><span><i>k&thinsp;g&thinsp;H</i></span></span>
+      <span class="eqnote" style="margin-left:12px">the height at which buoyant turbulence overtakes wind-shear turbulence</span>
+    </div>
+    <div class="chartrow" id="stabCards" style="margin:16px 0"></div>
+    <div class="widget">
+      <h3>Run the iteration <span class="pill gold">interactive</span></h3>
+      <p class="whint">Each pass: compute L per pixel → apply ψ corrections to u<sub>*</sub> and r<sub>ah</sub> →
+      re-invert the anchors for dT → new line → new H → repeat, until <b>dT<sub>hot</sub></b> and
+      <b>r<sub>ah,hot</sub></b> stop moving (&lt;1% change). The page arrives already converged (E5 needs the
+      final state) — press <b>Reset to neutral</b>, then step through the passes to watch it happen.</p>
+      <div class="btnrow">
+        <button class="btn" id="iterOne">Run one iteration</button>
+        <button class="btn ghost" id="iterAll">Run to convergence</button>
+        <button class="btn ghost" id="iterReset">Reset to neutral</button>
+        <span class="small" id="iterMsg" aria-live="polite"></span>
+      </div>
+      <div class="chartrow">
+        <div class="chart" id="chConvDT"></div>
+        <div class="chart" id="chConvRah"></div>
+      </div>
+      <div class="cards" id="e4Cards"></div>
+    </div>
+    <div class="note">
+      <b class="ttl">Why the values move the way they do</b>
+      <p>Over the hot field L&nbsp;&lt;&nbsp;0 and |L| is small: buoyant plumes carry heat far more efficiently than the
+      neutral log-profile assumed in E3, so r<sub>ah</sub> <em>drops</em> on the first pass — and since
+      H<sub>hot</sub> is fixed by the energy balance, dT<sub>hot</sub>&nbsp;=&nbsp;H·r<sub>ah</sub>/(ρc<sub>p</sub>) drops
+      with it. The first pass overshoots, then the adjustments shrink in a damped oscillation; on this scene the
+      &lt;1% rule lands at about seven passes — which is exactly why the MATLAB exercise hard-codes seven.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ E5 · FINAL ET ============ -->
+<section class="mod" id="e5">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno">E5</span><h2>Closing the balance: from one instant to a daily map</h2><span class="mlx">E5_ET_final.mlx</span></div>
+    <p class="modsub">λET falls out as the residual at the overpass instant; the reference-ET fraction carries it through the day.</p>
+    <div class="eq"><span class="tag">Eq. 10–12</span>
+      <i>ET<sub>ins</sub></i> = 3600·<span class="fr"><span>λ<i>ET</i></span><span>λ·10⁶</span></span> <span class="eqnote">mm h⁻¹</span>
+      &nbsp;&nbsp;&nbsp;
+      <i>ET<sub>r</sub>F</i> = <span class="fr"><span><i>ET<sub>ins</sub></i></span><span><i>ET<sub>r,overpass</sub></i></span></span>
+      &nbsp;&nbsp;&nbsp;
+      <i>ET<sub>24</sub></i> = <i>ET<sub>r,24</sub></i> · <i>ET<sub>r</sub>F</i> <span class="eqnote">mm d⁻¹</span>
+    </div>
+    <div class="prose">
+      <p>The satellite sees the landscape for one instant (<span id="passTimeTxt" class="mono"></span>).
+      The <strong>reference-ET fraction</strong> ET<sub>r</sub>F — this pixel's ET as a fraction of the reference
+      crop's — is assumed constant through daylight, so multiplying by the day's total ET<sub>r</sub>
+      (from E1) yields daily ET. ET<sub>r</sub>F is the satellite's version of a crop coefficient.</p>
+    </div>
+    <div class="widget">
+      <h3>The full energy-balance suite</h3>
+      <p class="whint">These update live with your anchors (E2), the weather (E1), and the iteration state (E4).
+      Hover any pixel to read its complete budget — the inspector shows R<sub>n</sub>&nbsp;−&nbsp;G&nbsp;−&nbsp;H&nbsp;=&nbsp;λET closing exactly.</p>
+      <div class="maps" id="fluxMaps"></div>
+      <div class="maps" id="etMaps"></div>
+      <div class="cards" id="e5Cards"></div>
+    </div>
+    <div class="widget">
+      <h3>Does it make sense? ET by land cover</h3>
+      <p class="whint">Scene-average daily ET for each land cover, against the ranges we expect for southwest
+      Georgia in June from lysimeter, eddy-covariance, and OpenET studies. This is validation thinking —
+      an algorithm can run perfectly and still be wrong.</p>
+      <div class="chart" id="chLC"></div>
+      <div class="note hot" id="forestNote" style="display:none"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 · UNCERTAINTY ============ -->
+<section class="mod" id="unc">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno alt">§7</span><h2>Sensitivity &amp; uncertainty — is the map trustworthy?</h2><span class="mlx">sensitivity_uncertainty.mlx</span></div>
+    <p class="modsub">Learning goal 3: distinguish "the code ran" from "the result is valid." Two experiments.</p>
+    <div class="widget">
+      <h3>Experiment 1 — the anchors are a choice</h3>
+      <p class="whint">Every anchor pair you have tried on this page is logged here with the scene-mean ET it
+      produced. Go back to E2, pick deliberately bad anchors (a mild "hot" pixel; a half-stressed "cold" pivot),
+      and watch the whole map shift. In METRIC calibration, analyst anchor choice is one of the largest single
+      sources of uncertainty.</p>
+      <div class="tblwrap"><table class="tb" id="trialTable"><thead><tr>
+        <th>Trial</th><th>T<sub>s,cold</sub> (K)</th><th>T<sub>s,hot</sub> (K)</th><th>slope a</th>
+        <th>Scene ET̄₂₄ (mm/d)</th><th>Pivot ET̄₂₄</th><th>vs. algorithm pick</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="widget">
+      <h3>Experiment 2 — Monte Carlo error propagation</h3>
+      <p class="whint">MODIS LST is good to about ±1 K; albedo to ±0.02; your station ET<sub>r</sub> to a few
+      percent. Perturb the inputs within those errors, re-run all of SEBAL each time, and the spread of
+      scene-mean ET₂₄ is your uncertainty band.</p>
+      <div class="ctlrow">
+        <label class="ctl"><span class="lab"><span>σ(LST)</span><span class="val" id="vSigT">1.0 K</span></span>
+          <input type="range" id="sSigT" min="0.2" max="2.5" step="0.1" value="1"></label>
+        <label class="ctl"><span class="lab"><span>σ(albedo)</span><span class="val" id="vSigA">0.02</span></span>
+          <input type="range" id="sSigA" min="0" max="0.05" step="0.005" value="0.02"></label>
+        <label class="ctl"><span class="lab"><span>σ(ET<sub>r</sub>)</span><span class="val" id="vSigE">5 %</span></span>
+          <input type="range" id="sSigE" min="0" max="15" step="1" value="5"></label>
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="mcRun">Run 150 realizations</button>
+        <span class="small" id="mcMsg" aria-live="polite"></span>
+      </div>
+      <div class="chart" id="chMC"></div>
+      <div class="cards" id="mcCards"></div>
+    </div>
+    <div class="note amber">
+      <b class="ttl">Failure modes to diagnose in your own runs</b>
+      <ul>
+        <li><b>Anchor contamination:</b> a "cold" pixel that is actually water or wetland — wrong roughness, wrong
+        heat storage, and the 1.05·ET<sub>r</sub> boundary condition no longer holds.</li>
+        <li><b>Energy-balance non-closure:</b> pixels where λET clamps at zero mean H&nbsp;&gt;&nbsp;R<sub>n</sub>&nbsp;−&nbsp;G —
+        the dT line is over-extrapolated there.</li>
+        <li><b>Tall-canopy bias:</b> the dT–T<sub>s</sub> line is calibrated on cropland; over the pine blocks the
+        roughness is 20× larger and the linear model is least defensible (this motivates the trapezoid models —
+        Long &amp; Singh 2012; Yang &amp; Shang 2013 in your readings).</li>
+        <li><b>Advection:</b> ET<sub>r</sub>F constant-through-the-day fails on days when dry air blows in mid-afternoon.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 · ACROSS GEORGIA ============ -->
+<section class="mod" id="stations">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno alt">§8</span><h2>Your turn: nine stations across Georgia</h2></div>
+    <p class="modsub">The handout's closing exercise: run the pipeline for UGA weather-network stations spanning Georgia's physiographic provinces — then explain the geography in the numbers.</p>
+    <div class="prose">
+      <p>Georgia climbs from sea level on Jekyll Island to nearly 600&nbsp;m in the Blue Ridge at Blairsville. Along
+      that climb, June radiation, humidity, and temperature all shift — and so does everything SEBAL computes.
+      <strong>Before you reveal each row, predict:</strong> will daily ET<sub>r</sub> at this station be higher or
+      lower than Camilla's? Then check yourself, and work through the discussion points below.</p>
+    </div>
+    <div class="stationwrap">
+      <div class="gamap" id="gaMap" aria-label="Schematic map of Georgia with weather stations"></div>
+      <div style="flex:1 1 420px;min-width:300px">
+        <div class="tblwrap"><table class="tb" id="stTable"></table></div>
+        <p class="small">Ranges are June-typical values computed with this page's FAO-56 engine from each
+        station's June-normal weather (UGA weather network climatology), ±&nbsp;the day-to-day spread. They are
+        estimates for prediction-checking, not measurements.</p>
+      </div>
+    </div>
+    <div class="note">
+      <b class="ttl">Discussion points in class</b>
+      <ul>
+        <li>Coastal Plain vs. Blue Ridge: which drives the ET<sub>r</sub> difference more — temperature, humidity,
+        or radiation? Use the E1 sliders to test your claim.</li>
+        <li>Two stations at nearly the same latitude can differ in ET<sub>r</sub>F for the same crop. What surface
+        properties could do that?</li>
+        <li>The satellite overpass time is essentially the same statewide. Why does that make the
+        ET<sub>r</sub>F method portable across the state?</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 9 · DATA SOURCES ============ -->
+<section class="mod" id="data">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno alt">§9</span><h2>Georgia data sources — build this with real data</h2></div>
+    <p class="modsub">Everything the MATLAB exercise ships as .mat files, you can pull for Georgia yourself. Updated product IDs replace the deprecated ones in older SEBAL guides.</p>
+    <div id="dataCards"></div>
+    <div class="note">
+      <b class="ttl">Check yourself against the professionals</b>
+      <p>Two operational products publish satellite ET for every Georgia field: <strong>OpenET</strong>
+      (ensemble of six models including the METRIC descendant of SEBAL, 30-m resolution, openetdata.org) and the
+      USGS <strong>SSEBop</strong> actual-ET product. After you run SEBAL on a real Georgia scene, comparing your
+      map against theirs is the single fastest sanity check you can do.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10 · QUIZ ============ -->
+<section class="mod" id="quiz">
+  <div class="wrap">
+    <div class="modhead"><span class="stepno alt">§10</span><h2>Self-check</h2></div>
+    <p class="modsub">Answer before peeking. Each maps to a handout question or a step you just ran.</p>
+    <div id="quizBox"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><strong>PBA 1 · ET estimation and partitioning</strong> — interactive companion, Georgia edition.
+    <strong>Evaristo Critical Zone Hydrology Lab</strong>, University of Georgia — built for WASR 4500/6500
+    (J. Evaristo). The landscape is synthetic but every computation on this page runs the handout's equations
+    (FAO-56; Bastiaanssen et&nbsp;al. 1998; Allen et&nbsp;al. 2007) live in your browser.</p>
+    <div class="refs">
+      Allen, R.G., Pereira, L.S., Raes, D., Smith, M. (1998). <i>Crop evapotranspiration — FAO Irrigation and Drainage Paper 56.</i> FAO, Rome. ·
+      Allen, R.G., Tasumi, M., Trezza, R. (2007). METRIC — Model. <i>J. Irrig. Drain. Eng.</i> 133, 380–394. ·
+      Bastiaanssen, W.G.M., et al. (1998). SEBAL 1. Formulation. <i>J. Hydrol.</i> 212–213, 198–212. ·
+      Long, D., Singh, V.P. (2012). M-SEBAL. <i>Water Resour. Res.</i> 48, W02528. ·
+      Yang, Y., Shang, S. (2013). HTEM. <i>J. Geophys. Res. Atmos.</i> 118, 2284–2300. ·
+      Senay, G.B., et al. (2013). SSEBop. <i>J. Am. Water Resour. Assoc.</i> 49, 577–591. ·
+      Melton, F.S., et al. (2022). OpenET. <i>J. Am. Water Resour. Assoc.</i> 58, 971–994.
+    </div>
+  </div>
+</footer>
+
+<div id="pxtip" role="status"></div>
+<style>
+.dsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;margin:16px 0}
+.dscard{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:16px 18px;box-shadow:var(--card-sh)}
+.dscard h3{font-family:var(--sans);font-size:.92rem;margin:0 0 2px}
+.dscard .dsk{font-family:var(--mono);font-size:.72rem;color:var(--gold);margin:0 0 8px}
+.dscard p{font-size:.85rem;font-family:var(--sans);color:var(--ink2);margin:.3em 0}
+.dscard ul{font-size:.82rem;font-family:var(--sans);color:var(--ink2);margin:.4em 0 .2em;padding-left:18px}
+.dscard li{margin:.25em 0}
+.anchor-dot{position:absolute;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 0 1.5px rgba(0,0,0,.55)}
+.mapshell{position:relative;display:inline-block}
+</style>
+<script>
+'use strict';
+/* =====================================================================
+   PBA 1 — SEBAL over the Lower Flint, Georgia edition
+   Everything below runs the handout equations live.
+   ===================================================================== */
+
+/* ---------------- configuration (Georgia specifics) ---------------- */
+const CFG = {
+  site:{name:'Camilla, Mitchell County', lat:31.280, lon:-84.292, elev:49},
+  doy:161,                          // 10 June, as in the MATLAB exercise
+  overpass:{clockEDT:'≈12:07 p.m. EDT', utc:'≈16:07 UTC', frac:12.12,
+            note:'Terra’s descending node crosses the equator at ~10:30 a.m. local solar time. Camilla sits far west in the Eastern zone (solar noon ≈1:37 p.m. EDT), so 10:30 solar lands near noon on the clock.'},
+  Gsc:1367, sigma:5.67e-8, k:0.41, cp:1013, lam:2.45,
+};
+
+const LCINFO = {
+  0:{name:'Open water', color:'#3d7dc4', zom:0.0005},
+  1:{name:'Pine forest', color:'#1c5e34', zom:1.09},
+  10:{name:'Grass / pasture', color:'#a3c26b', zom:0.02},
+  11:{name:'Wetland fringe', color:'#5f9391', zom:0.0005},
+  12:{name:'Cropland', color:'#dfc06a', zom:null},   // 0.018·LAI
+  13:{name:'Urban (Camilla)', color:'#8d8478', zom:0.5},
+  16:{name:'Bare ground', color:'#cabb9e', zom:0.001},
+};
+
+// June-typical daily ET expectations for SW Georgia (validation ranges, mm/d)
+const EXPECT = [
+  {key:'pivot',  name:'Irrigated pivot',  lo:5.0, hi:8.0},
+  {key:'dry',    name:'Dryland crop',     lo:2.5, hi:4.5},
+  {key:'fallow', name:'Fallow / dry field', lo:0.0, hi:1.5},
+  {key:'forest', name:'Pine forest',      lo:3.0, hi:4.8},
+  {key:'grass',  name:'Grass / pasture',  lo:3.0, hi:4.8},
+  {key:'wet',    name:'Wetland fringe',   lo:4.5, hi:6.5},
+  {key:'urban',  name:'Urban',            lo:1.0, hi:2.8},
+];
+
+// UGA Weather Network stations for the §8 exercise.
+// June-normal forcing (Tmax/Tmin °C, afternoon RH %, wind m/s) — climatological estimates.
+// Coordinates & elevations verified against the network's official Site Location
+// table (weather.uga.edu) and cross-checked with the USGS 3DEP elevation service.
+const STATIONS = [
+  {name:'Camilla',          county:'Mitchell', region:'Coastal Plain (Dougherty Plain)', lat:31.2801, lon:-84.2916, elev:49,  wx:{Tmax:33.0,Tmin:21.5,RHmin:53,u2:1.9}, note:'The study site — Stripling Irrigation Research Park.', star:true},
+  {name:'Newton',           county:'Baker',    region:'Coastal Plain (Ichawaynochaway)', lat:31.2239, lon:-84.4779, elev:45,  wx:{Tmax:33.0,Tmin:21.5,RHmin:53,u2:1.8}, note:'Jones Center at Ichauway — longleaf pine country.'},
+  {name:'Attapulgus',       county:'Decatur',  region:'Coastal Plain (far SW)',          lat:30.7616, lon:-84.4853, elev:83,  wx:{Tmax:33.0,Tmin:21.5,RHmin:54,u2:1.8}, note:'Southernmost tier, near the Florida line.'},
+  {name:'Tifton',           county:'Tift',     region:'Coastal Plain (Tifton Upland)',   lat:31.4925, lon:-83.5253, elev:118, wx:{Tmax:32.0,Tmin:21.5,RHmin:55,u2:2.0}, note:'UGA Tifton campus; decades of ET research.'},
+  {name:'Jekyll Island',    county:'Glynn',    region:'Atlantic coast (barrier island)', lat:31.0805, lon:-81.4278, elev:2,   wx:{Tmax:30.5,Tmin:23.0,RHmin:64,u2:2.7}, note:'Sea breeze: humid, windy, small diurnal swing.'},
+  {name:'Midville',         county:'Burke',    region:'Upper Coastal Plain',             lat:32.8756, lon:-82.2161, elev:79,  wx:{Tmax:33.0,Tmin:20.5,RHmin:51,u2:1.8}, note:'East-central row-crop country.'},
+  {name:'Griffin',          county:'Spalding', region:'Piedmont',                        lat:33.2611, lon:-84.2825, elev:285, wx:{Tmax:31.5,Tmin:19.5,RHmin:52,u2:1.9}, note:'Home of the Weather Network since 1991.'},
+  {name:'Watkinsville-UGA', county:'Oconee',   region:'Piedmont (near Athens)',          lat:33.8693, lon:-83.4499, elev:239, wx:{Tmax:31.5,Tmin:19.0,RHmin:52,u2:1.8}, note:'J. Phil Campbell REC — your backyard.'},
+  {name:'Blairsville',      county:'Union',    region:'Blue Ridge',                      lat:34.8390, lon:-83.9281, elev:590, wx:{Tmax:28.0,Tmin:15.5,RHmin:58,u2:1.5}, cloudy:true, note:'Mountain REC; coolest, cloudiest June in Georgia.'},
+];
+
+const DATASOURCES = [
+  {name:'UGA Weather Network (Georgia AEMN)', k:'weather.uga.edu · georgiaweather.net',
+   p:'About 90 stations statewide, run by UGA CAES from the Griffin campus since 1991. Supplies everything meteodata.mat contains — air T, RH, wind, solar radiation, pressure, rainfall, soil T — and publishes a computed daily potential ET for every station.',
+   items:['Pick a station → historical data → hourly export (variables for E1: T, RH, u₂, solar radiation)','Lower Flint stations: Camilla (Stripling Irrigation Park), Newton (Ichauway), Dawson (USDA Peanut Lab)','Compare the network’s published daily ET against your own E1 output — they should nearly match']},
+  {name:'MODIS land products, Collection 6.1 (NASA LP DAAC)', k:'appeears.earthdatacloud.nasa.gov · search.earthdata.nasa.gov',
+   p:'Current product IDs for each SEBAL input — these supersede the retired IDs (e.g., MOD12Q1-era land cover, MCD43B3 albedo) that still circulate in older SEBAL manuals:',
+   items:['LST &amp; emissivity — MOD11A2 (1 km, 8-day) or MOD11A1 (daily); MOD21A2 is the newer TES-algorithm alternative','Reflectance + solar zenith — MOD09A1 (500 m, 8-day)','Leaf Area Index — MOD15A2H (500 m, 8-day)','Albedo — MCD43A3 (500 m, daily, 16-day retrieval window)','Land cover — MCD12Q1 (500 m, annual, 17 IGBP classes)','AppEEARS (free Earthdata login) clips any product to a Georgia polygon → GeoTIFF/CSV; all five are also in Google Earth Engine as MODIS/061/…'],
+   warn:'Heads-up: Terra’s last orbit-maintenance maneuver was in early 2020, and its overpass has been drifting earlier since — accelerating after Terra left the Earth-science constellation in October 2022 (down to ~9:00 a.m. solar by late 2025). For SEBAL work, use archive scenes from before October 2022, when the drift was still only ~15 minutes off the classic ~10:30 a.m. solar overpass.'},
+  {name:'Elevation — USGS 3DEP', k:'apps.nationalmap.gov/downloader',
+   p:'The U.S. upgrade over the exercise’s global GMTED2010: the seamless 1/3 arc-second (~10 m) DEM covers all of Georgia (1-m lidar over most of it), meters above NAVD88, public domain.',
+   items:['Resample to your MODIS scene grid before feeding SEBAL','The Dougherty Plain is nearly flat — predict what that does to the τ_sw and lapse-rate terms, then check']},
+  {name:'Validation — OpenET & USGS SSEBop', k:'etdata.org · earlywarning.usgs.gov',
+   p:'Operational satellite ET for every Georgia field. OpenET serves 30-m monthly/daily ET across all 48 conterminous states (Georgia included since its 2025 expansion) from a six-model ensemble — including geeSEBAL, an Earth Engine implementation of the very algorithm on this page — plus eeMETRIC, SSEBop, PT-JPL, DisALEXI, and SIMS.',
+   items:['OpenET Data Explorer: outline a Mitchell County pivot → monthly ET (ensemble MAE at cropland flux towers ≈16 mm/month)','USGS SSEBop: simplified energy-balance ET; in a GA/FL/AL evaluation (USGS SIR 2021-5072), bias-corrected basin ET agreed with water-balance estimates to within ~3% on average (individual basins −9 to +17%)','Where your SEBAL map and the ensemble disagree most is exactly where §7’s failure modes live']},
+];
+
+const QUIZ = [
+  {q:'Why does the cold anchor pixel have to be an irrigated crop field — not the Flint River, which is even colder?',
+   opts:['Water pixels are too small for MODIS to resolve',
+         'The calibration assumes ET_cold = 1.05·ETr for a full-cover crop; water stores heat, has near-zero roughness, and breaks both the energy and resistance assumptions',
+         'Rivers move, so their temperature is unreliable',
+         'Water albedo is too low for the radiation balance'],
+   a:1, why:'H_cold = Rn − G − 1.05·λETr is a crop-specific boundary condition. Over water, heat storage replaces G, z_om collapses, and ET ≠ 1.05·ETr — the dT line would be calibrated with a wrong endpoint. (The E2 script enforces this by scanning only lc = 12.)'},
+  {q:'At the hot anchor pixel, SEBAL assumes…',
+   opts:['H = 0, so all energy evaporates water','λET = 0, so H = Rn − G','G = 0, because the soil is dry','R_n = 0 at midday'],
+   a:1, why:'A dry, bare field has nothing left to evaporate: the full available energy Rn − G leaves as sensible heat. That anchors the top of the dT line.'},
+  {q:'Your Monin–Obukhov length comes back L = −18 m over a fallow field at overpass. That means…',
+   opts:['Stable air: turbulence is suppressed','A calm, neutral atmosphere','Unstable air: above ~18 m buoyancy, not wind shear, dominates the turbulence — convection is vigorous and heat transport enhanced','The pixel is water'],
+   a:2, why:'Negative L is unstable; |L| is roughly the height where buoyancy production of turbulence overtakes shear production (shear still rules below it). A small |L| on a hot June midday means vigorous convection — exactly why r_ah must be corrected downward.'},
+  {q:'Why must E4 iterate instead of applying the stability correction once?',
+   opts:['MATLAB loops are faster than vectorized code','Because ψ depends on L, L depends on H, and H depends on r_ah, which depends on ψ — a circular dependency solved by fixed-point iteration','To average out random noise in the LST image','Because MODIS delivers seven images per day'],
+   a:1, why:'H ↔ r_ah ↔ stability form a loop with no closed-form solution; SEBAL repeats the cycle until dT_hot and r_ah,hot stop changing. On this scene the <1% rule lands at about seven passes — the same seven the MATLAB scripts hard-code.'},
+  {q:'A pivot pixel returns ET_rF = 0.98. The best reading is…',
+   opts:['The algorithm failed — ET_rF cannot approach 1','The crop is transpiring at essentially the reference rate: well-watered, full cover — as designed for an irrigated field','The pixel is 98% covered by crop','Daily ET there is 0.98 mm'],
+   a:1, why:'ET_rF is the satellite’s crop coefficient: instantaneous ET over reference ET. Well-irrigated mid-season corn should sit near (even slightly above) 1. Multiply by the day’s ETr (≈5–6 mm) for daily ET.'},
+  {q:'The single assumption that lets one overpass instant become a daily ET map is…',
+   opts:['Rn is constant all day','ET_rF stays constant through the day, so ET₂₄ = ETr₂₄ · ET_rF','The atmosphere is neutral all day','LST does not change between overpasses'],
+   a:1, why:'SEBAL assumes the fraction — not the flux — is conserved: the pixel tracks the reference crop through the diurnal cycle. It fails under afternoon advection or moving cloud fields (§7).'},
+];
+
+/* ---------------- tiny utilities ---------------- */
+const $=id=>document.getElementById(id);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function fmt(x,d=2){return (x==null||!isFinite(x))?'–':(+x).toFixed(d)}
+function clamp(x,a,b){return x<a?a:(x>b?b:x)}
+function esat(T){return 0.6108*Math.exp(17.27*T/(T+237.3))}
+function lerp(a,b,t){return a+(b-a)*t}
+function hex2rgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function rampFn(stops){const cols=stops.map(hex2rgb);return t=>{t=clamp(t,0,1)*(cols.length-1);const i=Math.min(cols.length-2,Math.floor(t)),f=t-i;
+  return [Math.round(lerp(cols[i][0],cols[i+1][0],f)),Math.round(lerp(cols[i][1],cols[i+1][1],f)),Math.round(lerp(cols[i][2],cols[i+1][2],f))]}}
+const RAMPS={
+  lst: rampFn(['#1c5cab','#86b6ef','#efeee9','#f2b287','#c15014','#7a2600']),
+  ndvi:rampFn(['#f0ede1','#cfe0bc','#7fb877','#2e7d43','#0b4d2c']),
+  alb: rampFn(['#4a463c','#a8a494','#e4e0d2','#fdfbf0']),
+  rn:  rampFn(['#fdf3e0','#f3b45c','#d95926','#8a2f08']),
+  h:   rampFn(['#fdeee6','#f09a70','#c94f24','#701c02']),
+  g:   rampFn(['#f7f0dc','#e3c56b','#a8821d','#5f470a']),
+  et:  rampFn(['#f3f7fb','#9ec5f4','#3987e5','#1c5cab','#0d366b']),
+};
+function noiseGrid(N,rand,cell){ // smooth value noise
+  const gw=Math.ceil(N/cell)+2, g=[];
+  for(let i=0;i<gw*gw;i++)g.push(rand());
+  const sm=t=>t*t*(3-2*t), out=new Float64Array(N*N);
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const gx=x/cell,gy=y/cell,ix=Math.floor(gx),iy=Math.floor(gy),fx=sm(gx-ix),fy=sm(gy-iy);
+    const a=g[iy*gw+ix],b=g[iy*gw+ix+1],c=g[(iy+1)*gw+ix],d=g[(iy+1)*gw+ix+1];
+    out[y*N+x]=lerp(lerp(a,b,fx),lerp(c,d,fx),fy);
+  }
+  return out;
+}
+
+/* ---------------- E1: weather + FAO-56 hourly reference ET ---------------- */
+function computeWeather(wx, site=CFG.site){
+  const N=24, J=CFG.doy, z=site.elev;
+  const dr=1+0.033*Math.cos(2*Math.PI*J/365), sd=0.409*Math.sin(2*Math.PI*J/365-1.39);
+  const latR=site.lat*Math.PI/180, P=101.3*Math.pow((293-0.0065*z)/293,5.26);
+  const tau=0.75+2e-5*z;
+  // Angstrom-type cloud reduction: Rs=(0.25+0.5·n/N)·Ra with sunshine fraction n/N = 1−cloud
+  const cf=(0.25+0.5*(1-wx.cloud/100))/0.75;
+  const ea=Math.max(0.4, esat(wx.Tmax)*wx.RHmin/100);
+  const T=[],RH=[],U=[],Rn=[],G=[],ETr=[],LE=[],Rs=[],cosz=[];
+  for(let h=0;h<N;h++){
+    const t=h+0.5;
+    // piecewise diurnal temperature: min at 6h, max at 15h
+    let Tt;
+    if(t>=6&&t<=15) Tt=wx.Tmin+(wx.Tmax-wx.Tmin)*Math.sin(Math.PI*(t-6)/18);
+    else{const td=t<6?t+9:t-15; Tt=wx.Tmax-(wx.Tmax-wx.Tmin)*Math.sin(Math.PI*Math.min(td,15)/30)*1.0;}
+    T.push(Tt);
+    RH.push(clamp(100*ea/esat(Tt),15,98));
+    U.push(Math.max(0.4*wx.u2, wx.u2*(0.54+0.46*Math.sin(Math.PI*clamp((t-7)/12,0,1)))));
+    const tsol=t-((-60)-site.lon)/15;               // EDT clock → solar time
+    const ha=(tsol-12)*Math.PI/12;
+    const cz=Math.sin(latR)*Math.sin(sd)+Math.cos(latR)*Math.cos(sd)*Math.cos(ha);
+    cosz.push(cz);
+    const Ra=cz>0?CFG.Gsc*dr*cz:0, Rso=tau*Ra, Rss=Rso*cf;
+    Rs.push(Rss);
+    const Tk=Tt+273.16;
+    const fcd=clamp(cf,0.05,1);
+    const Rnl=CFG.sigma*Math.pow(Tk,4)*(0.34-0.14*Math.sqrt(ea))*(1.35*fcd-0.35);
+    const Rnn=(1-0.23)*Rss-Rnl;
+    Rn.push(Rnn);
+    G.push(Rnn>0?0.1*Rnn:0.5*Rnn);                 // FAO-56 hourly convention over grass
+  }
+  const out={T,RH,U,Rn,G,Rs,ETr,LE,ea,P};
+  for(let h=0;h<N;h++){
+    const Tt=T[h], es=esat(Tt), vpd=Math.max(0,es-ea);
+    const D=4098*es/Math.pow(Tt+237.3,2), gam=0.665e-3*P;
+    const rho=P/(1.01*(Tt+273)*0.287), ra=208/U[h];
+    const le=(D*(Rn[h]-G[h])+rho*CFG.cp*vpd/ra)/(D+gam*(1+70/ra));  // W/m²
+    LE.push(le);
+    ETr.push(Math.max(0,3600*le/(CFG.lam*1e6)));
+  }
+  out.daily=ETr.reduce((s,v)=>s+v,0);
+  out.pass=(ETr[11]+ETr[12])/2;                     // hour bracketing ≈12:05 EDT overpass
+  out.peak=Math.max(...ETr);
+  // overpass-hour scalars used by SEBAL
+  out.u2pass=(U[11]+U[12])/2; out.Tpass=(T[11]+T[12])/2;
+  return out;
+}
+
+/* ---------------- E2: synthetic Lower-Flint scene ---------------- */
+function genScene(){
+  const N=96, L=N*N, rand=mulberry32(20260610);
+  const lc=new Int16Array(L).fill(12), moist=new Float64Array(L), dem=new Float64Array(L);
+  const ndvi=new Float64Array(L), alb=new Float64Array(L), lai=new Float64Array(L),
+        emis=new Float64Array(L), lst=new Float64Array(L);
+  const n1=noiseGrid(N,rand,14), n2=noiseGrid(N,rand,7), n3=noiseGrid(N,rand,28);
+  // field blocks: per-field dryland moisture
+  const FB=8, fmoist=[];
+  for(let i=0;i<Math.ceil(N/FB)*Math.ceil(N/FB);i++)fmoist.push(0.25+0.45*rand());
+  const fw=Math.ceil(N/FB);
+  const fieldOf=(x,y)=>Math.floor(y/FB)*fw+Math.floor(x/FB);
+  // Flint river path (flows N→S on the east side) + creek from west
+  const riverX=new Float64Array(N);
+  for(let y=0;y<N;y++)riverX[y]=72+6*Math.sin(y/13)+3.5*Math.sin(y/31+1.2);
+  const crX=[],crY=[];
+  for(let x=6;x<74;x++){const yy=58+7*Math.sin(x/9)+(x-6)*0.06*Math.sin(x/17);crX.push(x);crY.push(yy);}
+  const distRiver=(x,y)=>{
+    let d=Math.abs(x-riverX[y]);
+    for(let i=0;i<crX.length;i+=2){const dd=Math.hypot(x-crX[i],y-crY[i]);if(dd<d)d=dd;}
+    return d;
+  };
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const i=y*N+x, dR=distRiver(x,y);
+    dem[i]=42+0.55*Math.min(dR,40)+10*n3[i]-4;
+    moist[i]=fmoist[fieldOf(x,y)];
+    if(dR<1.6){lc[i]=0;}
+    else if(dR<3.6){lc[i]=11;}
+    else if(n1[i]>0.66&&x<62){lc[i]=1;}                         // pine blocks W/central
+    else if(dR<7&&n2[i]>0.45){lc[i]=1;}                          // riparian pine
+    else if(n1[i]<0.22&&n2[i]>0.5){lc[i]=10;}                    // pasture
+    if(x>=28&&x<=36&&y>=58&&y<=66&&n2[i]>0.18)lc[i]=13;          // Camilla
+    if(lc[i]===12&&n2[i]>0.97)lc[i]=16;                          // odd bare patch
+  }
+  // fallow dry fields: pick 6 field blocks that are pure cropland
+  let fallowSet=new Set(), tries=0;
+  while(fallowSet.size<6&&tries++<300){
+    const fx=Math.floor(rand()*(N/FB-2))+1, fy=Math.floor(rand()*(N/FB-2))+1;
+    let ok=true;
+    for(let y=fy*FB;y<fy*FB+FB;y++)for(let x=fx*FB;x<fx*FB+FB;x++)if(lc[y*N+x]!==12)ok=false;
+    if(ok)fallowSet.add(fy*fw+fx);
+  }
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x;
+    if(lc[i]===12&&fallowSet.has(fieldOf(x,y)))moist[i]=0.04+0.05*rand();}
+  // center pivots
+  const pivots=[];
+  tries=0;
+  while(pivots.length<17&&tries++<900){
+    const r=3.1+rand()*1.1, px=8+rand()*(N-16), py=8+rand()*(N-16);
+    if(pivots.some(p=>Math.hypot(p.x-px,p.y-py)<p.r+r+2.5))continue;
+    let ok=true;
+    for(let y=Math.floor(py-r);y<=py+r;y++)for(let x=Math.floor(px-r);x<=px+r;x++){
+      if(x<0||y<0||x>=N||y>=N||(Math.hypot(x-px,y-py)<=r&&lc[y*N+x]!==12&&lc[y*N+x]!==16)){ok=false}}
+    if(!ok)continue;
+    const st=rand(); pivots.push({x:px,y:py,r,m:st<0.68?0.94+0.05*rand():(st<0.85?0.55+0.1*rand():0.2+0.1*rand())});
+  }
+  for(const p of pivots)
+    for(let y=Math.floor(p.y-p.r);y<=p.y+p.r;y++)for(let x=Math.floor(p.x-p.r);x<=p.x+p.r;x++)
+      if(x>=0&&y>=0&&x<N&&y<N&&Math.hypot(x-p.x,y-p.y)<=p.r){const i=y*N+x;lc[i]=12;moist[i]=p.m;}
+  // attributes
+  const Ta=303.2;
+  for(let i=0;i<L;i++){
+    const m=moist[i], jn=(n2[i]-0.5), c=lc[i];
+    let nd,al,la,em,dT;
+    if(c===0){nd=-0.10;al=0.06;la=0;em=0.99;dT=-6.0;}
+    else if(c===11){nd=0.60+0.05*jn;al=0.11;la=2.5;em=0.985;dT=-2.5;}
+    else if(c===1){nd=0.80+0.05*jn;al=0.125;la=3.4+0.4*jn;em=0.985;dT=1.9;}
+    else if(c===10){nd=0.55+0.08*jn;al=0.19;la=1.3;em=0.975;dT=4.6;}
+    else if(c===13){nd=0.25+0.05*jn;al=0.16;la=0.5;em=0.945;dT=9.6;}
+    else if(c===16){nd=0.12+0.03*jn;al=0.26;la=0.05;em=0.949;dT=15.8;}
+    else{ nd=0.16+0.70*m+0.05*jn; al=0.232-0.052*m+0.012*jn; la=Math.max(0.2,0.25+3.7*m);
+          em=0.952+0.033*Math.min(1,nd/0.8); dT=14.4-16.3*m; }
+    ndvi[i]=clamp(nd,-0.15,0.95); alb[i]=clamp(al,0.05,0.30); lai[i]=la; emis[i]=clamp(em,0.94,0.99);
+    lst[i]=Ta+dT+1.4*(n3[i]-0.5)+(c===12&&m<0.15?1.2*(n2[i]-0.5):0);
+  }
+  // scene solar geometry at overpass
+  const J=CFG.doy, dr=1+0.033*Math.cos(2*Math.PI*J/365), sd=0.409*Math.sin(2*Math.PI*J/365-1.39);
+  const latR=CFG.site.lat*Math.PI/180;
+  const tsol=CFG.overpass.frac-((-60)-CFG.site.lon)/15, ha=(tsol-12)*Math.PI/12;
+  const cosz=Math.sin(latR)*Math.sin(sd)+Math.cos(latR)*Math.cos(sd)*Math.cos(ha);
+  // static per-pixel radiation pieces + roughness
+  const tau=new Float64Array(L), Rsin=new Float64Array(L), Rlout=new Float64Array(L),
+        emA=new Float64Array(L), zom=new Float64Array(L);
+  for(let i=0;i<L;i++){
+    tau[i]=0.75+2e-5*dem[i];
+    Rsin[i]=CFG.Gsc*dr*tau[i]*cosz;
+    Rlout[i]=CFG.sigma*emis[i]*Math.pow(lst[i],4);
+    emA[i]=0.85*Math.pow(-Math.log(tau[i]),0.09);
+    const c=lc[i]; zom[i]=c===12?Math.max(0.005,0.018*lai[i]):LCINFO[c].zom;
+  }
+  // algorithm anchor picks (E2 rules: extremes over homogeneous 3×3 cropland)
+  function homogCrop(i){
+    const x=i%N,y=(i-x)/N; if(x<1||y<1||x>=N-1||y>=N-1)return false;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(lc[(y+dy)*N+(x+dx)]!==12)return false;
+    return true;
+  }
+  let autoHot=-1,autoCold=-1,Th=-1e9,Tc=1e9;
+  for(let i=0;i<L;i++)if(homogCrop(i)){
+    if(lst[i]>Th){Th=lst[i];autoHot=i;}
+    if(lst[i]<Tc&&lst[i]>273){Tc=lst[i];autoCold=i;}
+  }
+  const catOf=i=>{const c=lc[i];
+    if(c===12)return moist[i]>0.8?'pivot':(moist[i]<0.15?'fallow':'dry');
+    return c===1?'forest':c===10?'grass':c===11?'wet':c===13?'urban':c===0?'water':'fallow';};
+  return {N,L,lc,moist,dem,ndvi,alb,lai,emis,lst,tau,Rsin,Rlout,emA,zom,cosz,Ta,
+          autoHot,autoCold,homogCrop,catOf,pivots};
+}
+
+/* ---------------- E2–E5: the SEBAL engine ---------------- */
+function runSEBAL(SC,wxo,coldI,hotI,opts={}){
+  const {N,L}=SC, k=CFG.k, cp=CFG.cp, maxIter=opts.maxIter??10;
+  const lstA=opts.lst||SC.lst, albA=opts.alb||SC.alb;
+  const Ts_c=lstA[coldI], Ts_h=lstA[hotI], demc=SC.dem[coldI];
+  const sub=opts.stride||1;
+  const idx=[]; for(let y=0;y<N;y+=sub)for(let x=0;x<N;x+=sub)idx.push(y*N+x);
+  if(sub>1){if(!idx.includes(coldI))idx.push(coldI); if(!idx.includes(hotI))idx.push(hotI);}
+  // --- Rn and G (Eq. 2, Eq. 3) ---
+  const Rn=new Float64Array(L).fill(NaN), G=new Float64Array(L).fill(NaN);
+  const sig=CFG.sigma;
+  for(const i of idx){
+    const Rsin=SC.Rsin[i];
+    const Rlout=opts.lst? sig*SC.emis[i]*Math.pow(lstA[i],4) : SC.Rlout[i];
+    const Rlin=SC.emA[i]*sig*Math.pow(Ts_c+0.0065*(demc-SC.dem[i]),4);
+    Rn[i]=(1-albA[i])*Rsin+Rlin-Rlout-(1-SC.emis[i])*Rlin;
+    const c=SC.lc[i], nd=SC.ndvi[i];
+    let g2;
+    if(c===0||nd<0) g2=0.5;                              // water
+    else g2=(lstA[i]-273.15)*(0.0038+0.0074*albA[i])*(1-0.98*Math.pow(nd,4)); // Eq. 3 (÷α form)
+    G[i]=clamp(g2,0,0.5)*Rn[i];
+  }
+  // --- anchor boundary conditions (Eq. 6–7, W/m²) ---
+  const ETr_pass=(opts.ETrScale??1)*wxo.pass;
+  const LEc=1.05*ETr_pass*(CFG.lam*1e6)/3600;
+  const H_c=Rn[coldI]-G[coldI]-LEc, H_h=Rn[hotI]-G[hotI];
+  // --- wind at blending height from station (E3) ---
+  const u=wxo.u2pass, ufz=k*u/Math.log(2/0.036), u200=ufz*Math.log(200/0.036)/k;
+  // --- iteration state ---
+  const uf=new Float64Array(L), rah=new Float64Array(L), rho=new Float64Array(L),
+        H=new Float64Array(L), dT=new Float64Array(L), TaA=new Float64Array(L);
+  const hist=[];
+  let rc=1.292, rh=1.2;                                   // initial anchor densities (E3)
+  for(const i of idx){ uf[i]=k*u200/Math.log(200/SC.zom[i]); rah[i]=Math.log(2/0.1)/(k*uf[i]); }
+  let a=0,b=0,converged=false,it=0;
+  for(it=0; it<=maxIter; it++){
+    if(it>0){ // stability corrections (E4 / StabCorr.m)
+      for(const i of idx){
+        let Lm;
+        if(H[i]===0||!isFinite(H[i]))Lm=-1000;
+        else Lm=(-rho[i]*cp*Math.pow(uf[i],3)*lstA[i])/(k*9.81*H[i]);
+        let pm200,ph2,ph01;
+        if(Lm<0){
+          const x200=Math.pow(1-16*200/Lm,0.25),x2=Math.pow(1-16*2/Lm,0.25),x01=Math.pow(1-16*0.1/Lm,0.25);
+          pm200=2*Math.log((1+x200)/2)+Math.log((1+x200*x200)/2)-2*Math.atan(x200)+Math.PI/2;
+          ph2=2*Math.log((1+x2*x2)/2); ph01=2*Math.log((1+x01*x01)/2);
+        }else if(Lm>0){pm200=-5*2/Lm;ph2=-5*2/Lm;ph01=-5*0.1/Lm;}
+        else{pm200=0;ph2=0;ph01=0;}
+        const den=Math.log(200/SC.zom[i])-pm200;
+        uf[i]=k*u200/Math.max(den,0.8);
+        rah[i]=clamp((Math.log(2/0.1)-ph2+ph01)/(k*uf[i]),2,250);
+      }
+      rc=rho[coldI]; rh=rho[hotI];
+    }
+    const dTc=H_c*rah[coldI]/(rc*cp), dTh=H_h*rah[hotI]/(rh*cp);
+    a=(dTc-dTh)/(Ts_c-Ts_h); b=dTc-a*Ts_c;
+    for(const i of idx){
+      dT[i]=a*lstA[i]+b;
+      TaA[i]=lstA[i]-dT[i];
+      rho[i]=354.6375*Math.pow(1-0.0065*SC.dem[i]/TaA[i],5.2558)/(TaA[i]-0.0065*SC.dem[i]);
+      H[i]=rho[i]*cp*dT[i]/rah[i];
+    }
+    hist.push({a,b,dTc,dTh,rahc:rah[coldI],rahh:rah[hotI],ufh:uf[hotI],rhoh:rho[hotI],Hh:H[hotI],
+               H:opts.keepMaps?H.slice():null,rah:opts.keepMaps?rah.slice():null});
+    const n=hist.length;
+    if(n>=2){
+      const p=hist[n-2],q=hist[n-1];
+      if(Math.abs((q.dTh-p.dTh)/(p.dTh||1))<0.01&&Math.abs((q.rahh-p.rahh)/(p.rahh||1))<0.01){converged=true;break;}
+    }
+  }
+  // --- E5 final maps at the last iteration ---
+  const LE=new Float64Array(L).fill(NaN), ETins=new Float64Array(L).fill(NaN),
+        ETrF=new Float64Array(L).fill(NaN), ET24=new Float64Array(L).fill(NaN);
+  const ETr24=(opts.ETrScale??1)*wxo.daily;
+  let clampCount=0;
+  for(const i of idx){
+    let le=Rn[i]-G[i]-H[i];
+    if(SC.lc[i]===0){LE[i]=NaN;continue;}          // mask water, as E5 does
+    if(le<0){le=0;clampCount++;}
+    LE[i]=le; ETins[i]=3600*le/(CFG.lam*1e6);
+    ETrF[i]=ETins[i]/ETr_pass; ET24[i]=ETrF[i]*ETr24;
+  }
+  return {Rn,G,H,dT,TaA,rah,uf,LE,ETins,ETrF,ET24,hist,a,b,H_c,H_h,LEc,Ts_c,Ts_h,
+          converged,nIter:hist.length-1,clampCount,idx,ETr_pass,u200,coldI,hotI};
+}
+
+/* ---------------- category means + Monte Carlo ---------------- */
+function catMeans(SC,R){
+  const sums={},cnts={};
+  for(const i of R.idx){
+    if(!isFinite(R.ET24[i]))continue;
+    const c=SC.catOf(i);
+    sums[c]=(sums[c]||0)+R.ET24[i]; cnts[c]=(cnts[c]||0)+1;
+  }
+  const out={};
+  for(const c in sums)out[c]=sums[c]/cnts[c];
+  return out;
+}
+function sceneMean(SC,R,cat){
+  let s=0,n=0;
+  for(const i of R.idx){if(!isFinite(R.ET24[i]))continue;if(cat&&SC.catOf(i)!==cat)continue;s+=R.ET24[i];n++;}
+  return n?s/n:NaN;
+}
+function runMC(SC,wxo,coldI,hotI,sig,nReal,onDone,onProg){
+  const rand=mulberry32(777), res=[], L=SC.L;
+  const lstP=new Float64Array(L), albP=new Float64Array(L);
+  let r=0;
+  const gauss=()=>{let u=0,v=0;while(u===0)u=rand();while(v===0)v=rand();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+  function chunk(){
+    const t0=performance.now();
+    while(r<nReal&&performance.now()-t0<40){
+      const bT=gauss()*sig.T, bA=gauss()*sig.A, fE=Math.max(0.5,1+gauss()*sig.E/100);
+      for(let i=0;i<L;i++){lstP[i]=SC.lst[i]+bT+gauss()*sig.T*0.6;
+        albP[i]=clamp(SC.alb[i]+bA+gauss()*sig.A*0.5,0.03,0.4);}
+      const R=runSEBAL(SC,wxo,coldI,hotI,{lst:lstP,alb:albP,ETrScale:fE,stride:2,maxIter:6});
+      res.push({mean:sceneMean(SC,R),pivot:sceneMean(SC,R,'pivot')});
+      r++;
+    }
+    onProg&&onProg(r,nReal);
+    if(r<nReal)setTimeout(chunk,0); else onDone(res);
+  }
+  chunk();
+}
+</script>
+<script>
+'use strict';
+/* ================== shared UI helpers ================== */
+const NS='http://www.w3.org/2000/svg';
+function svgE(tag,attrs={},parent){const e=document.createElementNS(NS,tag);
+  for(const k in attrs)e.setAttribute(k,attrs[k]); if(parent)parent.appendChild(e); return e;}
+function niceTicks(lo,hi,n=5){
+  if(!(hi>lo)){hi=lo+1;}
+  const span=hi-lo, step0=span/n, mag=Math.pow(10,Math.floor(Math.log10(step0)));
+  let step=mag; for(const m of [1,2,2.5,5,10]){if(step0<=m*mag){step=m*mag;break;}}
+  const t0=Math.ceil(lo/step)*step, out=[];
+  for(let v=t0;v<=hi+1e-9;v+=step)out.push(+v.toFixed(10));
+  return out;
+}
+const TIP=$('pxtip');
+function showTip(html,x,y){TIP.innerHTML=html;TIP.style.display='block';
+  const w=TIP.offsetWidth,h=TIP.offsetHeight;
+  TIP.style.left=Math.min(x+16,innerWidth-w-8)+'px';
+  TIP.style.top=(y+18+h>innerHeight?y-h-10:y+18)+'px';}
+function hideTip(){TIP.style.display='none';}
+
+/* line chart with hover crosshair */
+function lineChart(el,cfg){
+  const w=cfg.w||520,h=cfg.h||240,m={l:46,r:cfg.rpad||58,t:26,b:34};
+  el.innerHTML='';
+  const svg=svgE('svg',{viewBox:`0 0 ${w} ${h}`,role:'img','aria-label':cfg.title||''});
+  el.appendChild(svg);
+  let xlo=Infinity,xhi=-Infinity,ylo=cfg.ymin??Infinity,yhi=cfg.ymax??-Infinity;
+  for(const s of cfg.series){for(let i=0;i<s.xs.length;i++){const x=s.xs[i],y=s.ys[i];
+    if(!isFinite(y))continue; xlo=Math.min(xlo,x);xhi=Math.max(xhi,x);
+    if(cfg.ymin==null)ylo=Math.min(ylo,y); if(cfg.ymax==null)yhi=Math.max(yhi,y);}}
+  if(ylo===yhi){yhi=ylo+1;}
+  const yt=niceTicks(ylo,yhi,4); ylo=Math.min(ylo,yt[0]); yhi=Math.max(yhi,yt[yt.length-1]);
+  const X=x=>m.l+(x-xlo)/(xhi-xlo)*(w-m.l-m.r), Y=y=>h-m.b-(y-ylo)/(yhi-ylo)*(h-m.t-m.b);
+  for(const t of yt){svgE('line',{x1:m.l,x2:w-m.r,y1:Y(t),y2:Y(t),stroke:'var(--line)','stroke-width':1},svg);
+    svgE('text',{x:m.l-7,y:Y(t)+3.5,'text-anchor':'end',fill:'var(--muted)','font-size':10.5},svg).textContent=t;}
+  const xt=cfg.xTicks||niceTicks(xlo,xhi,6);
+  for(const t of xt){svgE('text',{x:X(t),y:h-m.b+15,'text-anchor':'middle',fill:'var(--muted)','font-size':10.5},svg).textContent=t;}
+  svgE('line',{x1:m.l,x2:w-m.r,y1:Y(ylo>0?ylo:0),y2:Y(ylo>0?ylo:0),stroke:'var(--muted)','stroke-width':1},svg);
+  if(cfg.vline!=null){svgE('line',{x1:X(cfg.vline),x2:X(cfg.vline),y1:m.t,y2:h-m.b,stroke:'var(--gold)','stroke-width':1.4,'stroke-dasharray':'4 3'},svg);
+    svgE('text',{x:X(cfg.vline)+4,y:m.t+9,fill:'var(--gold)','font-size':9.5},svg).textContent=cfg.vlab||'';}
+  const usedY=[];
+  for(const s of cfg.series){
+    let d='';for(let i=0;i<s.xs.length;i++){const y=s.ys[i];if(!isFinite(y))continue;
+      d+=(d?'L':'M')+X(s.xs[i]).toFixed(1)+' '+Y(y).toFixed(1);}
+    svgE('path',{d,fill:'none',stroke:s.color,'stroke-width':2,'stroke-linejoin':'round'},svg);
+    if(s.xs.length<=14)for(let i=0;i<s.xs.length;i++)if(isFinite(s.ys[i]))
+      svgE('circle',{cx:X(s.xs[i]),cy:Y(s.ys[i]),r:3.4,fill:s.color},svg);
+    let ly=Y(s.ys[s.ys.length-1]); for(const u of usedY)if(Math.abs(ly-u)<12)ly=u+12; usedY.push(ly);
+    svgE('text',{x:w-m.r+5,y:clamp(ly,m.t+6,h-m.b)+3,fill:s.color,'font-size':10.5,'font-weight':600},svg).textContent=s.label;
+  }
+  svgE('text',{x:m.l,y:13,class:'gtitle',fill:'var(--ink2)','font-size':12,'font-weight':600},svg).textContent=cfg.title||'';
+  if(cfg.ylab)svgE('text',{x:m.l,y:h-m.b+15+13,fill:'var(--muted)','font-size':9.5},svg).textContent='';
+  svgE('text',{x:(m.l+w-m.r)/2,y:h-3,'text-anchor':'middle',fill:'var(--muted)','font-size':10}, svg).textContent=cfg.xlab||'';
+  svgE('text',{x:12,y:m.t-8,fill:'var(--muted)','font-size':10}, svg).textContent=cfg.ylabTop||'';
+  // hover
+  const cross=svgE('line',{y1:m.t,y2:h-m.b,stroke:'var(--muted)','stroke-width':1,'stroke-dasharray':'2 3',visibility:'hidden'},svg);
+  const hit=svgE('rect',{x:m.l,y:m.t,width:w-m.l-m.r,height:h-m.t-m.b,fill:'transparent'},svg);
+  hit.addEventListener('mousemove',ev=>{
+    const r=svg.getBoundingClientRect(), px=(ev.clientX-r.left)*(w/r.width);
+    const xv=xlo+(px-m.l)/(w-m.l-m.r)*(xhi-xlo);
+    let bi=0,bd=Infinity; const s0=cfg.series[0];
+    for(let i=0;i<s0.xs.length;i++){const d=Math.abs(s0.xs[i]-xv);if(d<bd){bd=d;bi=i;}}
+    cross.setAttribute('x1',X(s0.xs[bi]));cross.setAttribute('x2',X(s0.xs[bi]));cross.setAttribute('visibility','visible');
+    let html=`<div class="t">${cfg.xlab||'x'} = ${s0.xs[bi]}</div>`;
+    for(const s of cfg.series)html+=`<div><span style="color:${s.color}">●</span> ${s.label}: ${fmt(s.ys[bi],cfg.dec??1)} ${s.unit||cfg.unit||''}</div>`;
+    showTip(html,ev.clientX,ev.clientY);
+  });
+  hit.addEventListener('mouseleave',()=>{cross.setAttribute('visibility','hidden');hideTip();});
+}
+
+/* horizontal bar chart with expected-range brackets */
+function rangeBars(el,items,cfg={}){
+  const w=cfg.w||560, rh=30, m={l:130,r:70,t:26,b:30}, h=m.t+m.b+items.length*rh;
+  el.innerHTML='';
+  const svg=svgE('svg',{viewBox:`0 0 ${w} ${h}`,role:'img','aria-label':cfg.title||''}); el.appendChild(svg);
+  let hi=0; for(const it of items)hi=Math.max(hi,it.val||0,it.hi||0);
+  hi=niceTicks(0,hi*1.06,5).pop();
+  const X=v=>m.l+v/hi*(w-m.l-m.r);
+  for(const t of niceTicks(0,hi,5)){svgE('line',{x1:X(t),x2:X(t),y1:m.t,y2:h-m.b,stroke:'var(--line)'},svg);
+    svgE('text',{x:X(t),y:h-m.b+14,'text-anchor':'middle',fill:'var(--muted)','font-size':10},svg).textContent=t;}
+  items.forEach((it,i)=>{
+    const y=m.t+i*rh+5, bh=rh-12;
+    svgE('text',{x:m.l-8,y:y+bh/2+3.5,'text-anchor':'end',fill:'var(--ink2)','font-size':11},svg).textContent=it.name;
+    if(isFinite(it.val)){
+      svgE('rect',{x:X(0),y,width:Math.max(1,X(it.val)-X(0)),height:bh,rx:3,fill:cfg.color||'var(--le)'},svg);
+      svgE('text',{x:X(it.val)+5,y:y+bh/2+3.5,fill:'var(--ink)','font-size':10.5,'font-family':'var(--mono)'},svg).textContent=fmt(it.val,1);
+    }
+    if(it.lo!=null){ const yc=y+bh/2;
+      svgE('line',{x1:X(it.lo),x2:X(it.hi),y1:yc,y2:yc,stroke:'var(--ink2)','stroke-width':1.6},svg);
+      svgE('line',{x1:X(it.lo),x2:X(it.lo),y1:yc-5,y2:yc+5,stroke:'var(--ink2)','stroke-width':1.6},svg);
+      svgE('line',{x1:X(it.hi),x2:X(it.hi),y1:yc-5,y2:yc+5,stroke:'var(--ink2)','stroke-width':1.6},svg);
+    }
+  });
+  svgE('text',{x:m.l,y:13,fill:'var(--ink2)','font-size':12,'font-weight':600},svg).textContent=cfg.title||'';
+  svgE('text',{x:(m.l+w-m.r)/2,y:h-2,'text-anchor':'middle',fill:'var(--muted)','font-size':10},svg).textContent=cfg.xlab||'';
+}
+
+function histoChart(el,vals,cfg={}){
+  const w=cfg.w||560,h=cfg.h||210,m={l:46,r:16,t:26,b:36};
+  el.innerHTML=''; if(!vals.length)return;
+  const svg=svgE('svg',{viewBox:`0 0 ${w} ${h}`}); el.appendChild(svg);
+  const lo=Math.min(...vals),hi=Math.max(...vals),nb=cfg.bins||18,bwv=(hi-lo)/nb||1;
+  const bins=new Array(nb).fill(0); for(const v of vals)bins[Math.min(nb-1,Math.floor((v-lo)/bwv))]++;
+  const bmax=Math.max(...bins);
+  const X=v=>m.l+(v-lo)/(hi-lo||1)*(w-m.l-m.r), Y=c=>h-m.b-c/bmax*(h-m.t-m.b);
+  for(let i=0;i<nb;i++){const x0=X(lo+i*bwv),x1=X(lo+(i+1)*bwv);
+    svgE('rect',{x:x0+1,y:Y(bins[i]),width:Math.max(1,x1-x0-2),height:h-m.b-Y(bins[i]),fill:'var(--le)',rx:2},svg);}
+  for(const t of niceTicks(lo,hi,6))svgE('text',{x:X(t),y:h-m.b+14,'text-anchor':'middle',fill:'var(--muted)','font-size':10},svg).textContent=t.toFixed(1);
+  svgE('line',{x1:m.l,x2:w-m.r,y1:h-m.b,y2:h-m.b,stroke:'var(--muted)'},svg);
+  const srt=[...vals].sort((a,b)=>a-b), q=p=>srt[Math.floor(p*(srt.length-1))];
+  for(const [p,lab] of [[0.05,'p5'],[0.5,'median'],[0.95,'p95']]){
+    svgE('line',{x1:X(q(p)),x2:X(q(p)),y1:m.t,y2:h-m.b,stroke:'var(--gold)','stroke-width':p===0.5?2:1,'stroke-dasharray':p===0.5?'':'3 3'},svg);
+    svgE('text',{x:X(q(p)),y:m.t-4,'text-anchor':'middle',fill:'var(--gold)','font-size':9.5},svg).textContent=lab;}
+  svgE('text',{x:m.l,y:13,fill:'var(--ink2)','font-size':12,'font-weight':600},svg).textContent=cfg.title||'';
+  svgE('text',{x:(m.l+w-m.r)/2,y:h-3,'text-anchor':'middle',fill:'var(--muted)','font-size':10},svg).textContent=cfg.xlab||'';
+  return {q};
+}
+
+/* ================== canvas maps + pixel inspector ================== */
+const MAPREG=new Map();  // canvas -> {getTip}
+function drawMap(cv,arr,ramp,lo,hi,opts={}){
+  const N=SC.N, ctx=cv.getContext('2d'), img=ctx.createImageData(N,N);
+  for(let i=0;i<N*N;i++){
+    const v=arr[i], o=i*4;
+    if(!isFinite(v)){ // masked: hatch grey
+      const g=((i%N)+((i/N)|0))%2?208:196;
+      img.data[o]=g;img.data[o+1]=g;img.data[o+2]=g-4;img.data[o+3]=255;continue;}
+    const c=ramp((v-lo)/(hi-lo||1));
+    img.data[o]=c[0];img.data[o+1]=c[1];img.data[o+2]=c[2];img.data[o+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+  if(opts.register!==false)registerMap(cv);
+  if(opts.shell)placeAnchors(cv);
+}
+function drawLCMap(cv){
+  const N=SC.N,ctx=cv.getContext('2d'),img=ctx.createImageData(N,N);
+  for(let i=0;i<N*N;i++){const c=hex2rgb(LCINFO[SC.lc[i]].color),o=i*4;
+    let [r,g,b]=c;
+    if(SC.lc[i]===12){const m=SC.moist[i]; r=Math.round(lerp(223,58,m)); g=Math.round(lerp(192,122,m)); b=Math.round(lerp(106,60,m));}
+    img.data[o]=r;img.data[o+1]=g;img.data[o+2]=b;img.data[o+3]=255;}
+  ctx.putImageData(img,0,0); registerMap(cv);
+}
+function pxFromEvent(cv,ev){
+  const r=cv.getBoundingClientRect();
+  const x=Math.floor((ev.clientX-r.left)/r.width*SC.N), y=Math.floor((ev.clientY-r.top)/r.height*SC.N);
+  if(x<0||y<0||x>=SC.N||y>=SC.N)return -1;
+  return y*SC.N+x;
+}
+function pixelTip(i){
+  const c=SC.lc[i], R=SIM.R, D=SIM.disp;
+  let html=`<div class="t">${LCINFO[c].name}${c===12?(SC.moist[i]>0.8?' (irrigated)':SC.moist[i]<0.15?' (fallow/dry)':' (dryland)'):''}</div>`;
+  html+=`LST ${fmt(SC.lst[i],1)} K · NDVI ${fmt(SC.ndvi[i],2)}<br>α ${fmt(SC.alb[i],2)} · LAI ${fmt(SC.lai[i],1)} · z ${fmt(SC.dem[i],0)} m`;
+  if(R&&D){
+    html+=`<br>R<sub>n</sub> ${fmt(R.Rn[i],0)} · G ${fmt(R.G[i],0)} · H ${fmt(D.H[i],0)} W/m²`;
+    if(isFinite(D.LE[i]))html+=`<br>λET ${fmt(D.LE[i],0)} W/m² · ET<sub>r</sub>F ${fmt(D.ETrF[i],2)}<br><b>ET₂₄ ${fmt(D.ET24[i],1)} mm/d</b>`;
+    else html+=`<br><i>water — masked in E5</i>`;
+  }
+  return html;
+}
+function registerMap(cv){
+  if(MAPREG.has(cv))return; MAPREG.set(cv,1);
+  cv.addEventListener('mousemove',ev=>{const i=pxFromEvent(cv,ev);if(i<0)return hideTip();showTip(pixelTip(i),ev.clientX,ev.clientY);});
+  cv.addEventListener('mouseleave',hideTip);
+}
+function makeMapBox(parent,id,title,ramp,unit,dec=0){
+  const box=document.createElement('div');box.className='mapbox';
+  box.innerHTML=`<div class="mapshell"><canvas id="${id}" width="96" height="96" role="img" aria-label="${title} map"></canvas></div>
+   <span class="cap"><b>${title}</b><span class="mono" id="${id}R"></span></span>
+   <div class="cbar" id="${id}C"></div><div class="cbar-lab"><span id="${id}L"></span><span>${unit}</span><span id="${id}H"></span></div>`;
+  parent.appendChild(box);
+  const cbar=$(id+'C'); let s='linear-gradient(90deg';
+  for(let i=0;i<=10;i++){const c=ramp(i/10);s+=`,rgb(${c[0]},${c[1]},${c[2]}) ${i*10}%`;}
+  cbar.style.background=s+')';
+  return {cv:$(id),update(arr,lo,hi){
+    if(lo==null){lo=Infinity;hi=-Infinity;for(const v of arr){if(isFinite(v)){lo=Math.min(lo,v);hi=Math.max(hi,v);}}}
+    drawMap(this.cv,arr,ramp,lo,hi); $(id+'L').textContent=fmt(lo,dec); $(id+'H').textContent=fmt(hi,dec);
+    placeAnchors(this.cv); return [lo,hi];
+  }};
+}
+function placeAnchors(cv){
+  const shell=cv.parentElement; if(!shell.classList.contains('mapshell'))return;
+  shell.querySelectorAll('.anchor-dot').forEach(e=>e.remove());
+  for(const [i,col] of [[SIM.cold,'var(--cold)'],[SIM.hot,'var(--hot)']]){
+    if(i==null)continue;
+    const x=i%SC.N,y=(i-x)/SC.N,d=document.createElement('div');
+    d.className='anchor-dot'; d.style.background=col;
+    d.style.left=((x+0.5)/SC.N*100)+'%'; d.style.top=((y+0.5)/SC.N*100)+'%';
+    shell.appendChild(d);
+  }
+}
+
+/* ================== state ================== */
+const SC=genScene();
+const SIM={wx:{Tmax:33,Tmin:21,RHmin:52,u2:2.0,cloud:0},wxo:null,cold:SC.autoCold,hot:SC.autoHot,
+           R:null,k:0,disp:null,autoMean:null,trials:0,pickMode:null};
+function deriveDisp(){
+  const R=SIM.R,hs=R.hist[Math.min(SIM.k,R.hist.length-1)];
+  const L=SC.L,H=hs.H,LE=new Float64Array(L).fill(NaN),ETrF=new Float64Array(L).fill(NaN),ET24=new Float64Array(L).fill(NaN);
+  for(const i of R.idx){
+    if(SC.lc[i]===0)continue;
+    let le=R.Rn[i]-R.G[i]-H[i]; if(le<0)le=0;
+    LE[i]=le; ETrF[i]=(3600*le/(CFG.lam*1e6))/R.ETr_pass; ET24[i]=ETrF[i]*SIM.wxo.daily;
+  }
+  SIM.disp={H,LE,ETrF,ET24,rahh:hs.rahh,dTh:hs.dTh,dTc:hs.dTc,a:hs.a,b:hs.b};
+}
+function recomputeWeather(){SIM.wxo=computeWeather(SIM.wx);}
+function recomputeSEBAL(logTrial){
+  SIM.R=runSEBAL(SC,SIM.wxo,SIM.cold,SIM.hot,{keepMaps:true,maxIter:10});
+  SIM.k=SIM.R.hist.length-1;
+  deriveDisp();
+  const isAuto=(SIM.cold===SC.autoCold&&SIM.hot===SC.autoHot);
+  if(isAuto)SIM.autoMean=sceneMean(SC,SIM.R);
+  else{const RA=runSEBAL(SC,SIM.wxo,SC.autoCold,SC.autoHot,{maxIter:10});SIM.autoMean=sceneMean(SC,RA);}
+  if(logTrial)addTrial(isAuto);
+}
+function rerenderAll(){renderE1();renderE2();renderE3();renderE4();renderE5();renderHero();}
+
+/* ================== §1 energy balance + radiation ================== */
+function renderEB(){
+  const Rn=620,H=+$('sH').value,G=+$('sG').value,LE=Rn-H-G;
+  $('vH').textContent=H+' W/m²';$('vG').textContent=G+' W/m²';
+  const el=$('ebBar'); el.innerHTML='';
+  const bar=document.createElement('div');
+  bar.style.cssText='display:flex;gap:2px;height:52px;border-radius:8px;overflow:hidden;font-family:var(--sans);font-size:.75rem;color:#fff;font-weight:600';
+  const seg=(w,color,lab)=>{const d=document.createElement('div');
+    d.style.cssText=`flex:0 0 ${Math.max(0,w/Rn*100)}%;background:${color};display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden`;
+    d.textContent=lab; return d;};
+  if(LE>=0){bar.append(seg(LE,'var(--le)',LE>42?`λET ${LE}`:''),seg(H,'var(--hot)',H>42?`H ${H}`:''),seg(G,'var(--gg)',G>42?`G ${G}`:''));}
+  else{bar.append(seg(H+LE,'var(--hot)','H'),seg(G,'var(--gg)','G'));}
+  el.appendChild(bar);
+  const lab=document.createElement('div');lab.className='small';lab.style.marginTop='6px';
+  lab.innerHTML=LE>=0?`R<sub>n</sub> 620 = λET <b style="color:var(--le)">${LE}</b> + H <b style="color:var(--hot)">${H}</b> + G <b style="color:var(--gg)">${G}</b> W/m² &nbsp;→&nbsp; that λET evaporates <b>${fmt(LE*3600/2.45e6,2)} mm/h</b>`
+   :`<b style="color:var(--hot)">Impossible: H + G exceed R<sub>n</sub> by ${-LE} W/m².</b> λET would be negative — in E5, SEBAL clamps such pixels to zero and flags them as non-closure.`;
+  el.appendChild(lab);
+  $('ebCards').innerHTML=`<div class="card coldc"><div class="v">${fmt(Math.max(0,LE)/Rn*100,0)}%</div><div class="n">evaporative fraction</div></div>
+   <div class="card"><div class="v">${fmt(Math.max(0,LE)*3600/2.45e6*10,1)}</div><div class="n">mm per 10 h at this rate</div></div>`;
+}
+function renderRad(){
+  const alb=+$('sAlb').value,em=+$('sEmis').value,Ts=+$('sTs').value;
+  $('vAlb').textContent=fmt(alb,2);$('vEmis').textContent=fmt(em,3);$('vTs').textContent=Ts+' K';
+  const J=CFG.doy,dr=1+0.033*Math.cos(2*Math.PI*J/365),tau=0.75+2e-5*CFG.site.elev;
+  const Rs=CFG.Gsc*dr*tau*SC.cosz, Rld=SC.emA[0]*CFG.sigma*Math.pow(SC.Ta,4);
+  const Rlu=em*CFG.sigma*Math.pow(Ts,4);
+  const refl=alb*Rs, lrefl=(1-em)*Rld;
+  const Rn=(1-alb)*Rs+Rld-Rlu-lrefl;
+  const el=$('radSvg'); el.innerHTML='';
+  const w=560,h=230,gy=190;
+  const svg=svgE('svg',{viewBox:`0 0 ${w} ${h}`}); el.appendChild(svg);
+  svgE('defs',{},svg).innerHTML=`<marker id="ah" viewBox="0 0 10 10" refX="7.5" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker>`;
+  svgE('rect',{x:0,y:gy,width:w,height:6,fill:'var(--pine)',opacity:0.75},svg);
+  svgE('text',{x:w/2,y:gy+22,'text-anchor':'middle',fill:'var(--ink2)','font-size':10.5},svg).textContent='vegetation / soil surface';
+  const arrow=(x1,y1,x2,y2,v,col,lab,lx,ly,anch)=>{
+    svgE('line',{x1,y1,x2,y2,stroke:col,'stroke-width':clamp(v/80,1,7.5),'marker-end':'url(#ah)',opacity:0.92},svg);
+    const t=svgE('text',{x:lx,y:ly,'text-anchor':anch||'middle',fill:col,'font-size':10.5,'font-weight':600},svg);
+    t.textContent=`${lab} ${fmt(v,0)}`;};
+  arrow(62,22,116,gy-8,Rs,'var(--gold)','Rs↓',34,16,'start');
+  arrow(150,gy-8,204,30,refl,'var(--gold)','αRs↓',212,30,'start');
+  arrow(300,28,300,gy-8,Rld,'var(--rn)','RL↓',300,16);
+  arrow(352,gy-8,352,64,lrefl,'var(--rn)','(1−ε₀)RL↓',362,58,'start');
+  arrow(480,gy-8,480,30,Rlu,'var(--hot)','RL↑',480,18);
+  $('radRead').innerHTML=`R<sub>n</sub> = (1−${fmt(alb,2)})·${fmt(Rs,0)} + ${fmt(Rld,0)} − ${fmt(Rlu,0)} − ${fmt(lrefl,0)} = <b>${fmt(Rn,0)} W/m²</b>
+   &nbsp;·&nbsp; presets: <button class="btn ghost" style="padding:2px 10px;font-size:.72rem" id="preCold">irrigated pivot</button>
+   <button class="btn ghost" style="padding:2px 10px;font-size:.72rem" id="preHot">dry fallow field</button>`;
+  $('preCold').onclick=()=>{$('sAlb').value=0.18;$('sEmis').value=0.985;$('sTs').value=301;renderRad();};
+  $('preHot').onclick=()=>{$('sAlb').value=0.23;$('sEmis').value=0.955;$('sTs').value=318;renderRad();};
+}
+
+/* ================== E1 ================== */
+function renderE1(){
+  const o=SIM.wxo,hrs=[...Array(24)].map((_,i)=>i+0.5);
+  lineChart($('chFlux'),{title:'Energy terms at the reference grass (W/m²)',xlab:'hour (EDT)',unit:'W/m²',dec:0,
+    xTicks:[0,4,8,12,16,20,24],vline:CFG.overpass.frac,vlab:'overpass',
+    series:[{xs:hrs,ys:o.Rn,color:'var(--rn)',label:'Rn'},
+            {xs:hrs,ys:o.LE,color:'var(--le)',label:'λETr'},
+            {xs:hrs,ys:o.G,color:'var(--gg)',label:'G'}]});
+  lineChart($('chETr'),{title:'Hourly reference ET (mm h⁻¹)',xlab:'hour (EDT)',unit:'mm/h',dec:2,
+    xTicks:[0,4,8,12,16,20,24],vline:CFG.overpass.frac,vlab:'overpass',ymin:0,
+    series:[{xs:hrs,ys:o.ETr,color:'var(--le)',label:'ETr'}]});
+  $('e1Cards').innerHTML=
+   `<div class="card pos"><div class="v">${fmt(o.daily,2)}</div><div class="n">daily ETr (mm d⁻¹)</div></div>
+    <div class="card"><div class="v">${fmt(o.pass,2)}</div><div class="n">ETr at overpass (mm h⁻¹)</div></div>
+    <div class="card"><div class="v">${fmt(o.peak,2)}</div><div class="n">peak hourly ETr</div></div>
+    <div class="card"><div class="v">${fmt(o.daily/25.4,2)}″</div><div class="n">in inches — compare UGA checkbook tables</div></div>`;
+}
+
+/* ================== E2 ================== */
+let MB={};
+function renderSceneStatics(){
+  const leg=$('lcLegend'); leg.innerHTML='';
+  for(const c of [12,1,10,11,0,13,16]){
+    const s=document.createElement('span');
+    s.innerHTML=`<i style="background:${LCINFO[c].color}"></i>${LCINFO[c].name}${c===12?' (dark = irrigated)':''}`;
+    leg.appendChild(s);
+  }
+  const sm=$('sceneMaps');
+  MB.lc=(()=>{const box=document.createElement('div');box.className='mapbox';
+    box.innerHTML=`<div class="mapshell"><canvas id="mLC" width="96" height="96" role="img" aria-label="Land cover map of the synthetic Lower Flint scene"></canvas></div><span class="cap"><b>Land cover · 24 km scene</b><span class="mono">250 m px</span></span>`;
+    sm.appendChild(box);return $('mLC');})();
+  drawLCMap(MB.lc);
+  MB.ndvi=makeMapBox(sm,'mNDVI','NDVI',RAMPS.ndvi,'–',2);
+  MB.alb=makeMapBox(sm,'mALB','Albedo',RAMPS.alb,'–',2);
+  MB.lst=makeMapBox(sm,'mLST','Surface temperature',RAMPS.lst,'K',0);
+  MB.ndvi.update(SC.ndvi,-0.1,0.95); MB.alb.update(SC.alb,0.05,0.3); MB.lst.update(SC.lst);
+  // pick map colorbar
+  const cb=$('pickCbar'); let s='linear-gradient(90deg';
+  for(let i=0;i<=10;i++){const c=RAMPS.lst(i/10);s+=`,rgb(${c[0]},${c[1]},${c[2]}) ${i*10}%`;}
+  cb.style.background=s+')';
+  const rg=$('rgMaps');
+  MB.rn=makeMapBox(rg,'mRN','Net radiation Rn',RAMPS.rn,'W/m²',0);
+  MB.g=makeMapBox(rg,'mG','Ground heat flux G',RAMPS.g,'W/m²',0);
+}
+function renderE2(){
+  // pick map
+  const cvw=$('pickMap');
+  let lo=Infinity,hi=-Infinity;for(const v of SC.lst){lo=Math.min(lo,v);hi=Math.max(hi,v);}
+  if(!cvw.parentElement.classList.contains('mapshell')){
+    const sh=document.createElement('div');sh.className='mapshell';
+    cvw.parentElement.insertBefore(sh,cvw);sh.appendChild(cvw);
+  }
+  drawMap(cvw,SC.lst,RAMPS.lst,lo,hi); placeAnchors(cvw);
+  $('pickLo').textContent=fmt(lo,0);$('pickHi').textContent=fmt(hi,0);
+  $('pickRange').textContent='';
+  const R=SIM.R;
+  $('anchorCards').innerHTML=
+   `<div class="card coldc"><div class="v">${fmt(R.Ts_c,1)}</div><div class="n">Ts cold (K)</div></div>
+    <div class="card hotc"><div class="v">${fmt(R.Ts_h,1)}</div><div class="n">Ts hot (K)</div></div>
+    <div class="card coldc"><div class="v">${fmt(R.H_c,0)}</div><div class="n">H cold (W/m²)</div></div>
+    <div class="card hotc"><div class="v">${fmt(R.H_h,0)}</div><div class="n">H hot (W/m²)</div></div>`;
+  $('rnCards').innerHTML=
+   `<div class="card"><div class="v">${fmt(R.Rn[SIM.cold],0)} / ${fmt(R.Rn[SIM.hot],0)}</div><div class="n">Rn cold / hot (W/m²)</div></div>
+    <div class="card"><div class="v">${fmt(R.G[SIM.cold],0)} / ${fmt(R.G[SIM.hot],0)}</div><div class="n">G cold / hot (W/m²)</div></div>
+    <div class="card coldc"><div class="v">${fmt(R.LEc,0)}</div><div class="n">λET cold = 1.05·λETr (W/m²)</div></div>`;
+  $('anchorNote').innerHTML=`Cold anchor: dense irrigated canopy — nearly all available energy evaporates water
+   (H<sub>cold</sub> small). Hot anchor: the driest homogeneous field — H<sub>hot</sub>&nbsp;=&nbsp;R<sub>n</sub>−G takes
+   everything. These two H values are the fixed boundary conditions for E3–E4.`;
+  MB.rn.update(SIM.R.Rn); MB.g.update(SIM.R.G);
+}
+function setAnchor(i){
+  const mode=SIM.pickMode, msg=$('pickMsg');
+  if(!mode){msg.textContent='Choose "Pick cold" or "Pick hot" first.';return;}
+  if(SC.lc[i]!==12){msg.innerHTML=`<b style="color:var(--hot)">Rejected:</b> that pixel is ${LCINFO[SC.lc[i]].name.toLowerCase()} — the E2 scan only accepts cropland (see quiz Q1).`;return;}
+  if(!SC.homogCrop(i)){msg.innerHTML=`<b style="color:var(--gold)">Rejected:</b> cropland, but its 3×3 neighborhood isn’t homogeneous — anchor pixels must sit inside a uniform field.`;return;}
+  if(mode==='cold')SIM.cold=i; else SIM.hot=i;
+  if(SIM.cold===SIM.hot){msg.textContent='Cold and hot cannot be the same pixel.';return;}
+  const dtc=SC.lst[SIM.cold],dth=SC.lst[SIM.hot];
+  if(dth<=dtc){msg.innerHTML=`<b style="color:var(--hot)">Careful:</b> your “hot” pixel (${fmt(dth,1)} K) is colder than your “cold” one (${fmt(dtc,1)} K) — the dT line will invert. Watch what happens.`;}
+  else msg.innerHTML=`${mode==='cold'?'Cold':'Hot'} anchor set: ${fmt(SC.lst[i],1)} K, NDVI ${fmt(SC.ndvi[i],2)}, α ${fmt(SC.alb[i],2)}.`;
+  recomputeSEBAL(true); rerenderAll();
+}
+
+/* ================== E3 ================== */
+function renderE3(){
+  const R=SIM.R,D=SIM.disp, el=$('chDT');
+  const w=520,h=300,m={l:48,r:20,t:26,b:38};
+  el.innerHTML='';
+  const svg=svgE('svg',{viewBox:`0 0 ${w} ${h}`}); el.appendChild(svg);
+  const xlo=Math.min(R.Ts_c,297)-1,xhi=Math.max(R.Ts_h,320)+1;
+  const dts=[],cols=[];
+  for(let i=0;i<SC.L;i+=3){if(SC.lc[i]===0)continue;dts.push([SC.lst[i],D.a*SC.lst[i]+D.b,SC.lc[i]]);}
+  let ylo=Infinity,yhi=-Infinity;for(const d of dts){ylo=Math.min(ylo,d[1]);yhi=Math.max(yhi,d[1]);}
+  ylo=Math.min(ylo,-1);yhi=Math.max(yhi,16);
+  const X=x=>m.l+(x-xlo)/(xhi-xlo)*(w-m.l-m.r),Y=y=>h-m.b-(y-ylo)/(yhi-ylo)*(h-m.t-m.b);
+  for(const t of niceTicks(ylo,yhi,5)){svgE('line',{x1:m.l,x2:w-m.r,y1:Y(t),y2:Y(t),stroke:'var(--line)'},svg);
+    svgE('text',{x:m.l-6,y:Y(t)+3.5,'text-anchor':'end',fill:'var(--muted)','font-size':10},svg).textContent=t;}
+  for(const t of niceTicks(xlo,xhi,6))svgE('text',{x:X(t),y:h-m.b+15,'text-anchor':'middle',fill:'var(--muted)','font-size':10},svg).textContent=t;
+  svgE('line',{x1:m.l,x2:w-m.r,y1:Y(0),y2:Y(0),stroke:'var(--muted)'},svg);
+  for(const d of dts)svgE('circle',{cx:X(d[0]),cy:Y(d[1]),r:2,fill:LCINFO[d[2]].color,opacity:0.55},svg);
+  svgE('line',{x1:X(xlo),y1:Y(D.a*xlo+D.b),x2:X(xhi),y2:Y(D.a*xhi+D.b),stroke:'var(--ink)','stroke-width':1.6,'stroke-dasharray':'5 3'},svg);
+  svgE('circle',{cx:X(R.Ts_c),cy:Y(D.dTc),r:7,fill:'var(--cold)',stroke:'#fff','stroke-width':2},svg);
+  svgE('circle',{cx:X(R.Ts_h),cy:Y(D.dTh),r:7,fill:'var(--hot)',stroke:'#fff','stroke-width':2},svg);
+  svgE('text',{x:X(R.Ts_c)+10,y:Y(D.dTc)+4,fill:'var(--cold)','font-size':11,'font-weight':600},svg).textContent='cold';
+  svgE('text',{x:X(R.Ts_h)-10,y:Y(D.dTh)-10,'text-anchor':'end',fill:'var(--hot)','font-size':11,'font-weight':600},svg).textContent='hot';
+  svgE('text',{x:m.l,y:13,fill:'var(--ink2)','font-size':12,'font-weight':600},svg).textContent=`dT = a·Ts + b   (iteration ${SIM.k} of ${SIM.R.hist.length-1})`;
+  svgE('text',{x:(m.l+w-m.r)/2,y:h-4,'text-anchor':'middle',fill:'var(--muted)','font-size':10},svg).textContent='surface temperature Ts (K)';
+  svgE('text',{x:14,y:m.t-8,fill:'var(--muted)','font-size':10},svg).textContent='dT (K)';
+  $('e3Cards').innerHTML=
+   `<div class="card"><div class="v">${fmt(D.a,3)}</div><div class="n">slope a (–)</div></div>
+    <div class="card"><div class="v">${fmt(D.b,1)}</div><div class="n">intercept b (K)</div></div>
+    <div class="card coldc"><div class="v">${fmt(D.dTc,2)}</div><div class="n">dT cold (K)</div></div>
+    <div class="card hotc"><div class="v">${fmt(D.dTh,2)}</div><div class="n">dT hot (K)</div></div>`;
+  if(!MB.hini){MB.hini=makeMapBox($('hInitBox'),'mHI','Sensible heat H at this iteration',RAMPS.h,'W/m²',0);}
+  MB.hini.update(SIM.disp.H);
+  // zom table (once)
+  const zt=$('zomTable');
+  if(!zt.dataset.done){zt.dataset.done=1;
+    let rows='<thead><tr><th>Land cover</th><th>z<sub>om</sub> (m)</th><th>In this scene</th></tr></thead><tbody>';
+    for(const c of [1,13,10,16,11,0,12]){
+      rows+=`<tr><td>${LCINFO[c].name}</td><td class="num">${c===12?'0.018·LAI':LCINFO[c].zom}</td>
+        <td>${c===12?'0.005–0.08 m across fields':c===1?'roughest surface — most efficient turbulent exchange':c===0||c===11?'aerodynamically glassy — heat leaves slowly':''}</td></tr>`;}
+    zt.innerHTML=rows+'</tbody>';}
+}
+
+/* ================== E4 ================== */
+function renderStabCards(){
+  const el=$('stabCards'); if(el.dataset.done)return; el.dataset.done=1;
+  const mk=(ttl,col,body,art)=>`<div class="stat" style="flex:1 1 220px"><div class="v" style="font-size:1.05rem;color:${col}">${ttl}</div>
+    <div style="margin:6px 0">${art}</div><div class="n">${body}</div></div>`;
+  const wig=(col,paths)=>`<svg viewBox="0 0 120 40" style="width:110px;height:40px">${paths.map(p=>`<path d="${p}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round"/>`).join('')}</svg>`;
+  el.innerHTML=
+   mk('L &lt; 0 · unstable','var(--hot)','Hot surface, buoyant thermals rise — turbulence enhanced, r<sub>ah</sub> drops. The June-midday default over almost every land pixel here.',
+      wig('var(--hot)',['M20 38 q6 -10 0 -18 q-5 -8 2 -16','M55 38 q-6 -10 0 -18 q5 -8 -2 -16','M90 38 q6 -10 0 -18 q-5 -8 2 -16']))+
+   mk('L → ∞ · neutral','var(--ink2)','Pure mechanical (wind-shear) turbulence — the E3 starting assumption. ψ corrections are zero.',
+      wig('var(--ink2)',['M12 12 h96','M12 22 h96','M12 32 h96']))+
+   mk('L &gt; 0 · stable','var(--cold)','Surface colder than air (night, or irrigated fields under advection) — turbulence suppressed, r<sub>ah</sub> grows.',
+      wig('var(--cold)',['M12 16 h96','M12 24 h96','M20 34 q10 4 20 0 q10 -4 20 0 q10 4 20 0 q10 -4 20 0']));
+}
+function renderE4(){
+  const R=SIM.R,ks=R.hist.map((_,i)=>i);
+  const kk=Math.min(SIM.k,R.hist.length-1);
+  lineChart($('chConvDT'),{title:'dT at the hot pixel vs iteration (K)',xlab:'iteration (0 = neutral)',dec:2,unit:'K',
+    xTicks:ks,series:[{xs:ks.slice(0,kk+1),ys:R.hist.slice(0,kk+1).map(h=>h.dTh),color:'var(--hot)',label:'dT_hot'}]});
+  lineChart($('chConvRah'),{title:'r_ah at the hot pixel vs iteration (s/m)',xlab:'iteration (0 = neutral)',dec:1,unit:'s/m',
+    xTicks:ks,series:[{xs:ks.slice(0,kk+1),ys:R.hist.slice(0,kk+1).map(h=>h.rahh),color:'var(--pine)',label:'r_ah,hot'}]});
+  const conv=kk===R.hist.length-1&&R.converged;
+  const d=SIM.disp;
+  // Monin-Obukhov L at hot pixel for the DISPLAYED iteration's state
+  const hs=R.hist[kk];
+  const Lhot=(-hs.rhoh*CFG.cp*Math.pow(hs.ufh,3)*SC.lst[SIM.hot])/(CFG.k*9.81*hs.Hh);
+  $('e4Cards').innerHTML=
+   `<div class="card"><div class="v">${kk}</div><div class="n">iterations shown</div></div>
+    <div class="card ${conv?'pos':''}"><div class="v">${conv?'yes':'not yet'}</div><div class="n">converged (&lt;1% change)?</div></div>
+    <div class="card hotc"><div class="v">${fmt(d.dTh,2)}</div><div class="n">dT hot now (K)</div></div>
+    <div class="card"><div class="v">${fmt(Lhot,1)}</div><div class="n">L at hot pixel (m)</div></div>`;
+  $('iterOne').disabled=kk===R.hist.length-1;
+  $('iterMsg').textContent=kk===0?'Neutral start — no corrections yet. Run an iteration.':
+    conv?`Converged after ${R.nIter} correction passes (<1% rule). Press “Reset to neutral” to replay the loop.`:
+    'Still moving — keep iterating.';
+}
+
+/* ================== E5 ================== */
+function renderE5(){
+  $('passTimeTxt').textContent=`${CFG.overpass.clockEDT} / ${CFG.overpass.utc}, DOY ${CFG.doy}`;
+  const R=SIM.R,D=SIM.disp;
+  if(!MB.f1){
+    const fm=$('fluxMaps');
+    MB.f1=makeMapBox(fm,'mRN2','Rn (W/m²)',RAMPS.rn,'W/m²',0);
+    MB.f2=makeMapBox(fm,'mG2','G (W/m²)',RAMPS.g,'W/m²',0);
+    MB.f3=makeMapBox(fm,'mH2','H (W/m²)',RAMPS.h,'W/m²',0);
+    MB.f4=makeMapBox(fm,'mLE2','λET (W/m²)',RAMPS.et,'W/m²',0);
+    const em=$('etMaps');
+    MB.e1=makeMapBox(em,'mETRF','ETrF — reference-ET fraction',RAMPS.et,'–',2);
+    MB.e2m=makeMapBox(em,'mET24','Daily ET (mm d⁻¹)',RAMPS.et,'mm/d',1);
+    MB.e1.cv.parentElement.parentElement.classList.add('bigmap');
+    MB.e2m.cv.parentElement.parentElement.classList.add('bigmap');
+  }
+  MB.f1.update(R.Rn); MB.f2.update(R.G); MB.f3.update(D.H); MB.f4.update(D.LE);
+  MB.e1.update(D.ETrF,0,1.15); MB.e2m.update(D.ET24,0,Math.max(6.5,SIM.wxo.daily*1.1));
+  const mAll=sceneMean(SC,{idx:SIM.R.idx,ET24:D.ET24}),mPiv=sceneMean(SC,{idx:SIM.R.idx,ET24:D.ET24},'pivot');
+  let clampN=0; for(const i of R.idx)if(isFinite(D.LE[i])&&D.LE[i]===0)clampN++;
+  $('e5Cards').innerHTML=
+   `<div class="card pos"><div class="v">${fmt(mAll,2)}</div><div class="n">scene-mean ET₂₄ (mm d⁻¹)</div></div>
+    <div class="card coldc"><div class="v">${fmt(mPiv,2)}</div><div class="n">irrigated-pivot mean ET₂₄</div></div>
+    <div class="card"><div class="v">${fmt(SIM.wxo.daily,2)}</div><div class="n">reference ETr (mm d⁻¹)</div></div>
+    <div class="card ${clampN>R.idx.length*0.12?'hotc':''}"><div class="v">${clampN}</div><div class="n">pixels clamped λET&lt;0 (non-closure)</div></div>`;
+  // land-cover chart
+  const cm=catMeans(SC,{idx:R.idx,ET24:D.ET24});
+  rangeBars($('chLC'),EXPECT.map(e=>({name:e.name,val:cm[e.key],lo:e.lo,hi:e.hi})),
+    {title:'Scene-mean daily ET by land cover — bars: SEBAL · brackets: expected June range (SW Georgia)',xlab:'ET₂₄ (mm d⁻¹)'});
+  const fn=$('forestNote');
+  const fEx=EXPECT.find(e=>e.key==='forest'), wEx=EXPECT.find(e=>e.key==='wet');
+  let vmsg='';
+  if(isFinite(cm.wet)&&cm.wet>wEx.hi){
+    vmsg+=`<p>The <b>wetland fringe</b> overshoots its bracket (${fmt(cm.wet,1)} vs ${wEx.lo}–${wEx.hi} mm d⁻¹;
+     mean ET<sub>r</sub>F ≈ ${fmt(cm.wet/SIM.wxo.daily,2)}). That is the dT&nbsp;=&nbsp;aT<sub>s</sub>&nbsp;+&nbsp;b line being
+     <em>extrapolated</em> over cool, aerodynamically smooth, non-crop pixels: dT dips toward zero or below, H
+     nearly vanishes, and λET inherits almost all of R<sub>n</sub>&nbsp;−&nbsp;G. It is the mirror image of §7's
+     “anchor contamination” failure mode — SEBAL is least trustworthy exactly where the surface least resembles
+     the calibration cropland.</p>`;
+  }
+  if(isFinite(cm.forest)&&cm.forest<fEx.lo){
+    vmsg+=`<p>The <b>pine flats</b> fall below their bracket (${fmt(cm.forest,1)} vs ${fEx.lo}–${fEx.hi} mm d⁻¹):
+     the cropland-calibrated dT line, applied to a canopy ~20× rougher (z<sub>om</sub>&nbsp;≈&nbsp;1&nbsp;m vs 0.02&nbsp;m),
+     inflates H and starves λET — the classic SEBAL tall-canopy bias that motivated the trapezoid-framework
+     models in your readings (Long &amp; Singh 2012; Yang &amp; Shang 2013).</p>`;
+  }else if(isFinite(cm.forest)){
+    vmsg+=`<p>The <b>pine flats</b> currently land at ${fmt(cm.forest,1)} mm d⁻¹ — inside their bracket here. Do
+     not count on that in real scenes: the dT line is calibrated on cropland, and over a canopy ~20× rougher
+     (z<sub>om</sub>&nbsp;≈&nbsp;1&nbsp;m vs 0.02&nbsp;m) the same dT implies a much larger H, so SEBAL routinely
+     under-predicts forest ET. That documented bias motivated the trapezoid-framework models in your readings
+     (Long &amp; Singh 2012; Yang &amp; Shang 2013). Watch this box while you experiment with anchors.</p>`;
+  }
+  fn.style.display='block';
+  fn.innerHTML=`<b class="ttl">Reading the chart like a validator</b>${vmsg}`;
+}
+function renderHero(){
+  let lo=Infinity,hi=-Infinity;for(const v of SC.lst){lo=Math.min(lo,v);hi=Math.max(hi,v);}
+  drawMap($('heroLST'),SC.lst,RAMPS.lst,lo,hi,{register:false});
+  drawMap($('heroET'),SIM.disp.ET24,RAMPS.et,0,Math.max(6.5,SIM.wxo.daily*1.1),{register:false});
+}
+
+/* ================== §7 uncertainty ================== */
+function addTrial(isAuto){
+  const tb=$('trialTable').querySelector('tbody'); SIM.trials++;
+  const R=SIM.R,D=SIM.disp;
+  const mean=sceneMean(SC,{idx:R.idx,ET24:D.ET24}),piv=sceneMean(SC,{idx:R.idx,ET24:D.ET24},'pivot');
+  const dv=mean-SIM.autoMean;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${SIM.trials}${isAuto?' <span class="pill">algorithm</span>':''}</td>
+   <td class="num">${fmt(R.Ts_c,1)}</td><td class="num">${fmt(R.Ts_h,1)}</td><td class="num">${fmt(R.a,3)}</td>
+   <td class="num"><b>${fmt(mean,2)}</b></td><td class="num">${fmt(piv,2)}</td>
+   <td class="num" style="color:${Math.abs(dv)<0.05?'var(--muted)':dv>0?'var(--hot)':'var(--cold)'}">${dv>=0?'+':''}${fmt(dv,2)}</td>`;
+  tb.appendChild(tr);
+}
+function renderMC(res){
+  const means=res.map(r=>r.mean);
+  const H=histoChart($('chMC'),means,{title:`Scene-mean ET₂₄ across ${res.length} perturbed re-runs`,xlab:'scene-mean ET₂₄ (mm d⁻¹)',bins:16});
+  const srt=[...means].sort((a,b)=>a-b),q=p=>srt[Math.floor(p*(srt.length-1))];
+  const mean=means.reduce((s,v)=>s+v,0)/means.length;
+  const sd=Math.sqrt(means.reduce((s,v)=>s+(v-mean)**2,0)/means.length);
+  $('mcCards').innerHTML=
+   `<div class="card"><div class="v">${fmt(mean,2)}</div><div class="n">mean of means (mm/d)</div></div>
+    <div class="card"><div class="v">±${fmt(sd,2)}</div><div class="n">std deviation</div></div>
+    <div class="card"><div class="v">${fmt(q(0.05),2)}–${fmt(q(0.95),2)}</div><div class="n">90% interval (mm/d)</div></div>
+    <div class="card"><div class="v">${fmt(sd/mean*100,0)}%</div><div class="n">relative uncertainty</div></div>`;
+}
+
+/* ================== §8 stations ================== */
+function stationRange(st){
+  // clear-day to cloudy-day span; Blue Ridge stations get extra afternoon convection
+  const cl=st.cloudy?[20,65]:[5,55];
+  const hiW=computeWeather({...st.wx,cloud:cl[0]},{lat:st.lat,lon:st.lon,elev:st.elev});
+  const loW=computeWeather({...st.wx,Tmax:st.wx.Tmax-2.5,cloud:cl[1]},{lat:st.lat,lon:st.lon,elev:st.elev});
+  return [loW.daily,hiW.daily];
+}
+function renderStations(){
+  const cam=STATIONS[0], camR=stationRange(cam), camMid=(camR[0]+camR[1])/2;
+  let html=`<thead><tr><th>Station (county)</th><th>Region</th><th class="num">Lat / Lon</th><th class="num">Elev (m)</th><th>June ETr₂₄ (mm d⁻¹)</th><th>vs Camilla</th></tr></thead><tbody>`;
+  for(const st of STATIONS){
+    const r=stationRange(st),mid=(r[0]+r[1])/2,d=mid-camMid;
+    const arrow=st.star?'—':Math.abs(d)<0.15?'≈ same':(d>0?`▲ +${fmt(d,1)}`:`▼ ${fmt(d,1)}`);
+    html+=`<tr class="strow" ${st.star?'style="background:var(--pine-wash)"':''}>
+     <td><b>${st.name}</b> (${st.county})${st.star?' ★':''}<br><span class="small">${st.note}</span></td>
+     <td>${st.region}</td><td class="num">${st.lat.toFixed(3)}, ${st.lon.toFixed(3)}</td><td class="num">${st.elev}</td>
+     <td class="num"><button class="revealbtn">predict → reveal</button><span class="hidden-val">${fmt(r[0],1)} – ${fmt(r[1],1)}</span></td>
+     <td class="num"><span class="hidden-val" style="color:${d>0.15?'var(--hot)':d<-0.15?'var(--cold)':'var(--muted)'}">${arrow}</span></td></tr>`;
+  }
+  $('stTable').innerHTML=html+'</tbody>';
+  $('stTable').querySelectorAll('.revealbtn').forEach(b=>b.addEventListener('click',()=>b.closest('tr').classList.add('shown')));
+  // schematic GA map
+  const GA=[[-85.605,34.984],[-83.109,35.001],[-82.98,34.72],[-82.74,34.53],[-82.32,34.06],[-81.95,33.46],[-81.62,33.10],[-81.41,32.62],[-81.15,32.24],[-80.87,32.03],[-81.13,31.72],[-81.28,31.42],[-81.43,31.13],[-81.49,30.97],[-81.47,30.71],[-81.90,30.79],[-82.05,30.66],[-82.23,30.56],[-83.50,30.64],[-84.86,30.71],[-84.98,31.00],[-85.10,31.30],[-85.04,31.62],[-85.06,32.05],[-84.93,32.25],[-85.00,32.51],[-85.18,32.87],[-85.605,34.984]];
+  const FLINT=[[-84.43,33.62],[-84.32,33.15],[-84.23,32.80],[-84.03,32.45],[-84.05,32.05],[-84.15,31.58],[-84.34,31.20],[-84.58,30.91],[-84.86,30.71]];
+  const W=340,H=350,pad=16;
+  const X=lon=>pad+(lon+85.8)/(85.8-80.6)*(W-2*pad), Y=lat=>H-pad-(lat-30.2)/(35.25-30.2)*(H-2*pad);
+  const svg=svgE('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'Schematic map of Georgia with UGA weather stations'});
+  $('gaMap').innerHTML=''; $('gaMap').appendChild(svg);
+  svgE('path',{d:GA.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join('')+'Z',
+    fill:'var(--surface2)',stroke:'var(--ink2)','stroke-width':1.2},svg);
+  svgE('path',{d:FLINT.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join(''),
+    fill:'none',stroke:'var(--cold)','stroke-width':1.6,opacity:0.8},svg);
+  svgE('text',{x:X(-84.05),y:Y(32.18),fill:'var(--cold)','font-size':9,'font-style':'italic'},svg).textContent='Flint R.';
+  svgE('rect',{x:X(-84.42),y:Y(31.40),width:X(-84.16)-X(-84.42),height:Y(31.16)-Y(31.40),fill:'none',stroke:'var(--hot)','stroke-width':1.4,'stroke-dasharray':'3 2'},svg);
+  svgE('text',{x:X(-84.46),y:Y(31.44)-6,'text-anchor':'end',fill:'var(--hot)','font-size':8.5},svg).textContent='study scene';
+  const lp={'Camilla':[7,-4],'Newton':[-14,13],'Attapulgus':[8,10],'Tifton':[8,4],'Jekyll Island':[-80,2],'Midville':[8,3],'Griffin':[8,3],'Watkinsville-UGA':[8,3],'Blairsville':[8,3]};
+  for(const st of STATIONS){
+    svgE('circle',{cx:X(st.lon),cy:Y(st.lat),r:st.star?5:3.6,fill:st.star?'var(--hot)':'var(--pine)',stroke:'#fff','stroke-width':1.3},svg);
+    const off=lp[st.name]||[7,3];
+    svgE('text',{x:X(st.lon)+off[0],y:Y(st.lat)+off[1],fill:'var(--ink2)','font-size':9.5,'font-weight':st.star?700:400},svg).textContent=st.name;
+  }
+  svgE('text',{x:W-6,y:H-4,'text-anchor':'end',fill:'var(--muted)','font-size':8.5},svg).textContent='schematic outline · UGA Weather Network stations';
+}
+
+/* ================== §9 data cards, §10 quiz ================== */
+function renderData(){
+  const g=document.createElement('div');g.className='dsgrid';
+  for(const d of DATASOURCES){
+    const c=document.createElement('div');c.className='dscard';
+    c.innerHTML=`<h3>${d.name}</h3><div class="dsk">${d.k}</div><p>${d.p}</p>
+      <ul>${d.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+      ${d.warn?`<div class="note amber" style="margin:10px 0 2px"><b class="ttl">Note</b><p>${d.warn}</p></div>`:''}`;
+    g.appendChild(c);
+  }
+  $('dataCards').appendChild(g);
+}
+function renderQuiz(){
+  const box=$('quizBox');
+  QUIZ.forEach((Q,qi)=>{
+    const d=document.createElement('div');d.className='quiz';
+    d.innerHTML=`<p class="qq">Q${qi+1}. ${Q.q}</p>`+
+      Q.opts.map((o,oi)=>`<label><input type="radio" name="q${qi}" value="${oi}"><span>${o}</span></label>`).join('')+
+      `<div class="fb" id="fb${qi}" aria-live="polite"></div>`;
+    box.appendChild(d);
+    d.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{
+      const fb=$('fb'+qi), ok=+inp.value===Q.a;
+      fb.className='fb '+(ok?'ok':'no');
+      fb.innerHTML=(ok?'<b>Correct.</b> ':'<b>Not quite.</b> ')+Q.why;
+    }));
+  });
+}
+
+/* ================== wiring ================== */
+function wire(){
+  // §1
+  for(const id of ['sH','sG'])$(id).addEventListener('input',renderEB);
+  for(const id of ['sAlb','sEmis','sTs'])$(id).addEventListener('input',renderRad);
+  // E1 sliders
+  const wxMap={sTmax:['Tmax','vTmax',v=>v+' °C'],sTmin:['Tmin','vTmin',v=>v+' °C'],sRH:['RHmin','vRH',v=>v+' %'],sU2:['u2','vU2',v=>fmt(v,1)+' m/s'],sCloud:['cloud','vCloud',v=>v+' %']};
+  let wxPend=false;
+  for(const id in wxMap)$(id).addEventListener('input',()=>{
+    const [k,vid,f]=wxMap[id];let v=+$(id).value;
+    if(k==='Tmin')v=Math.min(v,SIM.wx.Tmax-2);
+    if(k==='Tmax')v=Math.max(v,SIM.wx.Tmin+2);
+    SIM.wx[k]=v;$(vid).textContent=f(v);
+    if(wxPend)return; wxPend=true;
+    requestAnimationFrame(()=>{wxPend=false;recomputeWeather();recomputeSEBAL(false);rerenderAll();});
+  });
+  // E2 pick
+  const setMode=m=>{SIM.pickMode=m;
+    $('modeCold').classList.toggle('on',m==='cold');$('modeCold').setAttribute('aria-pressed',m==='cold');
+    $('modeHot').classList.toggle('on',m==='hot');$('modeHot').setAttribute('aria-pressed',m==='hot');};
+  $('modeCold').addEventListener('click',()=>setMode('cold'));
+  $('modeHot').addEventListener('click',()=>setMode('hot'));
+  $('autoAnchor').addEventListener('click',()=>{SIM.cold=SC.autoCold;SIM.hot=SC.autoHot;
+    $('pickMsg').textContent='Algorithm picks restored: coldest & hottest homogeneous cropland pixels.';
+    recomputeSEBAL(true);rerenderAll();});
+  $('pickMap').addEventListener('click',ev=>{const i=pxFromEvent($('pickMap'),ev);if(i>=0)setAnchor(i);});
+  // E4
+  $('iterOne').addEventListener('click',()=>{SIM.k=Math.min(SIM.k+1,SIM.R.hist.length-1);deriveDisp();renderE3();renderE4();renderE5();});
+  $('iterAll').addEventListener('click',()=>{SIM.k=SIM.R.hist.length-1;deriveDisp();renderE3();renderE4();renderE5();});
+  $('iterReset').addEventListener('click',()=>{SIM.k=0;deriveDisp();renderE3();renderE4();renderE5();});
+  // MC
+  const sigLab={sSigT:['vSigT',v=>fmt(v,1)+' K'],sSigA:['vSigA',v=>fmt(v,3)],sSigE:['vSigE',v=>v+' %']};
+  for(const id in sigLab)$(id).addEventListener('input',()=>{$(sigLab[id][0]).textContent=sigLab[id][1](+$(id).value);});
+  $('mcRun').addEventListener('click',()=>{
+    $('mcRun').disabled=true;
+    runMC(SC,SIM.wxo,SIM.cold,SIM.hot,{T:+$('sSigT').value,A:+$('sSigA').value,E:+$('sSigE').value},150,
+      res=>{renderMC(res);$('mcRun').disabled=false;$('mcMsg').textContent='Done — drag the σ sliders and run again to see which input dominates.';},
+      (r,n)=>{$('mcMsg').textContent=`running… ${r}/${n}`;});
+  });
+  // scroll spy
+  const links=[...document.querySelectorAll('nav.stepnav a')];
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  const spy=()=>{let on=0;
+    for(let i=0;i<secs.length;i++)if(secs[i].getBoundingClientRect().top<140)on=i;
+    links.forEach((a,i)=>a.classList.toggle('on',i===on));};
+  document.addEventListener('scroll',spy,{passive:true}); spy();
+}
+
+/* ================== boot ================== */
+recomputeWeather();
+renderSceneStatics();
+recomputeSEBAL(true);
+renderEB(); renderRad(); renderStabCards();
+rerenderAll();
+renderStations(); renderData(); renderQuiz();
+wire();
+</script>
+</html>
