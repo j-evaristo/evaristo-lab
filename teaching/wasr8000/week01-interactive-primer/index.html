@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Jaivime Evaristo">
+<meta name="description" content="Rates and Dates — an interactive introduction to environmental tracers for WASR 8000 (Week 1, Fall 2026). How water moves, where it came from, and how long it has been here.">
+<title>Rates and Dates — An Interactive Introduction to Environmental Tracers · WASR 8000</title>
+<style>
+/* ================= Design tokens ================= */
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb; --surface-2:#f3f2ee;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --baseline:#c3c2b7; --hairline:rgba(11,11,11,0.10);
+  --s1:#2a78d6; /* series 1: blue — stored / pre-event water, primary accent */
+  --s2:#eb6834; /* series 2: orange — event / new water */
+  --s3:#1baf7a; /* series 3: aqua — derived curves */
+  --age-young:#86b6ef; --age-mid:#2a78d6; --age-old:#104281; /* ordinal blue ramp */
+  --wash1:rgba(42,120,214,0.10); --wash2:rgba(235,104,52,0.10);
+  --good-text:#006300;
+  --chip:#eef3fb;
+  --shadow:0 1px 2px rgba(11,11,11,0.05), 0 8px 24px rgba(11,11,11,0.06);
+}
+html[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232322;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --baseline:#383835; --hairline:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --age-young:#184f95; --age-mid:#2a78d6; --age-old:#86b6ef;
+  --wash1:rgba(57,135,229,0.14); --wash2:rgba(217,89,38,0.14);
+  --good-text:#0ca30c;
+  --chip:#20293a;
+  --shadow:0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+}
+/* ================= Base ================= */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+main{max-width:1000px; margin:0 auto; padding:0 20px 80px}
+h1,h2,h3,h4{line-height:1.25; margin:0 0 .5em}
+h1{font-size:clamp(1.9rem,4.5vw,3rem); letter-spacing:-0.02em}
+h2{font-size:clamp(1.35rem,2.6vw,1.8rem); letter-spacing:-0.01em}
+h3{font-size:1.08rem}
+p{margin:.4em 0 1em}
+a{color:var(--s1)}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:2px solid var(--s1); outline-offset:2px; border-radius:4px}
+.small{font-size:.85rem; color:var(--ink-2)}
+.mono{font-variant-numeric:tabular-nums}
+.nowrap{white-space:nowrap}
+code{background:var(--surface-2); border:1px solid var(--hairline); border-radius:4px; padding:0 .3em; font-size:.9em}
+
+/* ================= Top bar & nav ================= */
+.topbar{
+  position:sticky; top:0; z-index:50; background:color-mix(in srgb, var(--page) 88%, transparent);
+  backdrop-filter:blur(8px); border-bottom:1px solid var(--hairline);
+}
+.topbar-inner{max-width:1000px; margin:0 auto; padding:8px 20px; display:flex; align-items:center; gap:12px}
+.topbar .course{font-size:.8rem; font-weight:600; color:var(--ink-2); white-space:nowrap}
+.navchips{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; flex:1}
+.navchips::-webkit-scrollbar{display:none}
+.navchips a{
+  font-size:.78rem; padding:4px 10px; border-radius:999px; white-space:nowrap;
+  color:var(--ink-2); text-decoration:none; border:1px solid transparent;
+}
+.navchips a:hover{background:var(--surface-2)}
+.navchips a.active{background:var(--chip); color:var(--s1); font-weight:600}
+.theme-btn{
+  border:1px solid var(--hairline); background:var(--surface); border-radius:999px;
+  padding:4px 10px; font-size:.78rem; color:var(--ink-2); flex-shrink:0;
+}
+.theme-btn:hover{background:var(--surface-2)}
+
+/* ================= Hero ================= */
+.hero{padding:64px 0 28px}
+.hero .kicker{font-size:.8rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--s1); margin-bottom:10px}
+.hero .sub{font-size:1.12rem; color:var(--ink-2); max-width:46em}
+.hero .meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px}
+.hero .meta span{font-size:.78rem; color:var(--ink-2); background:var(--surface); border:1px solid var(--hairline); border-radius:999px; padding:4px 12px}
+
+/* ================= Sections & cards ================= */
+section{padding:34px 0 6px; scroll-margin-top:64px}
+.sec-label{font-size:.75rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin-bottom:6px}
+.lede{font-size:1.05rem; color:var(--ink-2); max-width:50em}
+.card{
+  background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+  padding:20px 22px; margin:16px 0; box-shadow:var(--shadow);
+}
+.callout{
+  border-left:3px solid var(--s1); background:var(--wash1);
+  border-radius:0 10px 10px 0; padding:12px 16px; margin:14px 0; font-size:.95rem;
+}
+.callout.warn{border-left-color:var(--s2); background:var(--wash2)}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+@media (max-width:760px){ .grid2,.grid3,.grid4{grid-template-columns:1fr} }
+
+/* ================= Poll (§1) ================= */
+.poll-opts{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0}
+@media (max-width:760px){ .poll-opts{grid-template-columns:1fr} }
+.poll-btn{
+  text-align:left; background:var(--surface); border:1px solid var(--hairline); border-radius:12px;
+  padding:14px 16px; transition:border-color .15s, transform .15s;
+}
+.poll-btn:hover{border-color:var(--s1); transform:translateY(-1px)}
+.poll-btn .letter{
+  display:inline-flex; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center;
+  background:var(--chip); color:var(--s1); font-weight:700; font-size:.85rem; margin-bottom:8px;
+}
+.poll-btn.picked{border-color:var(--s1); box-shadow:0 0 0 1px var(--s1) inset}
+.reveal{display:none; margin-top:6px}
+.reveal.open{display:block; animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+@media (prefers-reduced-motion: reduce){ .reveal.open{animation:none} .poll-btn:hover{transform:none} }
+
+/* ================= Flip / contrast (§2) ================= */
+.duo{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+@media (max-width:760px){ .duo{grid-template-columns:1fr} }
+.duo .col h3{display:flex; align-items:center; gap:8px}
+.dot{width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0}
+.duo ul{margin:.3em 0; padding-left:1.2em}
+.duo li{margin:.35em 0}
+.duo li b{font-weight:600}
+
+/* ================= Chips (§3, glossary) ================= */
+.chiprow{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0}
+.chip-btn{
+  border:1px solid var(--hairline); background:var(--surface); border-radius:999px;
+  padding:6px 14px; font-size:.88rem;
+}
+.chip-btn:hover{border-color:var(--s1)}
+.chip-btn[aria-pressed="true"]{background:var(--chip); border-color:var(--s1); color:var(--s1); font-weight:600}
+.explain-panel{min-height:70px}
+
+/* ================= Accordion (§4, §8) ================= */
+.acc{border:1px solid var(--hairline); border-radius:12px; overflow:hidden; margin:14px 0; background:var(--surface)}
+.acc-item + .acc-item{border-top:1px solid var(--hairline)}
+.acc-head{
+  width:100%; display:flex; align-items:center; gap:12px; text-align:left;
+  padding:13px 16px; background:none; border:none;
+}
+.acc-head:hover{background:var(--surface-2)}
+.acc-head .tag{
+  font-size:.7rem; font-weight:700; letter-spacing:.08em; color:var(--s1);
+  background:var(--chip); padding:3px 9px; border-radius:999px; flex-shrink:0; min-width:74px; text-align:center;
+}
+.acc-head .q{flex:1; font-weight:600; font-size:.95rem}
+.acc-head .caret{transition:transform .2s; color:var(--muted); flex-shrink:0}
+.acc-head[aria-expanded="true"] .caret{transform:rotate(90deg)}
+.acc-body{display:none; padding:2px 16px 16px 16px; font-size:.93rem}
+.acc-body.open{display:block}
+.acc-body .strategy{margin:.2em 0 .5em}
+.acc-body .needs{color:var(--ink-2)}
+
+/* ================= Simulation (§5) ================= */
+.sim-wrap{display:grid; grid-template-columns:230px 1fr; gap:20px; align-items:start}
+@media (max-width:760px){ .sim-wrap{grid-template-columns:1fr} }
+.sim-controls{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 14px}
+.btn{
+  border:1px solid var(--hairline); border-radius:10px; padding:8px 16px;
+  background:var(--surface); font-weight:600; font-size:.9rem;
+}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--s1); border-color:var(--s1); color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.rain{background:var(--s2); border-color:var(--s2); color:#fff}
+.btn.rain:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.seg{display:inline-flex; border:1px solid var(--hairline); border-radius:10px; overflow:hidden}
+.seg button{border:none; background:var(--surface); padding:8px 14px; font-size:.85rem}
+.seg button + button{border-left:1px solid var(--hairline)}
+.seg button[aria-pressed="true"]{background:var(--chip); color:var(--s1); font-weight:700}
+.readouts{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:12px 0}
+@media (max-width:760px){ .readouts{grid-template-columns:1fr} }
+.tile{background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:12px 14px}
+.tile .lab{font-size:.75rem; color:var(--ink-2); margin-bottom:2px}
+.tile .val{font-size:1.35rem; font-weight:650; letter-spacing:-0.01em}
+.tile .sub{font-size:.75rem; color:var(--muted)}
+.legend{display:flex; flex-wrap:wrap; gap:16px; font-size:.8rem; color:var(--ink-2); margin:8px 0}
+.legend .key{display:inline-flex; align-items:center; gap:6px}
+.legend .swatch{width:12px; height:12px; border-radius:3px; display:inline-block}
+.legend .linekey{width:16px; height:0; border-top:2px solid; display:inline-block; border-radius:2px}
+.chart-card{background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px; margin:12px 0}
+.chart-card h4{margin:0 0 2px; font-size:.9rem}
+.chart-card .small{margin:0 0 8px}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.chart-card svg{width:100%;height:auto}
+details.tableview{margin-top:8px; font-size:.85rem}
+details.tableview summary{cursor:pointer; color:var(--ink-2)}
+details.tableview table{border-collapse:collapse; margin-top:8px; width:100%; max-width:480px}
+details.tableview th, details.tableview td{border-bottom:1px solid var(--grid); padding:4px 8px; text-align:right; font-variant-numeric:tabular-nums}
+details.tableview th:first-child, details.tableview td:first-child{text-align:left}
+details.tableview th{color:var(--ink-2); font-weight:600}
+
+/* ================= Sliders (§6, §7) ================= */
+.slider-row{display:grid; grid-template-columns:150px 1fr 74px; gap:12px; align-items:center; margin:8px 0}
+@media (max-width:560px){ .slider-row{grid-template-columns:110px 1fr 64px} }
+.slider-row label{font-size:.85rem; font-weight:600; display:flex; align-items:center; gap:7px}
+.slider-row output{font-size:.85rem; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-2)}
+input[type=range]{width:100%; accent-color:var(--s1); height:22px}
+.preset-row{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px}
+
+/* ================= Chain (§8) ================= */
+.chain{display:grid; grid-template-columns:repeat(4, 1fr); gap:0; margin:16px 0; position:relative}
+@media (max-width:760px){ .chain{grid-template-columns:1fr} }
+.chain-link{
+  background:var(--surface); border:1px solid var(--hairline); padding:14px 12px; text-align:center;
+  position:relative;
+}
+.chain-link:first-child{border-radius:12px 0 0 12px}
+.chain-link:last-child{border-radius:0 12px 12px 0}
+@media (max-width:760px){
+  .chain-link:first-child{border-radius:12px 12px 0 0}
+  .chain-link:last-child{border-radius:0 0 12px 12px}
+}
+.chain-link .num{
+  width:26px;height:26px;border-radius:50%;background:var(--chip);color:var(--s1);
+  font-weight:700;font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px;
+}
+.chain-link .name{font-weight:700; font-size:.9rem; letter-spacing:.04em}
+.chain-link .q{font-size:.78rem; color:var(--ink-2); margin-top:3px}
+.chain-link[aria-pressed="true"]{background:var(--chip); border-color:var(--s1)}
+.chain-link:hover{border-color:var(--s1); z-index:1}
+
+/* ================= Findings (§9) ================= */
+.stats-row{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0}
+@media (max-width:760px){ .stats-row{grid-template-columns:1fr} }
+.finding{border:1px solid var(--hairline); border-radius:12px; padding:14px 16px; background:var(--surface)}
+.finding .fnum{font-size:.72rem; font-weight:700; color:var(--s1); letter-spacing:.1em}
+.finding h4{margin:.2em 0 .3em; font-size:.95rem}
+.finding p{margin:0; font-size:.85rem; color:var(--ink-2)}
+
+/* ================= Scenarios (§10) ================= */
+.scen{border:1px solid var(--hairline); border-radius:14px; background:var(--surface); padding:18px 20px; margin:14px 0}
+.scen .scen-head{display:flex; gap:10px; align-items:baseline}
+.scen .letter{
+  width:28px;height:28px;border-radius:8px;background:var(--chip);color:var(--s1);
+  font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.scen h3{margin:0}
+.scen .scen-q{color:var(--ink-2); margin:.3em 0 .8em; font-size:.95rem}
+.opt-list{display:grid; gap:8px}
+.opt-btn{
+  text-align:left; border:1px solid var(--hairline); background:var(--surface); border-radius:10px;
+  padding:10px 14px; font-size:.9rem;
+}
+.opt-btn:hover{border-color:var(--s1)}
+.opt-btn.sel-best{border-color:var(--s3); background:color-mix(in srgb, var(--s3) 9%, var(--surface))}
+.opt-btn.sel-weak{border-color:var(--s2); background:var(--wash2)}
+.opt-btn:disabled{cursor:default; opacity:1}
+.feedback{font-size:.88rem; margin-top:10px; display:none}
+.feedback.open{display:block; animation:fadeUp .3s ease}
+.debrief{margin-top:12px; border-top:1px solid var(--grid); padding-top:12px; font-size:.88rem; display:none}
+.debrief.open{display:block}
+.debrief b{font-weight:650}
+
+/* ================= Quiz (§11) ================= */
+.quiz-q{border:1px solid var(--hairline); border-radius:12px; background:var(--surface); padding:16px 18px; margin:12px 0}
+.quiz-q h4{font-size:.95rem; margin-bottom:10px}
+.quiz-q .opt-btn{width:100%}
+.quiz-score{font-size:1.05rem; font-weight:650; margin:14px 0}
+.tick{color:var(--good-text); font-weight:700}
+.cross{color:var(--s2); font-weight:700}
+
+/* ================= Glossary (§12) ================= */
+.gloss-search{
+  width:100%; max-width:380px; font:inherit; padding:8px 14px; border-radius:10px;
+  border:1px solid var(--hairline); background:var(--surface); color:var(--ink); margin-bottom:12px;
+}
+.gloss-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+@media (max-width:760px){ .gloss-grid{grid-template-columns:1fr} }
+details.gloss{border:1px solid var(--hairline); border-radius:10px; background:var(--surface); padding:10px 14px}
+details.gloss summary{cursor:pointer; font-weight:600; font-size:.92rem}
+details.gloss p{font-size:.86rem; color:var(--ink-2); margin:.5em 0 0}
+details.gloss .pill{font-size:.68rem; font-weight:700; letter-spacing:.06em; color:var(--muted); text-transform:uppercase; margin-left:6px}
+
+/* ================= Readings (§13) ================= */
+.reading{display:grid; grid-template-columns:86px 1fr; gap:14px; padding:13px 0; border-bottom:1px solid var(--grid)}
+.reading:last-child{border-bottom:none}
+.reading .rtag{font-size:.7rem; font-weight:700; letter-spacing:.08em; color:var(--s1); background:var(--chip); border-radius:999px; padding:3px 0; text-align:center; height:fit-content}
+.reading .rtag.supp{color:var(--ink-2); background:var(--surface-2)}
+.reading h4{margin:0 0 2px; font-size:.93rem}
+.reading p{margin:0; font-size:.84rem; color:var(--ink-2)}
+
+/* ================= Footer ================= */
+footer{border-top:1px solid var(--hairline); margin-top:50px; padding:26px 0 10px; font-size:.8rem; color:var(--ink-2)}
+footer p{margin:.3em 0}
+
+/* ================= Tooltip ================= */
+.viz-tip{
+  position:fixed; z-index:99; pointer-events:none; background:var(--surface); border:1px solid var(--hairline);
+  border-radius:8px; box-shadow:var(--shadow); padding:7px 11px; font-size:.8rem; display:none; max-width:240px;
+}
+.viz-tip .tv{font-weight:700; font-variant-numeric:tabular-nums}
+.viz-tip .tk{display:inline-block; width:14px; border-top:2px solid; border-radius:2px; margin-right:5px; vertical-align:middle}
+
+/* ================= Column simulation drawing ================= */
+#hillcol{display:block; margin:0 auto}
+.pulse-flash{animation:pulseDown .5s ease-out}
+@keyframes pulseDown{0%{opacity:.9} 100%{opacity:0}}
+@media print{
+  .topbar,.theme-btn{display:none}
+  body{background:#fff}
+  .card,.chart-card,.tile{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="course">WASR 8000 · Week 1</span>
+    <nav class="navchips" aria-label="Sections">
+      <a href="#s-paradox">The paradox</a>
+      <a href="#s-gauge">What tracers add</a>
+      <a href="#s-tracer">What a tracer is</a>
+      <a href="#s-question">Question first</a>
+      <a href="#s-rates">Rates vs. dates</a>
+      <a href="#s-mixture">Mixtures of ages</a>
+      <a href="#s-bomb">The bomb pulse</a>
+      <a href="#s-chain">Evidence chain</a>
+      <a href="#s-global">Global picture</a>
+      <a href="#s-practice">Practice</a>
+      <a href="#s-quiz">Self-check</a>
+      <a href="#s-glossary">Glossary</a>
+      <a href="#s-next">Next</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle dark mode">◐ Theme</button>
+  </div>
+</div>
+
+<main>
+<header class="hero">
+  <div class="kicker">WASR 8000 · Environmental Tracers in Hydrology · Fall 2026</div>
+  <h1>Rates and Dates</h1>
+  <p class="sub">An interactive introduction to environmental tracers — how water moves, where it came from, and how long it has been here. No isotope background needed.</p>
+  <div class="meta">
+    <span>Week 1 companion · post-class review</span>
+    <span>≈ 20–30 minutes</span>
+    <span>7 interactive demos · self-check quiz</span>
+  </div>
+</header>
+
+<!-- ================= 1. PARADOX ================= -->
+<section id="s-paradox">
+  <div class="sec-label">1 · The opening paradox</div>
+  <h2>A stream rises within minutes. How old is the water?</h2>
+  <p class="lede">Rain begins over a forested catchment. Within minutes, the stream gauge shows discharge climbing. Choose the claim you would defend first.</p>
+
+  <div class="poll-opts" role="group" aria-label="Pick a claim">
+    <button class="poll-btn" type="button" data-pick="A">
+      <span class="letter">A</span>
+      <div><b>Mostly new rainfall</b></div>
+      <div class="small">The stream rose right after rain began — the simplest reading is that rain is running straight off into the channel.</div>
+    </button>
+    <button class="poll-btn" type="button" data-pick="B">
+      <span class="letter">B</span>
+      <div><b>Mostly water released from storage</b></div>
+      <div class="small">Catchments hold far more water than a single storm delivers — perhaps the storm pushes stored water out.</div>
+    </button>
+    <button class="poll-btn" type="button" data-pick="C">
+      <span class="letter">C</span>
+      <div><b>Discharge alone cannot tell us</b></div>
+      <div class="small">A gauge measures flow, not the history of the molecules passing it.</div>
+    </button>
+  </div>
+
+  <div class="reveal card" id="pollReveal">
+    <h3 id="pollHeadline"></h3>
+    <p id="pollBody"></p>
+    <p>When hydrologists first measured isotopes in storm runoff, the result up-ended the "obvious" answer A. In the classic storm analyzed by Sklash &amp; Farvolden (1979), river discharge rose roughly <b>fivefold</b> (from ~25 to ~130 m³/s) — yet <b>more than two-thirds of the water at peak flow was "pre-event" water</b>, water already stored in the catchment before the rain began (Jasechko, 2019, Fig. 27). The rain arrived, and the catchment answered — largely with <i>old</i> water.</p>
+    <div class="callout">A rising hydrograph is a <b>rate</b> observation. It tells you how quickly the system responds — it cannot tell you the <b>age</b> of the water doing the responding. Keep this distinction in hand; the whole course lives inside it.</div>
+    <p class="small">Be ready to name the observation that would change your mind — that habit is the seminar's standard of critique.</p>
+  </div>
+</section>
+
+<!-- ================= 2. GAUGE VS TRACER ================= -->
+<section id="s-gauge">
+  <div class="sec-label">2 · Why tracers exist</div>
+  <h2>Hydrology measures motion; tracers reveal history</h2>
+  <p class="lede">Conventional instruments answer "how much, how fast." Tracers answer where water came from, which route it took, how long it stayed, and what happened to it along the way.</p>
+
+  <div class="duo">
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--baseline)"></span>What conventional observations establish</h3>
+      <ul>
+        <li><b>Head and gradient</b> describe hydraulic potential — which way water is being pushed.</li>
+        <li><b>Discharge</b> measures water moving past a section, right now.</li>
+        <li><b>Storage change</b> tracks the balance of gains and losses.</li>
+      </ul>
+      <p class="small">All three are indispensable — and all three are silent about the history of the molecules involved.</p>
+    </div>
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--s1)"></span>What tracer information adds</h3>
+      <ul>
+        <li><b>Origin</b> — which source supplied the water or solute?</li>
+        <li><b>Pathway</b> — which route connected source and sample?</li>
+        <li><b>Age</b> — when did the water enter the system?</li>
+        <li><b>Process</b> — what reactions or mixing changed it?</li>
+      </ul>
+      <p class="small">Four kinds of history, none of which a gauge can see.</p>
+    </div>
+  </div>
+
+  <div class="callout">The same flow rate can be produced by <b>very different stores, pathways, and water ages</b>. Two catchments with identical hydrographs can be doing completely different things inside — and only a tracer can tell them apart.</div>
+</section>
+
+<!-- ================= 3. WHAT A TRACER IS ================= -->
+<section id="s-tracer">
+  <div class="sec-label">3 · The definition</div>
+  <h2>An environmental tracer is information carried by water</h2>
+  <p class="lede">A useful tracer has three properties. Miss any one of them, and the "tracer" tells you nothing you can defend.</p>
+
+  <div class="grid3">
+    <div class="card">
+      <h3>1 · A structured signal</h3>
+      <p class="small">It varies across space, time, sources, or reactions. A constant carries no information.</p>
+    </div>
+    <div class="card">
+      <h3>2 · A transport story</h3>
+      <p class="small">It enters naturally or through human activity, and moves with — or predictably relative to — the water.</p>
+    </div>
+    <div class="card">
+      <h3>3 · An interpretable response</h3>
+      <p class="small">Its concentration or isotope ratio can be linked, through a model, to a hydrologic hypothesis.</p>
+    </div>
+  </div>
+
+  <div class="callout"><b>Tracer = signal + transport behavior + model of interpretation.</b> "Environmental" describes how the signal is present in the system — it does not promise that every tracer is natural, or perfectly conservative.</div>
+
+  <div class="card">
+    <h3>Test the definition</h3>
+    <p class="small">Click each candidate and ask: does it have a structured signal, a transport story, and an interpretable response?</p>
+    <div class="chiprow" id="tracerChips" role="group" aria-label="Candidate tracers"></div>
+    <div class="explain-panel" id="tracerExplain" aria-live="polite">
+      <p class="small">Pick a candidate above.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Two families of isotope tracers</h3>
+    <div class="duo" style="margin-top:8px">
+      <div>
+        <h4 style="color:var(--s1); margin-bottom:4px">Tracers of the water itself</h4>
+        <p class="small">Oxygen (¹⁶O, ¹⁷O, ¹⁸O) and hydrogen (¹H, ²H, ³H) isotopes are <i>constituents of the water molecule</i> — not something dissolved in it. In low-temperature systems the stable ones travel conservatively: waters keep their isotopic "fingerprints" until they mix with other waters (Kendall et al., 2014).</p>
+      </div>
+      <div>
+        <h4 style="color:var(--s1); margin-bottom:4px">Tracers of the solutes in water</h4>
+        <p class="small">Isotopes of dissolved nitrogen, carbon, sulfur, and other elements fingerprint where a <i>solute</i> came from and what reactions transformed it — nitrate from fertilizer versus waste, carbon exchanged with soil or rock. Powerful, but rarely conservative: reactions shift the signal in predictable, recognizable directions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 4. QUESTION FIRST ================= -->
+<section id="s-question">
+  <div class="sec-label">4 · Choosing a tracer</div>
+  <h2>Start with the question, not the isotope</h2>
+  <p class="lede">Tracer choice begins with the hydrologic question — never with a favorite isotope or instrument. Five kinds of question cover most of hydrology. Open each to see a plausible first strategy.</p>
+
+  <div class="acc" id="qAcc"></div>
+
+  <div class="callout">The right column is a set of <b>examples, not a lookup table</b> — and a single tracer rarely answers a complete question by itself. Every strategy above still needs supporting measurements: water levels, precipitation, chemistry, land-use context. That is the multi-tracer principle you will see all term.</div>
+</section>
+
+<!-- ================= 5. RATES VS DATES ================= -->
+<section id="s-rates">
+  <div class="sec-label">5 · The central distinction</div>
+  <h2>Rates and dates answer different equations</h2>
+  <div class="duo">
+    <div class="card">
+      <h3 style="color:var(--s1)">RATE</h3>
+      <p><b>How much water moves per unit time?</b></p>
+      <p class="small">Recharge, discharge, exchange, velocity. Units: <code>volume / time</code> (or length/time).</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--s1)">DATE / TIMESCALE</h3>
+      <p><b>When did water enter, and how long did it stay?</b></p>
+      <p class="small">Recharge date, travel time, residence-time distribution. Units: <code>time</code>.</p>
+    </div>
+  </div>
+  <div class="callout"><b>Storage ≈ rate × timescale.</b> A useful dimensional intuition — not permission to ignore mixing or non-steady behavior. A large storage drained slowly and a small storage drained quickly can deliver the same discharge.</div>
+
+  <div class="card">
+    <h3>Try it: push rain through a hillslope</h3>
+    <p class="small">The column below is a hillslope's storage, drawn as stacked parcels of water — darker blue means the parcel has been in the ground longer. Press <b>Rain storm</b> and watch two different speeds at work: the <b>discharge response</b> (a pressure signal, fast) and the <b>movement of the rainwater itself</b> (slow). The stream responds immediately — but check <i>whose</i> water it is delivering.</p>
+
+    <div class="sim-controls">
+      <button class="btn rain" id="rainBtn" type="button">☔ Rain storm</button>
+      <button class="btn" id="playBtn" type="button" aria-pressed="false">▶ Run time</button>
+      <button class="btn" id="resetBtn" type="button">↺ Reset</button>
+      <div class="seg" role="group" aria-label="Storage size">
+        <button type="button" id="storeSmall" aria-pressed="false">Small storage</button>
+        <button type="button" id="storeLarge" aria-pressed="true">Large storage</button>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="key"><span class="swatch" style="background:var(--s2)"></span>this storm's rain (event water)</span>
+      <span class="key"><span class="swatch" style="background:linear-gradient(90deg,var(--age-young),var(--age-old))"></span>stored water, shaded by age (pre-event)</span>
+    </div>
+
+    <div class="sim-wrap">
+      <div>
+        <svg id="hillcol" width="210" height="420" viewBox="0 0 210 420" role="img" aria-label="Hillslope storage column: parcels of stored water with rain entering at the top and the oldest water exiting at the bottom to the stream"></svg>
+      </div>
+      <div>
+        <div class="readouts">
+          <div class="tile"><div class="lab">Model time</div><div class="val mono" id="roTime">day 0</div><div class="sub">1 tick ≈ 5 days</div></div>
+          <div class="tile"><div class="lab">Streamflow right now</div><div class="val mono" id="roQ">baseflow</div><div class="sub">responds within a tick of rain</div></div>
+          <div class="tile"><div class="lab">Water exiting entered…</div><div class="val mono" id="roAge">—</div><div class="sub">age of the parcel now reaching the stream</div></div>
+        </div>
+        <div class="chart-card">
+          <h4>Streamflow</h4>
+          <p class="small">parcels leaving per tick (relative discharge)</p>
+          <svg id="simQ" width="640" height="120" viewBox="0 0 640 120" role="img" aria-label="Simulated hydrograph"></svg>
+        </div>
+        <div class="chart-card">
+          <h4>Share of streamflow that is this storm's rain</h4>
+          <p class="small">fraction of recently exited parcels that are event water</p>
+          <svg id="simF" width="640" height="120" viewBox="0 0 640 120" role="img" aria-label="Fraction of event water in outflow over time"></svg>
+        </div>
+        <div class="callout" id="simMsg">Press <b>Rain storm</b>, then <b>Run time</b>. Watch the hydrograph jump immediately — while the orange parcels are still near the top of the column.</div>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:10px"><b>What just happened?</b> Rain landing on the hillslope raises the water pressure all the way down the column almost instantly, squeezing the <i>oldest stored water</i> out into the stream — rainfall "pushing" pre-event water ahead of it. Hydrologists call the speed of that pressure signal <b>celerity</b>, and the speed of the water molecules themselves <b>velocity</b> (McDonnell &amp; Beven, 2014). Fast response, old water: both can be true at once — and in real catchments, they usually are.</p>
+  </div>
+</section>
+
+<!-- ================= 6. MIXTURE OF AGES ================= -->
+<section id="s-mixture">
+  <div class="sec-label">6 · Why "the age" is a trap</div>
+  <h2>A water sample is usually a mixture of ages</h2>
+  <p class="lede">A well or stream sample rarely has <i>an</i> age. It blends water from stores with very different histories, and a single reported "age" can collapse — and hide — that distribution.</p>
+
+  <div class="card">
+    <h3>Mix a sample yourself</h3>
+    <p class="small">Drag the sliders (or pick a preset) to set how much of a sample comes from each store. The bar shows the blend; the curve shows the age distribution it implies; the marker shows the single "mean age" that would be reported.</p>
+
+    <div class="preset-row" id="mixPresets" role="group" aria-label="Mixture presets"></div>
+
+    <div class="slider-row">
+      <label for="mxRecent"><span class="swatch" style="background:var(--age-young); width:12px;height:12px;border-radius:3px;display:inline-block"></span>Recent input</label>
+      <input type="range" id="mxRecent" min="0" max="100" value="20" aria-describedby="mixNote">
+      <output id="mxRecentOut">20%</output>
+    </div>
+    <div class="slider-row">
+      <label for="mxActive"><span class="swatch" style="background:var(--age-mid); width:12px;height:12px;border-radius:3px;display:inline-block"></span>Active storage</label>
+      <input type="range" id="mxActive" min="0" max="100" value="55">
+      <output id="mxActiveOut">55%</output>
+    </div>
+    <div class="slider-row">
+      <label for="mxLegacy"><span class="swatch" style="background:var(--age-old); width:12px;height:12px;border-radius:3px;display:inline-block"></span>Legacy storage</label>
+      <input type="range" id="mxLegacy" min="0" max="100" value="25">
+      <output id="mxLegacyOut">25%</output>
+    </div>
+    <p class="small" id="mixNote">Shares are renormalized to total 100%.</p>
+
+    <svg id="mixBar" width="900" height="64" viewBox="0 0 900 64" style="width:100%; height:auto" role="img" aria-label="Composition of the sample as a stacked bar"></svg>
+    <div class="chart-card" style="margin-top:6px">
+      <h4>The age distribution behind the sample</h4>
+      <p class="small">probability density of water age (note the logarithmic time axis)</p>
+      <svg id="mixDist" width="900" height="240" viewBox="0 0 900 240" style="width:100%; height:auto" role="img" aria-label="Age distribution of the mixed sample on a logarithmic time axis"></svg>
+      <details class="tableview"><summary>View the numbers</summary><div id="mixTable"></div></details>
+    </div>
+
+    <div class="readouts" style="grid-template-columns:repeat(2,1fr)">
+      <div class="tile"><div class="lab">Single "mean age" a report might state</div><div class="val" id="mixMean">—</div><div class="sub">the arithmetic mean of the whole distribution</div></div>
+      <div class="tile"><div class="lab">Fraction younger than ~3 months</div><div class="val" id="mixYoung">—</div><div class="sub">the part that responds to current forcing</div></div>
+    </div>
+    <div class="callout" id="mixMsg"></div>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><h3 style="font-size:.95rem"><span class="dot" style="background:var(--age-young)"></span> Recent input</h3><p class="small">Event to seasonal. Highly responsive to current forcing — this is the water that carries this year's weather.</p></div>
+    <div class="card"><h3 style="font-size:.95rem"><span class="dot" style="background:var(--age-mid)"></span> Active storage</h3><p class="small">Months to years. Mixes changing recharge histories; the buffer between weather and long-term memory.</p></div>
+    <div class="card"><h3 style="font-size:.95rem"><span class="dot" style="background:var(--age-old)"></span> Legacy storage</h3><p class="small">Years to millennia. Carries past climate and land-use signals — decisions made decades ago still flow out of it today.</p></div>
+  </div>
+
+  <p class="small">The proportions depend on storage, connectivity, forcing, and the <i>sampling moment</i>: pumping, storms, season, and well-screen depth all change the mixture collected at one point. Week 3 will make this precise by separating <b>apparent age</b>, <b>mean residence time</b>, and <b>travel-time distributions</b>.</p>
+</section>
+
+<!-- ================= 7. BOMB PULSE ================= -->
+<section id="s-bomb">
+  <div class="sec-label">7 · A worked example</div>
+  <h2>The bomb pulse turned the atmosphere into a time stamp</h2>
+  <p class="lede">Tritium (³H) is radioactive hydrogen built into the water molecule itself, decaying with a half-life of 12.32 years. Atmospheric thermonuclear testing in the 1950s–60s spiked precipitation tritium to roughly 5–500× its natural background (which sat below ~15 TU over non-polar lands), peaking around 1963 — and then decay and atmospheric mixing brought it back down. That spike is a global time stamp written into every water body that received recharge.</p>
+
+  <div class="card">
+    <h3>Explore the pulse</h3>
+    <p class="small">The blue curve is precipitation tritium at a northern mid-latitude station (schematic, drawn to the pattern of IAEA network records — 60,859 measurements at 722 stations — synthesized in Jasechko, 2019, Fig. 6). Drag the slider to pick a <b>recharge year</b>: the dashed path shows that year's rain decaying to the present, and the aqua curve shows what rain from <i>every</i> year would measure if sampled today.</p>
+
+    <div class="slider-row" style="grid-template-columns:150px 1fr 120px">
+      <label for="triYear">Recharge year</label>
+      <input type="range" id="triYear" min="1950" max="2024" value="1963" step="1">
+      <output id="triYearOut">1963</output>
+    </div>
+    <div class="sim-controls">
+      <button class="chip-btn" id="triToggleToday" type="button" aria-pressed="true">Show "measured today" curve</button>
+    </div>
+
+    <div class="legend">
+      <span class="key"><span class="linekey" style="border-color:var(--s1)"></span>precipitation ³H in the year it fell</span>
+      <span class="key"><span class="linekey" style="border-color:var(--s3)"></span>what that rain would measure in 2026</span>
+      <span class="key"><span class="linekey" style="border-color:var(--muted); border-top-style:dashed"></span>decay path of the selected year</span>
+    </div>
+
+    <div class="chart-card" style="margin:6px 0">
+      <svg id="triChart" width="900" height="340" viewBox="0 0 900 340" style="width:100%; height:auto" role="img" aria-label="Precipitation tritium from 1945 to 2026 on a logarithmic axis, with decay paths to the present"></svg>
+      <details class="tableview"><summary>View the numbers</summary><div id="triTable"></div></details>
+    </div>
+
+    <div class="readouts">
+      <div class="tile"><div class="lab">That year's rain, when it fell</div><div class="val mono" id="triAtRecharge">—</div><div class="sub">tritium units (TU)</div></div>
+      <div class="tile"><div class="lab">Same water measured in 2026</div><div class="val mono" id="triToday">—</div><div class="sub">after radioactive decay, t½ = 12.32 y</div></div>
+      <div class="tile"><div class="lab">Other recharge years giving ≈ the same value</div><div class="val mono" id="triAmbig" style="font-size:1rem">—</div><div class="sub">why one number rarely equals one date</div></div>
+    </div>
+
+    <div class="callout" id="triMsg"></div>
+  </div>
+
+  <div class="callout warn"><b>The honest fine print.</b> An input pulse is useful for dating only when you also know the <b>input history</b> at your site, account for <b>decay</b>, and model <b>mixing</b> — a sample blending 1960s water with recent recharge can imitate a sample of intermediate age. Tritium identifies recent recharge with confidence; turning it into a single "age" takes the machinery of Week 3 and Week 5 (³H/³He, CFCs, SF₆, lumped-parameter models).</div>
+</section>
+
+<!-- ================= 8. EVIDENCE CHAIN ================= -->
+<section id="s-chain">
+  <div class="sec-label">8 · From signal to story</div>
+  <h2>A tracer becomes evidence through a four-link chain</h2>
+  <p class="lede">Between "we measured something" and "therefore the water is young" stand four links. Every link carries assumptions, and uncertainty compounds downstream. Click each link to see what can break there.</p>
+
+  <div class="chain" role="group" aria-label="Evidence chain">
+    <button class="chain-link" type="button" data-link="0"><span class="num">1</span><div class="name">INPUT</div><div class="q">What signal entered, where, and when?</div></button>
+    <button class="chain-link" type="button" data-link="1"><span class="num">2</span><div class="name">TRANSPORT</div><div class="q">How did mixing, decay, or reaction alter it?</div></button>
+    <button class="chain-link" type="button" data-link="2"><span class="num">3</span><div class="name">SAMPLE</div><div class="q">Does the design resolve variability and scale?</div></button>
+    <button class="chain-link" type="button" data-link="3"><span class="num">4</span><div class="name">INFERENCE</div><div class="q">Which model links observations to the claim?</div></button>
+  </div>
+  <div class="card explain-panel" id="chainExplain" aria-live="polite"><p class="small">Click a link above to see its failure modes.</p></div>
+
+  <div class="callout">For any paper this term, a productive move is to <b>start at the claim and walk backward</b>: what observation, sampling design, transport model, and input history must all hold for that claim to stand? Treat variability as information, not nuisance — and expect the seminar to ask where each assumption enters.</div>
+</section>
+
+<!-- ================= 9. GLOBAL PICTURE ================= -->
+<section id="s-global">
+  <div class="sec-label">9 · What the global data say</div>
+  <h2>Global syntheses turn samples into testable hypotheses</h2>
+  <p class="lede">A century of groundwater isotope measurements — compiled in Jasechko (2019) — now confirms and quantifies ideas that were once local hunches.</p>
+
+  <div class="stats-row">
+    <div class="tile"><div class="lab">Groundwater isotope measurements compiled</div><div class="val">&gt;100,000</div><div class="sub">well-water and spring samples</div></div>
+    <div class="tile"><div class="lab">Globally distributed aquifer systems</div><div class="val">&gt;1,000</div><div class="sub">across every continent</div></div>
+    <div class="tile"><div class="lab">Of Earth's fresh, unfrozen water that is groundwater</div><div class="val">~99%</div><div class="sub">the planet's dominant freshwater store</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="finding"><div class="fnum">FINDING 1</div><h4>Recharge is biased toward cold and wet seasons</h4><p>Aquifers fill disproportionately from winter and wet-season precipitation and from intense rainfall — not evenly from the annual total. Where recharge comes from matters as much as how much falls.</p></div>
+    <div class="finding"><div class="fnum">FINDING 2</div><h4>Modern groundwater is a small share of the total</h4><p>Water replenished within recent decades makes up a considerable share of the shallowest ~100 m — but only a small share of groundwater in the upper 1 km. Aquifers flush far more slowly than management horizons assume.</p></div>
+    <div class="finding"><div class="fnum">FINDING 3</div><h4>Fossil groundwater dominates aquifer storage</h4><p>Water recharged more than ~12,000 years ago — before the Holocene — dominates global aquifer storage, and its chemistry archives ice-age climate. Pumping it is closer to mining than to harvesting a renewable flow.</p></div>
+    <div class="finding"><div class="fnum">FINDING 4</div><h4>Groundwater generates much of streamflow</h4><p>In 61 of 101 compiled storm studies, more than half of streamflow was groundwater or other pre-event water — including during many storms. Rivers are, to a first approximation, groundwater in motion.</p></div>
+  </div>
+
+  <div class="callout warn"><b>Global patterns are a starting point, not a verdict.</b> The compiled data over-represent mid-latitude, agriculturally developed sedimentary basins, and under-sample high latitudes, hyperarid deserts, and equatorial rainforests. Local geology and sampling decide whether a global pattern applies to your site — a caution the review itself insists on.</div>
+
+  <p class="small">Also confirmed: surface-borne contaminants are more common in <i>younger</i> groundwater — age and vulnerability travel together. Which of these findings is a rate claim, which is a date claim, and which requires both? That question returns in every week of this course.</p>
+</section>
+
+<!-- ================= 10. PRACTICE ================= -->
+<section id="s-practice">
+  <div class="sec-label">10 · Practice</div>
+  <h2>Choose a tracer strategy</h2>
+  <p class="lede">Four scenarios from the Week 1 activity. For each, pick the strategy you would try <i>first</i> — then compare with the debrief. There is rarely one correct tracer; there are more and less defensible inference chains.</p>
+  <div id="scenarios"></div>
+  <div class="callout">Carry-one-question rule, from the break slide: <b>what can your chosen tracer <i>not</i> distinguish?</b> If you cannot answer that, you do not yet have a design — you have a favorite isotope.</div>
+</section>
+
+<!-- ================= 11. QUIZ ================= -->
+<section id="s-quiz">
+  <div class="sec-label">11 · Self-check</div>
+  <h2>Six questions before Week 2</h2>
+  <p class="lede">Immediate feedback, no grade, no record. If you miss one, the linked section is the fix.</p>
+  <div id="quiz"></div>
+  <div class="quiz-score" id="quizScore" aria-live="polite"></div>
+</section>
+
+<!-- ================= 12. GLOSSARY ================= -->
+<section id="s-glossary">
+  <div class="sec-label">12 · Vocabulary</div>
+  <h2>Glossary</h2>
+  <p class="lede">The Week 1 working vocabulary, plus a few terms you will meet in Week 2. Search or browse.</p>
+  <input class="gloss-search" id="glossSearch" type="search" placeholder="Search terms… (e.g., tritium, celerity)" aria-label="Search glossary">
+  <div class="gloss-grid" id="glossGrid"></div>
+</section>
+
+<!-- ================= 13. NEXT ================= -->
+<section id="s-next">
+  <div class="sec-label">13 · Where to go next</div>
+  <h2>The Week 1 readings — four complementary views</h2>
+  <p class="lede">Papers are not posted for this course: retrieving them from the citation and DOI — via UGA Libraries, GALILEO, or the publisher — is part of the training.</p>
+
+  <div class="card" style="padding-top:8px; padding-bottom:8px">
+    <div class="reading">
+      <span class="rtag">GLOBAL</span>
+      <div><h4>Jasechko, S. (2019). Global isotope hydrogeology — review. <i>Reviews of Geophysics</i>, 57(3), 835–965.</h4>
+      <p>The anchor overview: a synthesis of groundwater ²H, ¹⁸O, ³H, and ¹⁴C data, its major findings, and its geographic gaps. <a href="https://doi.org/10.1029/2018RG000627" rel="noopener">doi:10.1029/2018RG000627</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">CYCLE</span>
+      <div><h4>Gat, J. R. (1996). Oxygen and hydrogen isotopes in the hydrologic cycle. <i>Annu. Rev. Earth Planet. Sci.</i>, 24, 225–262.</h4>
+      <p>The classic account of stable-isotope behavior across the whole water cycle. <a href="https://doi.org/10.1146/annurev.earth.24.1.225" rel="noopener">doi:10.1146/annurev.earth.24.1.225</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">METHODS</span>
+      <div><h4>Kendall, C., Doctor, D. H., &amp; Young, M. B. (2014). Environmental isotope applications in hydrologic studies.</h4>
+      <p>A broad map of water- and solute-isotope applications, mixing, reaction, and multi-tracer work. <a href="https://doi.org/10.1016/B978-0-08-095975-7.00510-6" rel="noopener">doi:10.1016/B978-0-08-095975-7.00510-6</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">FRONTIER</span>
+      <div><h4>McGuire, K. J., &amp; McDonnell, J. J. (2015). Tracer advances in catchment hydrology.</h4>
+      <p>A short, forward-looking perspective on age, origin, pathway, tracer-aided models, and emerging tracers. <a href="https://doi.org/10.1002/hyp.10740" rel="noopener">doi:10.1002/hyp.10740</a></p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Coming in Week 2 — Fundamental principles of tracer techniques</h3>
+    <p class="small">δ (delta) notation and isotope systematics · equilibrium and kinetic fractionation · radioactive decay · the global and local meteoric water lines and deuterium excess · conservative vs. reactive tracers. On the discussion table: Dansgaard (1964), Craig (1961), and Evaristo, Jasechko &amp; McDonnell (2015) — reading notes begin.</p>
+    <p class="small" style="margin-bottom:0"><b>Exit-ticket habit worth keeping:</b> one hydrologic question you care about · one tracer you might use · one assumption you would have to test.</p>
+  </div>
+</section>
+
+<footer>
+  <p><b>WASR 8000 — Rates and Dates: Hydrological Methods and Applications</b> · Fall 2026 · Mondays 2:55–5:35 PM · Dr. Jaivime Evaristo · University of Georgia</p>
+  <p>This page accompanies the Week 1 meeting (Aug 17, 2026). Content follows the Week 1 lecture and course documents, with facts drawn from Jasechko (2019), <i>Rev. Geophys.</i> 57:835–965; Kendall, Doctor &amp; Young (2014); McGuire &amp; McDonnell (2015); Sklash &amp; Farvolden (1979) as presented in Jasechko (2019), Fig. 27; and McDonnell &amp; Beven (2014) on celerity vs. velocity. The tritium history is schematic, drawn to the pattern of IAEA GNIP records synthesized in Jasechko (2019), Fig. 6; the hillslope and mixture demonstrations are conceptual models for intuition, not site simulations.</p>
+  <p>The simulations run entirely in this page; nothing is recorded or submitted.</p>
+</footer>
+</main>
+
+<div class="viz-tip" id="vizTip" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const SVGNS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const n=document.createElementNS(SVGNS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);if(parent)parent.appendChild(n);return n;}
+function hel(tag,cls,parent,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;if(parent)parent.appendChild(n);return n;}
+function cssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+function hexToRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mixHex(h1,h2,t){const a=hexToRgb(h1),b=hexToRgb(h2);return `rgb(${Math.round(lerp(a[0],b[0],t))},${Math.round(lerp(a[1],b[1],t))},${Math.round(lerp(a[2],b[2],t))})`;}
+function ramp3(t,c1,c2,c3){return t<0.5?mixHex(c1,c2,t*2):mixHex(c2,c3,(t-0.5)*2);}
+function fmtTU(x){if(x<1)return "<1";if(x<10)return x.toFixed(1);if(x<100)return String(Math.round(x));return Math.round(x).toLocaleString("en-US");}
+function fmtAgeDays(d){if(d<14)return Math.round(d)+" days";if(d<64)return Math.round(d/7)+" weeks";if(d<700)return Math.round(d/30.44)+" months";const y=d/365.25;return (y<10?y.toFixed(1):Math.round(y).toLocaleString("en-US"))+" years";}
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;const t=1/(1+p*x);const y=1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);return s*y;}
+const normCdf=z=>0.5*(1+erf(z/Math.SQRT2));
+const reduceMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* tooltip */
+const tip=$("#vizTip");
+function showTip(rows,x,y){tip.textContent="";rows.forEach(r=>{const d=hel("div",null,tip);if(r.key){const k=hel("span","tk",d);k.style.borderColor=r.key;}const v=hel("span","tv",d,r.v+" ");hel("span",null,d,r.t);});tip.style.display="block";const w=tip.offsetWidth,h=tip.offsetHeight;let px=x+14,py=y-h-10;if(px+w>innerWidth-8)px=x-w-14;if(py<8)py=y+16;tip.style.left=px+"px";tip.style.top=py+"px";}
+function hideTip(){tip.style.display="none";}
+
+/* redraw registry for theme changes */
+const redraws=[];
+
+/* ============ theme ============ */
+const themeBtn=$("#themeBtn");
+let theme=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+function applyTheme(){document.documentElement.setAttribute("data-theme",theme);themeBtn.textContent=theme==="dark"?"◐ Light":"◐ Dark";redraws.forEach(f=>f());}
+themeBtn.addEventListener("click",()=>{theme=theme==="dark"?"light":"dark";applyTheme();});
+
+/* ============ nav active state ============ */
+const navLinks=$$(".navchips a");
+const secObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){navLinks.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+e.target.id));}});},{rootMargin:"-30% 0px -60% 0px"});
+$$("main section").forEach(s=>secObs.observe(s));
+
+/* ============ §1 poll ============ */
+const pollText={
+ A:{h:"The intuitive answer — and the one the isotope data overturned.",b:"It feels airtight: rain falls, the stream rises, so the rise must be rainwater. But a gauge measures flow, not identity. When isotopes gave storm water a fingerprint, answer A failed in catchment after catchment."},
+ B:{h:"Bold — and, in most studied catchments, right.",b:"Catchments hold vastly more water than any single storm delivers, and storms mobilize that store. Isotope measurements were what turned this from speculation into one of hydrology's most repeated findings."},
+ C:{h:"The methodologically careful answer.",b:"Correct — and worth saying precisely: discharge is a rate observation, and no amount of it can establish the age of the molecules passing the gauge. This is exactly the gap environmental tracers exist to fill."}
+};
+$$(".poll-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  $$(".poll-btn").forEach(b=>{b.classList.toggle("picked",b===btn);b.setAttribute("aria-pressed",b===btn?"true":"false");});
+  const t=pollText[btn.dataset.pick];
+  $("#pollHeadline").textContent="You chose "+btn.dataset.pick+". "+t.h;
+  $("#pollBody").textContent=t.b;
+  $("#pollReveal").classList.add("open");
+}));
+
+/* ============ §3 tracer chips ============ */
+const tracers=[
+ {t:"Temperature",d:"A tracer, but a leaky one. It has a structured signal (seasonal and depth patterns) and an interpretable heat-transport model — but heat exchanges readily with rock and soil, so it moves predictably relative to the water rather than with it. Useful for infiltration and stream–aquifer exchange over short distances."},
+ {t:"Chloride",d:"A classic conservative solute tracer. Its signal comes from atmospheric deposition and from concentration by evaporation; because it is neither consumed nor produced in most systems, a chloride mass balance can estimate recharge rates. The transport story is simple — that is precisely its value."},
+ {t:"δ¹⁸O & δ²H of water",d:"The workhorse pair. They are constituents of the water molecule itself, vary systematically with season, elevation, and evaporation, and behave conservatively in low-temperature systems — waters keep their fingerprint until they mix. Origin, pathway, and mixing questions start here."},
+ {t:"Tritium (³H)",d:"Radioactive hydrogen built into the water molecule, with a half-life of 12.32 years and a spectacular input history: the 1950s–60s bomb pulse. Signal, transport, and clock in one nucleus — but turning a concentration into an age requires the input curve and a mixing model (see Section 7)."},
+ {t:"Nitrate isotopes (δ¹⁵N, δ¹⁸O)",d:"A solute tracer, not a water tracer. Fertilizer, manure, and waste carry different isotopic fingerprints — and reactions like denitrification shift both isotopes in predictable directions. The reactivity that complicates source identification is itself information about process."},
+ {t:"An injected dye",d:"A tracer — but an applied one, not environmental. You control the input signal by design, which makes it superb for pathway and travel-time questions at plot to hillslope scale. 'Environmental' tracers differ in that their signal is already present, delivered by nature or by human activity at large."}
+];
+const chipRow=$("#tracerChips"),chipPanel=$("#tracerExplain");
+tracers.forEach((tr,i)=>{const b=hel("button","chip-btn",chipRow,tr.t);b.type="button";b.setAttribute("aria-pressed","false");b.addEventListener("click",()=>{$$("#tracerChips .chip-btn").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));chipPanel.textContent="";const h=hel("h4",null,chipPanel,tr.t);h.style.margin="0 0 4px";hel("p","small",chipPanel,tr.d);});});
+
+/* ============ §4 question-first accordion ============ */
+const qRows=[
+ {tag:"ORIGIN",q:"Where did the water or solute come from?",s:"Water isotopes (δ¹⁸O, δ²H); solute isotope fingerprints.",ex:"Does the town well draw from the river, or from mountain-front recharge? Precipitation isotopes vary with elevation and season, so the well's fingerprint can point to its source area.",need:"End-members characterized across seasons — sources that overlap or drift are the first failure mode."},
+ {tag:"PATHWAY",q:"Which flow route connected source and sample?",s:"Conservative tracers; dyes; geochemical end-members.",ex:"Does storm water reach the stream through the soil matrix or through preferential flowpaths? Route-specific chemistry — silica picked up in the matrix, for instance — separates routes the hydrograph cannot.",need:"Sampling positioned at the endpoints of candidate routes, timed to catch the event."},
+ {tag:"PROCESS",q:"What mixing or reaction changed the signal?",s:"Paired isotopes + concentrations + redox chemistry.",ex:"Is nitrate disappearing along the flow path by denitrification, or is it merely diluted? Reaction shifts isotope ratios as concentration falls; dilution does not.",need:"The supporting chemistry (redox state, reaction products) that distinguishes the mechanisms."},
+ {tag:"AGE",q:"When did water enter, and how long did it remain?",s:"³H, ¹⁴C, CFCs/SF₆, noble-gas radionuclides.",ex:"Was this well's water recharged after the 1950s? Bomb-pulse tritium answers that binary cleanly; the harder question — the full age distribution — needs more (Sections 6–7).",need:"The tracer's input history at your site, plus a mixing model for the age distribution."},
+ {tag:"RATE",q:"How fast is recharge, flow, or exchange?",s:"Tracer mass balance, depth profiles, or time-series models.",ex:"How much water crosses the root zone each year? A chloride mass balance or the descent of a tracer peak through the profile converts concentrations into a flux.",need:"Closure of the relevant water balance — a rate inferred from a tracer still has to add up."}
+];
+const qAcc=$("#qAcc");
+qRows.forEach((r,i)=>{
+  const item=hel("div","acc-item",qAcc);
+  const head=hel("button","acc-head",item);head.type="button";head.setAttribute("aria-expanded","false");
+  const tg=hel("span","tag",head,r.tag);const q=hel("span","q",head,r.q);const c=hel("span","caret",head,"▸");
+  const body=hel("div","acc-body",item);
+  const p1=hel("p","strategy",body);hel("b",null,p1,"A plausible first strategy: ");p1.appendChild(document.createTextNode(r.s));
+  hel("p",null,body,r.ex);
+  const p3=hel("p","needs",body);hel("b",null,p3,"What you would still need: ");p3.appendChild(document.createTextNode(r.need));
+  head.addEventListener("click",()=>{const open=body.classList.toggle("open");head.setAttribute("aria-expanded",open?"true":"false");});
+});
+
+/* ============ §5 hillslope simulation ============ */
+const sim={N:18,B:6,tickDays:5,parcels:[],day:0,countdown:6,stormQueue:0,exited:[],qHist:[],playing:false,timer:null,stormCount:0,firstOrangeDone:false,stormDay:null};
+function simInit(){
+  sim.parcels=[];sim.day=0;sim.countdown=sim.B;sim.stormQueue=0;sim.exited=[];sim.qHist=[];sim.stormCount=0;sim.firstOrangeDone=false;sim.stormDay=null;
+  for(let i=0;i<sim.N;i++){sim.parcels.push({birth:-((sim.N-i)*30),event:false});}
+  /* warm up under steady baseflow so the charts open with history, then rebase clocks to day 0 */
+  for(let k=0;k<90;k++)simTick(false);
+  const shift=sim.day;
+  sim.day=0;sim.parcels.forEach(pp=>pp.birth-=shift);sim.exited.forEach(e=>e.day-=shift);sim.qHist.forEach(h=>h.day-=shift);
+  $("#simMsg").innerHTML="Press <b>Rain storm</b>, then <b>Run time</b>. Watch the hydrograph jump immediately — while the orange parcels are still near the top of the column.";
+  updateReadouts(null,0);drawColumn();drawSimCharts();
+}
+function simTick(draw=true){
+  sim.day+=sim.tickDays;
+  let rainedThisTick=false;
+  if(sim.stormQueue>0){sim.parcels.push({birth:sim.day,event:true});sim.stormQueue--;rainedThisTick=true;}
+  let exits=0;let exitedParcel=null;
+  if(sim.parcels.length>sim.N){exitedParcel=sim.parcels.shift();exits=1;sim.countdown=Math.max(1,sim.countdown-1);}
+  else{sim.countdown--;if(sim.countdown<=0){exitedParcel=sim.parcels.shift();exits=1;sim.countdown=sim.B;sim.parcels.push({birth:sim.day,event:false});}}
+  if(exitedParcel){sim.exited.push({event:exitedParcel.event,age:sim.day-exitedParcel.birth,day:sim.day});if(sim.exited.length>400)sim.exited.shift();
+    if(exitedParcel.event&&!sim.firstOrangeDone){sim.firstOrangeDone=true;const lag=sim.day-sim.stormDay;
+      $("#simMsg").innerHTML="<b>The storm's own water is only now reaching the stream</b> — about "+fmtAgeDays(lag)+" of model time after the hydrograph peak it triggered. Fast response, slow water: the peak was old water being pushed out ahead of the rain.";}}
+  sim.qHist.push({exits,day:sim.day,rain:rainedThisTick});if(sim.qHist.length>90)sim.qHist.shift();
+  if(draw!==false){updateReadouts(exitedParcel,exits);drawColumn(rainedThisTick);drawSimCharts();}
+}
+function updateReadouts(exited,exits){
+  $("#roTime").textContent="day "+sim.day;
+  const recent=sim.qHist.slice(-6);const rate=recent.length?recent.reduce((a,b)=>a+b.exits,0)/recent.length:1/sim.B;
+  const x=rate/(1/sim.B);
+  $("#roQ").textContent=x<1.35?"baseflow":("≈ "+(Math.round(x*10)/10)+"× baseflow");
+  const last=sim.exited[sim.exited.length-1];
+  $("#roAge").textContent=last?fmtAgeDays(last.age)+" ago":"—";
+}
+function drawColumn(rained){
+  const svg=$("#hillcol");svg.textContent="";
+  const cy=cssVar("--age-young"),cm=cssVar("--age-mid"),co=cssVar("--age-old"),orange=cssVar("--s2"),hair=cssVar("--hairline"),mut=cssVar("--muted"),ink2=cssVar("--ink-2"),base=cssVar("--baseline");
+  const x0=70,w=80,topY=48,botY=390,H=botY-topY;
+  /* age ramp legend */
+  const defs=el("defs",{},svg);const g1=el("linearGradient",{id:"ageGrad",x1:"0",y1:"0",x2:"0",y2:"1"},defs);
+  el("stop",{offset:"0%","stop-color":cy},g1);el("stop",{offset:"50%","stop-color":cm},g1);el("stop",{offset:"100%","stop-color":co},g1);
+  el("rect",{x:30,y:topY+14,width:10,height:H-28,rx:3,fill:"url(#ageGrad)"},svg);
+  el("text",{x:35,y:topY+6,"text-anchor":"middle","font-size":"9",fill:mut},svg).textContent="newer";
+  el("text",{x:35,y:botY+11,"text-anchor":"middle","font-size":"9",fill:mut},svg).textContent="older";
+  /* ground surface */
+  el("line",{x1:x0-14,y1:topY,x2:x0+w+14,y2:topY,stroke:base,"stroke-width":1},svg);
+  el("text",{x:x0+w/2,y:topY-28,"text-anchor":"middle","font-size":"10",fill:ink2},svg).textContent="rain enters here";
+  el("text",{x:x0+w/2,y:topY-16,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent="↓";
+  /* column border */
+  el("rect",{x:x0-1,y:topY-1,width:w+2,height:H+2,rx:6,fill:"none",stroke:hair},svg);
+  /* parcels */
+  const n=sim.parcels.length;const slotH=H/sim.N;
+  const maxAge=sim.N*30*1.15;
+  sim.parcels.forEach((p,i)=>{
+    const age=sim.day-p.birth;
+    const y=Math.max(botY-(i+1)*slotH,4);
+    const fill=p.event?orange:ramp3(clamp(age/maxAge,0,1),cy,cm,co);
+    el("rect",{x:x0+2,y:y+1,width:w-4,height:Math.max(2,slotH-2),rx:3,fill},svg);
+  });
+  /* outlet arrow + stream */
+  el("path",{d:`M ${x0+w} ${botY-6} L ${x0+w+26} ${botY+4} L ${x0+w+18} ${botY+12}`,fill:"none",stroke:mut,"stroke-width":1.6,"stroke-linecap":"round"},svg);
+  el("text",{x:x0+w+8,y:botY+26,"font-size":"10",fill:ink2},svg).textContent="to stream";
+  /* oldest label */
+  el("text",{x:x0+w/2,y:botY+14,"text-anchor":"middle","font-size":"9",fill:mut},svg).textContent="oldest water exits first";
+  /* celerity pulse */
+  if(rained&&!reduceMotion){const pr=el("rect",{x:x0+2,y:topY,width:w-4,height:H,rx:5,fill:cssVar("--s1"),opacity:"0"},svg);pr.classList.add("pulse-flash");}
+}
+function drawSimCharts(){
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),grid=cssVar("--grid"),mut=cssVar("--muted"),base=cssVar("--baseline");
+  /* hydrograph */
+  const svgQ=$("#simQ");svgQ.textContent="";
+  const L=40,R=630,T=10,Bm=100;const W=R-L,Hh=Bm-T;
+  const smAll=sim.qHist.map((d,i)=>{const a=sim.qHist.slice(Math.max(0,i-5),i+1);return a.reduce((x,y)=>x+y.exits,0)/a.length;});
+  const win=sim.qHist.slice(-72);const smWin=smAll.slice(-72);
+  el("line",{x1:L,y1:Bm,x2:R,y2:Bm,stroke:base,"stroke-width":1},svgQ);
+  const baseRate=1/sim.B;const yOf=v=>Bm-Hh*clamp(v/1.1,0,1);
+  el("line",{x1:L,y1:yOf(baseRate),x2:R,y2:yOf(baseRate),stroke:grid,"stroke-width":1},svgQ);
+  el("text",{x:R,y:yOf(baseRate)-4,"text-anchor":"end","font-size":"9",fill:mut},svgQ).textContent="baseflow";
+  if(win.length>1){
+    let dPath="",dArea="M "+L+" "+Bm+" ";
+    win.forEach((d,i)=>{const x=L+W*i/71;const y=yOf(smWin[i]);dPath+=(i?"L":"M")+" "+x+" "+y+" ";dArea+="L "+x+" "+y+" ";});
+    dArea+="L "+(L+W*(win.length-1)/71)+" "+Bm+" Z";
+    el("path",{d:dArea,fill:s1,"fill-opacity":"0.10"},svgQ);
+    el("path",{d:dPath,fill:"none",stroke:s1,"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"},svgQ);
+    win.forEach((d,i)=>{if(d.rain){const x=L+W*i/71;el("line",{x1:x,y1:T,x2:x,y2:T+7,stroke:s2,"stroke-width":2},svgQ);}});
+  }
+  el("text",{x:L-4,y:T+8,"text-anchor":"end","font-size":"9",fill:mut},svgQ).textContent="high";
+  el("text",{x:L-4,y:Bm,"text-anchor":"end","font-size":"9",fill:mut},svgQ).textContent="0";
+  /* event fraction */
+  const svgF=$("#simF");svgF.textContent="";
+  el("line",{x1:L,y1:Bm,x2:R,y2:Bm,stroke:base,"stroke-width":1},svgF);
+  const yF=v=>Bm-Hh*clamp(v,0,1);
+  el("line",{x1:L,y1:yF(1/3),x2:R,y2:yF(1/3),stroke:grid,"stroke-width":1},svgF);
+  el("text",{x:R,y:yF(1/3)-4,"text-anchor":"end","font-size":"9",fill:mut},svgF).textContent="⅓";
+  const winDays=win.map(d=>d.day);
+  if(win.length>1){
+    let dP="";
+    win.forEach((d,i)=>{
+      const upto=sim.exited.filter(e=>e.day<=d.day).slice(-6);
+      const f=upto.length?upto.filter(e=>e.event).length/upto.length:0;
+      const x=L+W*i/71;dP+=(i?"L":"M")+" "+x+" "+yF(f)+" ";
+    });
+    el("path",{d:dP,fill:"none",stroke:s2,"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"},svgF);
+  }
+  el("text",{x:L-4,y:T+8,"text-anchor":"end","font-size":"9",fill:mut},svgF).textContent="all";
+  el("text",{x:L-4,y:Bm,"text-anchor":"end","font-size":"9",fill:mut},svgF).textContent="0";
+}
+function setPlay(on){
+  sim.playing=on;$("#playBtn").textContent=on?"⏸ Pause":"▶ Run time";$("#playBtn").setAttribute("aria-pressed",on?"true":"false");
+  clearInterval(sim.timer);if(on)sim.timer=setInterval(simTick,reduceMotion?600:420);
+}
+$("#playBtn").addEventListener("click",()=>setPlay(!sim.playing));
+$("#rainBtn").addEventListener("click",()=>{
+  sim.stormQueue=Math.min(sim.stormQueue+3,9);sim.stormCount++;if(sim.stormDay==null)sim.stormDay=sim.day;
+  if(sim.stormCount===1)$("#simMsg").innerHTML="Storm queued. <b>Watch two things at once:</b> the hydrograph (it will jump within a tick — that is <i>celerity</i>) and the orange parcels (they enter at the top and must work their way down — that is <i>velocity</i>).";
+  if(!sim.playing)setPlay(true);
+});
+$("#resetBtn").addEventListener("click",()=>{setPlay(false);simInit();});
+function setStore(n){setPlay(false);sim.N=n;simInit();
+  $("#storeSmall").setAttribute("aria-pressed",n===10?"true":"false");
+  $("#storeLarge").setAttribute("aria-pressed",n===18?"true":"false");}
+$("#storeSmall").addEventListener("click",()=>setStore(10));
+$("#storeLarge").addEventListener("click",()=>setStore(18));
+redraws.push(()=>{drawColumn();drawSimCharts();});
+simInit();
+
+/* ============ §6 age mixtures ============ */
+const comps=[
+ {key:"Recent input",c:1.48,s:0.55,varName:"--age-young",range:"days to months",meanD:10**1.48*Math.exp(0.5*Math.pow(0.55*Math.LN10,2))},
+ {key:"Active storage",c:2.86,s:0.50,varName:"--age-mid",range:"months to years",meanD:10**2.86*Math.exp(0.5*Math.pow(0.50*Math.LN10,2))},
+ {key:"Legacy storage",c:4.56,s:0.70,varName:"--age-old",range:"years to millennia",meanD:10**4.56*Math.exp(0.5*Math.pow(0.70*Math.LN10,2))}
+];
+const mxIds=["mxRecent","mxActive","mxLegacy"];
+const presets=[["Storm peak",55,35,10],["Baseflow, dry season",8,52,40],["Deep production well",2,18,80],["Even blend",33,34,33]];
+const presetRow=$("#mixPresets");
+presets.forEach(p=>{const b=hel("button","chip-btn",presetRow,p[0]);b.type="button";b.addEventListener("click",()=>{mxIds.forEach((id,i)=>{$("#"+id).value=p[i+1];});mixUpdate();});});
+function mixWeights(){
+  const raw=mxIds.map(id=>+$("#"+id).value);const sum=raw.reduce((a,b)=>a+b,0);
+  return sum===0?[1/3,1/3,1/3]:raw.map(v=>v/sum);
+}
+function mixUpdate(){
+  const w=mixWeights();
+  mxIds.forEach((id,i)=>{$("#"+id+"Out").textContent=Math.round(w[i]*100)+"%";});
+  /* stacked bar */
+  const svg=$("#mixBar");svg.textContent="";
+  const surf=cssVar("--surface"),ink=cssVar("--ink");
+  const L=4,R=896,T=10,Bh=34;let x=L;
+  const colors=comps.map(c=>cssVar(c.varName));
+  w.forEach((wi,i)=>{
+    const seg=Math.max(0,(R-L)*wi-2);
+    if(seg>2){
+      const r=el("rect",{x:x,y:T,width:seg,height:Bh,rx:4,fill:colors[i]},svg);
+      r.style.cursor="default";
+      const pct=Math.round(wi*100)+"%";
+      if(seg>=64){const rgb=hexToRgb(colors[i].startsWith("#")?colors[i]:"#2a78d6");
+        const lum=(0.299*rgb[0]+0.587*rgb[1]+0.114*rgb[2])/255;
+        el("text",{x:x+seg/2,y:T+Bh/2+4,"text-anchor":"middle","font-size":"12","font-weight":"600",fill:lum>0.62?"#0b0b0b":"#ffffff"},svg).textContent=pct;}
+      r.addEventListener("pointermove",e=>showTip([{key:colors[i],v:Math.round(wi*100)+"%",t:comps[i].key+" ("+comps[i].range+")"}],e.clientX,e.clientY));
+      r.addEventListener("pointerleave",hideTip);
+      x+=seg+2;
+    }
+  });
+  el("text",{x:L,y:60,"font-size":"10",fill:cssVar("--muted")},svg).textContent="the sample";
+  /* distribution */
+  drawMixDist(w);
+  /* readouts */
+  const meanD=w.reduce((a,wi,i)=>a+wi*comps[i].meanD,0);
+  const young=w.reduce((a,wi,i)=>a+wi*normCdf((Math.log10(90)-comps[i].c)/comps[i].s),0);
+  $("#mixMean").textContent="≈ "+fmtAgeDays(meanD);
+  $("#mixYoung").textContent=Math.round(young*100)+"%";
+  const msg=$("#mixMsg");
+  if(young>=0.22&&meanD>3650){msg.innerHTML="<b>The mean says "+fmtAgeDays(meanD)+"; the tap disagrees.</b> About "+Math.round(young*100)+"% of this sample is younger than three months, yet the reported mean lands where almost no actual water sits. This is how a single 'age' misleads.";}
+  else if(w[2]>=0.65){msg.innerHTML="<b>Mostly legacy water.</b> Its chemistry remembers past climate and land use — pumping it is drawing down a slowly renewed store, and a monitoring plan aimed only at last year's contaminants would miss most of what is flowing.";}
+  else if(w[0]>=0.55){msg.innerHTML="<b>A flashy mixture.</b> Dominated by recent input: expect strong response to current weather — and high vulnerability to whatever the surface is delivering right now.";}
+  else{msg.innerHTML="Drag a slider and watch the reported mean jump between the humps. <b>One number cannot represent a multimodal distribution</b> — report the distribution, or at least the fraction relevant to your question.";}
+  /* table */
+  const tb=$("#mixTable");tb.textContent="";
+  const table=hel("table",null,tb);const tr0=hel("tr",null,hel("thead",null,table));
+  ["Store","Share","Typical ages","Mean age of store"].forEach(h=>hel("th",null,tr0,h));
+  const tbody=hel("tbody",null,table);
+  comps.forEach((c,i)=>{const tr=hel("tr",null,tbody);hel("td",null,tr,c.key);hel("td",null,tr,Math.round(w[i]*100)+"%");hel("td",null,tr,c.range);hel("td",null,tr,fmtAgeDays(c.meanD));});
+  const trm=hel("tr",null,tbody);hel("td",null,trm,"Blended sample");hel("td",null,trm,"100%");hel("td",null,trm,Math.round(young*100)+"% younger than ~3 months");hel("td",null,trm,"mean ≈ "+fmtAgeDays(meanD));
+}
+function drawMixDist(w){
+  w=w||mixWeights();
+  const svg=$("#mixDist");svg.textContent="";
+  const ink=cssVar("--ink"),grid=cssVar("--grid"),mut=cssVar("--muted"),base=cssVar("--baseline"),s2=cssVar("--s2");
+  const L=16,R=884,T=16,Bm=196,W=R-L,Hh=Bm-T;
+  const X0=0,X1=6.6;const xOf=x=>L+W*(x-X0)/(X1-X0);
+  const ticks=[[0,"1 day"],[Math.log10(30),"1 month"],[Math.log10(365),"1 year"],[Math.log10(3650),"10 yr"],[Math.log10(36500),"100 yr"],[Math.log10(365000),"1,000 yr"],[Math.log10(3650000),"10,000 yr"]];
+  ticks.forEach(t=>{el("line",{x1:xOf(t[0]),y1:T,x2:xOf(t[0]),y2:Bm,stroke:grid,"stroke-width":1},svg);
+    el("text",{x:xOf(t[0]),y:Bm+16,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=t[1];});
+  el("line",{x1:L,y1:Bm,x2:R,y2:Bm,stroke:base,"stroke-width":1},svg);
+  el("text",{x:R,y:Bm+32,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent="age of water (logarithmic scale) →";
+  const pdf=(x,c,s)=>Math.exp(-((x-c)**2)/(2*s*s))/(s*Math.sqrt(2*Math.PI));
+  const N=220;let maxT=0;const totals=[];
+  for(let i=0;i<=N;i++){const x=X0+(X1-X0)*i/N;const v=w.reduce((a,wi,k)=>a+wi*pdf(x,comps[k].c,comps[k].s),0);totals.push(v);if(v>maxT)maxT=v;}
+  if(maxT<=0)maxT=1;
+  const yOf=v=>Bm-(Hh*0.92)*v/maxT;
+  comps.forEach((c,k)=>{
+    if(w[k]<0.005)return;
+    let d="M "+xOf(X0)+" "+Bm+" ";
+    for(let i=0;i<=N;i++){const x=X0+(X1-X0)*i/N;d+="L "+xOf(x)+" "+yOf(w[k]*pdf(x,c.c,c.s))+" ";}
+    d+="L "+xOf(X1)+" "+Bm+" Z";
+    el("path",{d,fill:cssVar(c.varName),"fill-opacity":"0.16"},svg);
+  });
+  let dT="";for(let i=0;i<=N;i++){const x=X0+(X1-X0)*i/N;dT+=(i?"L":"M")+" "+xOf(x)+" "+yOf(totals[i])+" ";}
+  el("path",{d:dT,fill:"none",stroke:ink,"stroke-width":2,"stroke-linejoin":"round"},svg);
+  /* mean marker */
+  const meanD=w.reduce((a,wi,i)=>a+wi*comps[i].meanD,0);
+  const xm=clamp(Math.log10(meanD),X0,X1);
+  el("line",{x1:xOf(xm),y1:T+4,x2:xOf(xm),y2:Bm,stroke:s2,"stroke-width":2},svg);
+  const anchor=xm>5.2?"end":(xm<1?"start":"middle");
+  el("text",{x:xOf(xm),y:T,"text-anchor":anchor,"font-size":"11","font-weight":"600",fill:cssVar("--ink-2")},svg).textContent="reported “mean age” ≈ "+fmtAgeDays(meanD);
+  /* hover */
+  const hit=el("rect",{x:L,y:T,width:W,height:Hh,fill:"transparent"},svg);
+  hit.addEventListener("pointermove",e=>{
+    const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(900/r.width);
+    const x=clamp(X0+(px-L)/W*(X1-X0),X0,X1);const days=Math.pow(10,x);
+    const rows=comps.map((c,k)=>({key:cssVar(c.varName),v:Math.round(w[k]*100)+"%",t:c.key})).filter((_,k)=>w[k]>0.004);
+    showTip([{v:fmtAgeDays(days),t:"age at cursor"}].concat(rows),e.clientX,e.clientY);
+  });
+  hit.addEventListener("pointerleave",hideTip);
+}
+mxIds.forEach(id=>$("#"+id).addEventListener("input",mixUpdate));
+redraws.push(mixUpdate);
+mixUpdate();
+
+/* ============ §7 tritium explorer ============ */
+const HALF=12.32,NOW=2026;
+const triAnchors=[[1945,10],[1950,10],[1952,15],[1954,60],[1956,150],[1958,500],[1959,700],[1960,420],[1961,320],[1962,1500],[1963,3000],[1964,2100],[1965,1150],[1966,720],[1967,470],[1968,360],[1969,300],[1970,230],[1972,140],[1974,95],[1976,72],[1978,56],[1980,42],[1982,33],[1984,27],[1986,23],[1988,20],[1990,17],[1992,15],[1994,13.5],[1996,12],[1998,11],[2000,10.5],[2003,9.6],[2006,9.2],[2010,8.8],[2015,8.4],[2020,8.1],[2026,8]];
+function triInput(y){
+  if(y<=triAnchors[0][0])return triAnchors[0][1];
+  for(let i=1;i<triAnchors.length;i++){const[y1,v1]=triAnchors[i-1],[y2,v2]=triAnchors[i];
+    if(y<=y2){const t=(y-y1)/(y2-y1);return Math.pow(10,lerp(Math.log10(v1),Math.log10(v2),t));}}
+  return triAnchors[triAnchors.length-1][1];
+}
+const triToday=y=>triInput(y)*Math.pow(2,-(NOW-y)/HALF);
+let triShowToday=true;
+function compressYears(arr){
+  if(!arr.length)return "none — this value is distinctive";
+  const runs=[];let s=arr[0],p=arr[0];
+  for(let i=1;i<=arr.length;i++){const y=arr[i];if(y===p+1){p=y;}else{runs.push(s===p?String(s):s+"–"+String(p).slice(2));if(y!=null){s=y;p=y;}}}
+  return runs.slice(0,4).join(", ")+(runs.length>4?"…":"");
+}
+function drawTri(){
+  const svg=$("#triChart");svg.textContent="";
+  const s1=cssVar("--s1"),s3=cssVar("--s3"),grid=cssVar("--grid"),mut=cssVar("--muted"),base=cssVar("--baseline"),surf=cssVar("--surface"),ink2=cssVar("--ink-2");
+  const L=64,R=880,T=18,Bm=300,W=R-L,Hh=Bm-T;
+  const y0=+$("#triYear").value;
+  const xOf=y=>L+W*(y-1945)/(NOW-1945);
+  const yOf=v=>Bm-Hh*clamp(Math.log10(Math.max(v,1))/4,0,1);
+  /* grid */
+  [0,1,2,3,4].forEach(e=>{const y=Bm-Hh*e/4;el("line",{x1:L,y1:y,x2:R,y2:y,stroke:e===0?base:grid,"stroke-width":1},svg);
+    el("text",{x:L-8,y:y+4,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent=e===4?"10,000 TU":Math.pow(10,e).toLocaleString("en-US");});
+  for(let y=1950;y<=2020;y+=10){el("line",{x1:xOf(y),y1:Bm,x2:xOf(y),y2:Bm+5,stroke:base},svg);
+    el("text",{x:xOf(y),y:Bm+18,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=y;}
+  el("text",{x:L,y:Bm+34,"font-size":"10",fill:mut},svg).textContent="each horizontal line is ×10 — the axis is logarithmic";
+  /* background band label */
+  el("text",{x:xOf(1946),y:yOf(10)-6,"font-size":"10",fill:mut},svg).textContent="natural background";
+  /* today curve */
+  if(triShowToday){let d="";for(let y=1945;y<=NOW;y++){const v=triToday(y);d+=(y===1945?"M":"L")+" "+xOf(y)+" "+yOf(v)+" ";}
+    el("path",{d,fill:"none",stroke:s3,"stroke-width":2,"stroke-linejoin":"round"},svg);
+    el("text",{x:xOf(1985),y:yOf(triToday(1985))+16,"font-size":"10","font-weight":"600",fill:ink2},svg).textContent="if sampled in 2026";}
+  /* input curve */
+  let dI="";for(let y=1945;y<=NOW;y++){dI+=(y===1945?"M":"L")+" "+xOf(y)+" "+yOf(triInput(y))+" ";}
+  el("path",{d:dI,fill:"none",stroke:s1,"stroke-width":2,"stroke-linejoin":"round"},svg);
+  el("text",{x:xOf(1963),y:yOf(3000)-10,"text-anchor":"middle","font-size":"10","font-weight":"600",fill:ink2},svg).textContent="1963 bomb peak";
+  /* decay path */
+  const v0=triInput(y0),vT=triToday(y0);
+  let dD="";for(let t=y0;t<=NOW;t+=0.5){const v=v0*Math.pow(2,-(t-y0)/HALF);dD+=(t===y0?"M":"L")+" "+xOf(t)+" "+yOf(v)+" ";}
+  el("path",{d:dD,fill:"none",stroke:mut,"stroke-width":1.6,"stroke-dasharray":"5 4"},svg);
+  el("line",{x1:xOf(y0),y1:T,x2:xOf(y0),y2:Bm,stroke:grid,"stroke-width":1},svg);
+  el("circle",{cx:xOf(y0),cy:yOf(v0),r:5.5,fill:s1,stroke:surf,"stroke-width":2},svg);
+  el("circle",{cx:xOf(NOW),cy:yOf(vT),r:5.5,fill:s3,stroke:surf,"stroke-width":2},svg);
+  /* crosshair layer */
+  const cross=el("line",{x1:0,y1:T,x2:0,y2:Bm,stroke:mut,"stroke-width":1,opacity:0},svg);
+  const hit=el("rect",{x:L,y:T,width:W,height:Hh,fill:"transparent",style:"cursor:crosshair"},svg);
+  function yearAt(e){const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(900/r.width);return Math.round(clamp(1945+(px-L)/W*(NOW-1945),1945,NOW));}
+  hit.addEventListener("pointermove",e=>{const y=yearAt(e);cross.setAttribute("x1",xOf(y));cross.setAttribute("x2",xOf(y));cross.setAttribute("opacity",1);
+    const rows=[{v:String(y),t:"recharge year"},{key:s1,v:fmtTU(triInput(y))+" TU",t:"in the year it fell"}];
+    if(triShowToday)rows.push({key:s3,v:fmtTU(triToday(y))+" TU",t:"measured in 2026"});
+    showTip(rows,e.clientX,e.clientY);});
+  hit.addEventListener("pointerleave",()=>{cross.setAttribute("opacity",0);hideTip();});
+  hit.addEventListener("pointerdown",e=>{const y=clamp(yearAt(e),1950,2024);$("#triYear").value=y;triUpdate(false);});
+  /* readouts */
+  $("#triYearOut").textContent=y0;
+  $("#triAtRecharge").textContent=fmtTU(v0)+" TU";
+  $("#triToday").textContent=(vT<1?"<1":fmtTU(vT))+" TU";
+  const others=[];for(let y=1950;y<=2024;y++){if(Math.abs(y-y0)>2&&Math.abs(Math.log10(triToday(y))-Math.log10(Math.max(vT,0.01)))<0.045)others.push(y);}
+  $("#triAmbig").textContent=compressYears(others);
+  const msg=$("#triMsg");
+  if(y0>=1959&&y0<=1972){msg.innerHTML="<b>Bomb-pulse water is still unmistakable.</b> Rain from "+y0+" fell at ~"+fmtTU(v0)+" TU and, after "+(NOW-y0)+" years of decay ("+((NOW-y0)/HALF).toFixed(1)+" half-lives), would still measure ~"+fmtTU(vT)+" TU — an order of magnitude above modern rain (~8 TU). Finding such values in groundwater identifies mid-century recharge with confidence. Turning them into a precise <i>date</i>, though, requires the input history and a mixing model: check the ambiguity readout.";}
+  else if(y0>=2000){msg.innerHTML="<b>The pulse has largely passed.</b> Rain from "+y0+" would measure ~"+fmtTU(vT)+" TU today — nearly indistinguishable from last year's rain. Tritium alone can say 'recent'; resolving <i>how</i> recent is why Week 5 brings in ³H/³He, CFCs, and SF₆.";}
+  else if(y0<=1958){msg.innerHTML="<b>Early-rise water has decayed to almost nothing.</b> Rain from "+y0+" would measure "+(vT<1?"below 1":("~"+fmtTU(vT)))+" TU today — hard to separate from pre-bomb or far older water. 'Tritium-dead' bounds the age; it does not pin it down. That is a job for ¹⁴C and friends (Week 3).";}
+  else{msg.innerHTML="<b>Mid-decline water is where ambiguity bites.</b> Rain from "+y0+" would measure ~"+fmtTU(vT)+" TU today — but so would rain from the years in the readout above, and so would many <i>mixtures</i> of older and younger water. A concentration is not a date until an input history and a mixing model make it one.";}
+  /* table */
+  const tb=$("#triTable");tb.textContent="";
+  const table=hel("table",null,tb);const tr0=hel("tr",null,hel("thead",null,table));
+  ["Recharge year","TU when it fell","TU if sampled in 2026"].forEach(h=>hel("th",null,tr0,h));
+  const tbody=hel("tbody",null,table);
+  for(let y=1950;y<=2025;y+=5){const tr=hel("tr",null,tbody);hel("td",null,tr,String(y));hel("td",null,tr,fmtTU(triInput(y)));hel("td",null,tr,triToday(y)<1?"<1":fmtTU(triToday(y)));}
+}
+function triUpdate(){drawTri();}
+$("#triYear").addEventListener("input",()=>triUpdate());
+$("#triToggleToday").addEventListener("click",e=>{triShowToday=!triShowToday;e.currentTarget.setAttribute("aria-pressed",triShowToday?"true":"false");drawTri();});
+redraws.push(drawTri);
+drawTri();
+
+/* ============ §8 evidence chain ============ */
+const chainData=[
+ {name:"INPUT",lead:"What signal entered the system — where, and when?",fails:["End-members overlap, or drift through time: 'fertilizer' and 'soil nitrogen' fingerprints are not always distinct, and this year's rain is not last decade's.","The input history is simply unknown at your site — a tritium value without a local input curve is a number without a ruler."],guard:"Characterize sources across seasons and years; archive input records before you need them."},
+ {name:"TRANSPORT",lead:"How did mixing, decay, or reaction alter the signal en route?",fails:["A sample blends multiple pathways and ages, so the 'signal' is already an average when it reaches you.","Fractionation, radioactive decay, sorption, or in-aquifer production shift the signal for reasons unrelated to the question you asked."],guard:"Choose tracers whose transport behavior is simple for your question — and model decay and reaction explicitly rather than hoping they cancel."},
+ {name:"SAMPLE",lead:"Does the sampling design resolve the variability that matters?",fails:["Sampling frequency and location control which variability you can see: weekly grabs cannot resolve a storm, one well cannot resolve a plume.","The sampling moment biases the mixture — storm vs. baseflow, pumping vs. static, shallow vs. deep screen all collect different water."],guard:"Match sampling frequency and placement to the timescale and scale of the process — then record the conditions of every sample."},
+ {name:"INFERENCE",lead:"Which model links the observations to the claim?",fails:["Different model structures can explain the same observation equally well — piston flow and a broad mixture can fit one tracer identically.","A single reported number (an 'age', a 'fraction') can collapse a distribution and overstate what the data constrain."],guard:"Test alternative models, report what the data cannot distinguish, and propagate uncertainty to the final claim."}
+];
+const chainPanel=$("#chainExplain");
+$$(".chain-link").forEach(btn=>btn.addEventListener("click",()=>{
+  $$(".chain-link").forEach(b=>b.setAttribute("aria-pressed",b===btn?"true":"false"));
+  const d=chainData[+btn.dataset.link];chainPanel.textContent="";
+  const h=hel("h4",null,chainPanel,d.name+" — "+d.lead);h.style.margin="0 0 8px";
+  const ul=hel("ul",null,chainPanel);ul.style.margin="0 0 10px";ul.style.paddingLeft="1.2em";
+  d.fails.forEach(f=>{const li=hel("li",null,ul,f);li.style.fontSize=".9rem";li.style.margin=".3em 0";});
+  const p=hel("p","small",chainPanel);hel("b",null,p,"The guard: ");p.appendChild(document.createTextNode(d.guard));
+}));
+
+/* ============ §10 scenarios ============ */
+const scenarios=[
+ {letter:"A",title:"Mountain spring",q:"Did the spring recharge locally, or at higher elevation?",
+  opts:[
+   {t:"Measure δ¹⁸O and δ²H in the spring and in precipitation collected across the elevation gradient.",best:true,fb:"The deck's plausible first choice. Precipitation isotopes vary systematically with elevation, so the spring's fingerprint can be placed on that gradient."},
+   {t:"Date the spring water with tritium.",best:false,fb:"Defensible later, but it answers a different question — when the water recharged, not where. Age can support an elevation story; it cannot substitute for one."},
+   {t:"Inject a dye near the summit and wait at the spring.",best:false,fb:"An applied-tracer reflex. Injection needs a known, chosen input point — but the recharge area is exactly what you don't know yet, and waiting out a groundwater travel time could take years."}],
+  debrief:{choice:"δ¹⁸O / δ²H against the local precipitation–elevation gradient.",check:"Map the precipitation/elevation end-members properly — and check for evaporation and seasonality before reading elevation off the fingerprint."}},
+ {letter:"B",title:"Nitrate plume",q:"Is the nitrate from fertilizer or from waste — and has it been transformed along the way?",
+  opts:[
+   {t:"Map nitrate concentrations in detail across the site.",best:false,fb:"Concentration maps show where nitrate is, not where it came from — and dilution and denitrification both lower concentrations, invisibly to a map."},
+   {t:"Measure the dual isotopes of nitrate (δ¹⁵N and δ¹⁸O of NO₃⁻), alongside nitrate, redox, and land-use data.",best:true,fb:"The plausible first choice: sources carry different dual-isotope fingerprints, and denitrification moves both ratios in a predictable direction — the same data speak to source and transformation."},
+   {t:"Measure δ¹⁸O and δ²H of the water.",best:false,fb:"Those trace the water, not the solute. Useful supporting context (whose water is it?), but silent on where the nitrogen came from."}],
+  debrief:{choice:"δ¹⁵N-NO₃ + δ¹⁸O-NO₃, paired with chemistry.",check:"Pair the isotopes with nitrate, redox, and land-use data — source ranges overlap, and isotopes alone can be argued both ways."}},
+ {letter:"C",title:"Shallow well",q:"How much of this well's water was recharged since the mid-20th century?",
+  opts:[
+   {t:"Radiocarbon (¹⁴C) dating of dissolved inorganic carbon.",best:false,fb:"¹⁴C is the tool for millennial water. For a shallow, decades-old system its resolution is poor and its carbon-chemistry corrections loom large — the wrong clock for this timescale."},
+   {t:"Tritium — possibly with CFCs/SF₆ — interpreted against the local input history with a mixing model.",best:true,fb:"The plausible first choice: bomb-pulse tritium is purpose-built for the 'since the 1950s?' question, and the extra tracers narrow the mixture (Week 5 makes this quantitative)."},
+   {t:"Compare the well's temperature with mean annual air temperature.",best:false,fb:"Temperature is a real tracer, but not an age tracer at this scale — it exchanges too readily with the subsurface to carry a decades-long memory."}],
+  debrief:{choice:"³H, possibly + CFCs/SF₆.",check:"Use an input history and a mixing model — and mind the screen depth and sampling contamination; both change which water you actually collected."}},
+ {letter:"D",title:"Stormflow",q:"During storms, how much streamflow is new rain versus stored water?",
+  opts:[
+   {t:"Analyze the discharge records: compare storm peaks to baseflow.",best:false,fb:"That is the opening paradox again — a hydrograph is a rate observation. It cannot partition the water's sources, however carefully you slice it."},
+   {t:"Sample stream water weekly through the season for δ¹⁸O.",best:false,fb:"Right tracer, wrong clock: a storm turns over in hours. Weekly samples alias the event completely — the variability that answers the question happens between your visits."},
+   {t:"Sample rainfall and streamflow at event resolution for δ¹⁸O / δ²H, and separate the hydrograph with a mixing model.",best:true,fb:"The plausible first choice: classic isotope hydrograph separation — the method behind the two-thirds pre-event result that opened this page."}],
+  debrief:{choice:"Event-resolution δ¹⁸O / δ²H of rain and stream.",check:"Sample rainfall and stream at event resolution, and test end-member variability — rain's isotopic composition can drift within a single storm."}}
+];
+const scenWrap=$("#scenarios");
+scenarios.forEach(sc=>{
+  const card=hel("div","scen",scenWrap);
+  const head=hel("div","scen-head",card);hel("span","letter",head,sc.letter);hel("h3",null,head,sc.title);
+  hel("p","scen-q",card,sc.q);
+  const list=hel("div","opt-list",card);
+  const fb=hel("div","feedback",card);const db=hel("div","debrief",card);
+  const btns=[];
+  sc.opts.forEach(o=>{
+    const b=hel("button","opt-btn",list,o.t);b.type="button";btns.push(b);
+    b.addEventListener("click",()=>{
+      if(fb.classList.contains("open"))return;
+      btns.forEach(x=>x.disabled=true);
+      b.classList.add(o.best?"sel-best":"sel-weak");
+      fb.textContent="";const lead=hel("b",null,fb,o.best?"A defensible first pass. ":"Less defensible as a first pass. ");fb.appendChild(document.createTextNode(o.fb));
+      fb.classList.add("open");
+      db.textContent="";
+      const p1=hel("p",null,db);hel("b",null,p1,"Debrief — plausible first choice: ");p1.appendChild(document.createTextNode(sc.debrief.choice));
+      const p2=hel("p",null,db);hel("b",null,p2,"Non-negotiable check: ");p2.appendChild(document.createTextNode(sc.debrief.check));
+      p2.style.marginBottom="0";
+      db.classList.add("open");
+    });
+  });
+});
+
+/* ============ §11 quiz ============ */
+const quiz=[
+ {q:"A stream's discharge doubles within twenty minutes of rain beginning. What has been established?",sec:"#s-rates",secName:"§5 Rates vs. dates",opts:[
+   {t:"The stream is now carrying mostly rainwater.",ok:false,fb:"Not established — response speed is a property of the pressure signal, not of the water's identity. In many studied storms most of the peak was stored water."},
+   {t:"The catchment transmits a response quickly — a rate (celerity) observation.",ok:true,fb:"Exactly. The hydrograph shows how fast the system responds; it is silent about the age of the water responding."},
+   {t:"The water in the stream is younger than twenty minutes.",ok:false,fb:"That would confuse the speed of the pressure signal with the speed — and age — of the molecules. They can differ by orders of magnitude."}]},
+ {q:"Which of these is an age (timescale) question, rather than a rate question?",sec:"#s-rates",secName:"§5 Rates vs. dates",opts:[
+   {t:"How much recharge does the aquifer receive per year?",ok:false,fb:"Volume per time — a rate."},
+   {t:"When did the water in this well enter the ground, and how long did it stay?",ok:true,fb:"Yes — its units are time. Rates move volume; dates and timescales describe history."},
+   {t:"How much streamflow passes the gauge during storms?",ok:false,fb:"Volume per time — a rate."}]},
+ {q:"A groundwater sample measures about 8 TU of tritium in 2026. On its own, this tells you…",sec:"#s-bomb",secName:"§7 The bomb pulse",opts:[
+   {t:"The water recharged in 1963, at the bomb peak.",ok:false,fb:"1963 rain (~thousands of TU) would still measure well above modern background today. 8 TU is what recent rain looks like — but not only recent rain."},
+   {t:"Little, yet: several recharge histories and mixtures are consistent with 8 TU. You need the input history and a mixing model.",ok:true,fb:"Right. A concentration becomes a date only through the input curve, decay, and a mixing model — the machinery of Weeks 3 and 5."},
+   {t:"The sample is contaminated.",ok:false,fb:"Nothing about 8 TU implies contamination — it is a routine value for waters carrying recent recharge."}]},
+ {q:"In the classic storm analysis (Sklash & Farvolden 1979, shown in Jasechko 2019), discharge rose about fivefold while…",sec:"#s-paradox",secName:"§1 The paradox",opts:[
+   {t:"event rainfall made up nearly all of the peak flow.",ok:false,fb:"The reverse — that is the intuition the isotope data overturned."},
+   {t:"pre-event (stored) water made up more than two-thirds of the flow, even at the peak.",ok:true,fb:"Yes — the storm mobilized water already in the catchment: rainfall pushing stored water into the stream."},
+   {t:"stream tritium spiked to bomb-peak values.",ok:false,fb:"Tritium was not the tool here — stable isotopes of the water separated event from pre-event water."}]},
+ {q:"δ¹⁸O and δ²H are especially direct tracers of water movement because…",sec:"#s-tracer",secName:"§3 What a tracer is",opts:[
+   {t:"they are part of the water molecule itself and behave conservatively in low-temperature systems.",ok:true,fb:"Right — the signal travels as the water, and waters keep their fingerprints until they mix."},
+   {t:"they decay at a precisely known rate.",ok:false,fb:"δ¹⁸O and δ²H are stable — no decay. The radioactive hydrogen isotope is tritium."},
+   {t:"they are added by human activity at known times.",ok:false,fb:"Their signal is natural — set by season, elevation, and evaporation, not by an anthropogenic release schedule."}]},
+ {q:"Two different models — piston flow and a broad mixture of ages — fit your tracer data equally well. The defensible response is to…",sec:"#s-chain",secName:"§8 The evidence chain",opts:[
+   {t:"prefer the newer, more sophisticated model.",ok:false,fb:"Sophistication is not evidence. If the data cannot distinguish the models, novelty does not either."},
+   {t:"report the ambiguity, and add a constraint — another tracer or measurement — that the models predict differently.",ok:true,fb:"Yes: say what the data cannot distinguish, then design the observation that would. That is the inference link of the chain, done honestly — and the multi-tracer principle in action."},
+   {t:"average the two models' answers.",ok:false,fb:"An average of two incompatible stories is not a story — it hides exactly the uncertainty a reader needs to see."}]}
+];
+const quizWrap=$("#quiz");let answered=0,correct=0;
+quiz.forEach((qz,qi)=>{
+  const card=hel("div","quiz-q",quizWrap);
+  hel("h4",null,card,(qi+1)+". "+qz.q);
+  const list=hel("div","opt-list",card);
+  const fb=hel("div","feedback",card);
+  const btns=[];
+  qz.opts.forEach(o=>{
+    const b=hel("button","opt-btn",list,o.t);b.type="button";btns.push(b);
+    b.addEventListener("click",()=>{
+      if(fb.classList.contains("open"))return;
+      btns.forEach(x=>x.disabled=true);
+      b.classList.add(o.ok?"sel-best":"sel-weak");
+      answered++;if(o.ok)correct++;
+      fb.textContent="";
+      const mark=hel("span",o.ok?"tick":"cross",fb,o.ok?"✓ ":"✗ ");
+      fb.appendChild(document.createTextNode(o.fb+" "));
+      const a=hel("a",null,fb,"Review "+qz.secName);a.href=qz.sec;
+      fb.classList.add("open");
+      $("#quizScore").textContent="Score so far: "+correct+" of "+answered+" on first click"+(answered===quiz.length?" — done. Anything missed, the linked section covers.":"");
+    });
+  });
+});
+
+/* ============ §12 glossary ============ */
+const gloss=[
+ {t:"Environmental tracer",d:"A substance or isotope whose signal is already present in the hydrologic system — delivered by nature or by human activity at large — and whose concentration or isotope ratio, combined with a transport story and an interpretive model, can constrain a hydrologic hypothesis."},
+ {t:"Isotope",d:"Atoms of the same element (same number of protons, Z) with different numbers of neutrons (N), hence different masses. ¹H, ²H (deuterium), and ³H (tritium) are the isotopes of hydrogen. Related terms: isobars share mass number A; isotones share N."},
+ {t:"Stable vs. radioactive isotope",d:"Stable isotopes (¹⁸O, ²H, ¹⁵N…) persist indefinitely; their ratios shift only through physical and chemical processes. Radioactive isotopes (³H, ¹⁴C…) transform spontaneously at a rate fixed by physics — which is what makes them clocks."},
+ {t:"Half-life & the decay law",d:"Radioactive decay follows dN/dt = −λN, giving N(t) = N₀e^(−λt): a fixed fraction decays per unit time regardless of temperature, pressure, or chemistry. The half-life t½ = ln2/λ is the time for half the atoms to decay: 12.32 years for tritium, 5,730 years for radiocarbon."},
+ {t:"Tritium (³H) & the tritium unit (TU)",d:"Radioactive hydrogen incorporated in the water molecule; half-life 12.32 years. 1 TU = one ³H atom per 10¹⁸ hydrogen atoms. Natural precipitation background is below ~15 TU over non-polar lands; 1960s bomb-pulse precipitation ran 5–500× higher."},
+ {t:"Bomb pulse",d:"The spike in atmospheric tritium (and ¹⁴C, ³⁶Cl…) produced by 1950s–60s thermonuclear testing, peaking around 1963. It stamped a global time marker into every water body receiving recharge — the foundation of much modern groundwater dating."},
+ {t:"Radiocarbon (¹⁴C)",d:"Radioactive carbon (half-life 5,730 years) carried by dissolved inorganic carbon rather than the water molecule itself. The clock for millennial groundwater — with corrections, because carbon exchanges with soil and rock along the way."},
+ {t:"CFCs & SF₆",d:"Industrial gases whose atmospheric concentrations rose on known schedules since the mid-20th century. Dissolved at recharge, they date young groundwater in the same spirit as tritium — from a known input history. Week 5's tools."},
+ {t:"Celerity vs. velocity",d:"Celerity is the speed at which a pressure or response signal propagates through a system; velocity is the speed of the water molecules themselves. A hillslope can transmit a storm signal in minutes while its water takes months to traverse the same distance — fast response, old water."},
+ {t:"Event vs. pre-event water",d:"Event water is the rain (or melt) of the storm being studied; pre-event water was already stored in the catchment when the storm began. Isotope hydrograph separation partitions streamflow between them — and pre-event water usually dominates."},
+ {t:"Hydrograph",d:"The record of discharge through time at a point on a stream. It measures the rate of response — and nothing about the identity, origin, or age of the water responding."},
+ {t:"Hydrograph separation",d:"Partitioning streamflow into source components (event vs. pre-event; or runoff vs. baseflow) using a mixing model on tracer signatures — the method behind the two-thirds pre-event result of Section 1."},
+ {t:"End-member",d:"A source water (or solute source) with a characteristic signature — mountain precipitation, valley rain, fertilizer nitrogen — whose mixtures are read from sample chemistry. End-members that overlap or drift through time are the first failure mode of mixing analyses."},
+ {t:"Mixing model",d:"The mathematical link from measured signatures to source proportions — in its simplest form, two end-members and one tracer give a two-component mass balance. Every mixing model inherits the assumption that end-members are known, distinct, and stable."},
+ {t:"Residence / transit time",d:"How long water spends in a store (residence) or takes to traverse a system (transit). Real samples carry distributions of these times, not single values; Week 3 distinguishes apparent age, mean residence time, and travel-time distributions."},
+ {t:"Travel-time distribution",d:"The full probability distribution of ages in a water sample or flux — the honest object behind any reported 'age'. Its shape (narrow, broad, multimodal) is itself hydrologic information about storage and flowpaths."},
+ {t:"Apparent age",d:"The age obtained by pretending a sample is a single parcel (piston flow) and inverting one tracer. Useful shorthand, dangerous currency: for mixtures it can sit far from most of the actual water."},
+ {t:"Piston flow",d:"The idealization that water moves as an intact parcel — first in, first out, no mixing. The hillslope demonstration of Section 5 is a piston-flow model; real systems mix, which is why single ages mislead."},
+ {t:"Recharge",d:"Water crossing the water table to join groundwater storage. Globally it is biased toward cold and wet seasons and intense events — aquifers do not fill evenly from the annual average."},
+ {t:"Baseflow",d:"The streamflow maintained between storms, sustained largely by groundwater discharge. Its persistence through drought is the surface expression of subsurface storage and its timescales."},
+ {t:"Modern groundwater",d:"Water recharged within recent decades (commonly, since the early 1950s — the tritium era). A considerable share of the shallowest ~100 m, but a small share of groundwater in the upper kilometer of crust."},
+ {t:"Fossil groundwater",d:"Water recharged more than ~12,000 years ago, before the Holocene. It dominates global aquifer storage and archives ice-age climate in its chemistry; pumping it is closer to mining than to harvesting a renewable flow."},
+ {t:"Conservative vs. reactive tracer",d:"A conservative tracer moves with the water and is not produced or consumed along the way (δ¹⁸O and δ²H in low-temperature systems, chloride in most settings). A reactive tracer transforms en route — a liability for source questions, a source of information for process questions. Week 2 formalizes this."},
+ {t:"δ (delta) notation — preview",d:"Isotope ratios are reported as parts-per-thousand deviations from a standard: δ = (R_sample/R_standard − 1) × 1000‰. Week 2 builds this properly, with fractionation and the meteoric water lines."},
+ {t:"Fractionation — preview",d:"Any process that changes the relative abundance of isotopes — evaporation enriching the heavy isotopes left behind, for instance. The physics that writes the signals tracers read. Week 2's centerpiece."},
+ {t:"Meteoric water line — preview",d:"The tight global correlation between δ²H and δ¹⁸O in precipitation (δ²H ≈ 8·δ¹⁸O + 10). Waters that evaporate fall off the line predictably — one of hydrology's most useful diagnostic plots. Week 2."}
+];
+const glossGrid=$("#glossGrid");
+gloss.forEach(g=>{
+  const d=hel("details","gloss",glossGrid);
+  const s=hel("summary",null,d,g.t);
+  if(/preview/i.test(g.t))hel("span","pill",s,"Week 2");
+  hel("p",null,d,g.d);
+});
+$("#glossSearch").addEventListener("input",e=>{
+  const v=e.target.value.trim().toLowerCase();
+  $$("#glossGrid details").forEach((d,i)=>{
+    const hit=!v||gloss[i].t.toLowerCase().includes(v)||gloss[i].d.toLowerCase().includes(v);
+    d.style.display=hit?"":"none";
+  });
+});
+
+/* boot */
+applyTheme();
+})();
+</script>
+
+</body>
+</html>
