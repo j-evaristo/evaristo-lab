@@ -465,7 +465,7 @@ img { max-width:100%; display:block; }
 <div class="page" id="page-streamflow">
   <div class="section">
     <div class="section-head"><h2>Georgia Streamflow Explorer</h2><p>Interactive daily discharge records for every USGS gaging station in Georgia</p></div>
-    <div class="subnav"><a class="active" onclick="showPage('streamflow')">GA Streamflow</a><a onclick="showPage('groundwater')">GA Groundwater</a><a onclick="showPage('groundwater-ca')">CA Groundwater</a></div>
+    <div class="subnav"><a class="active" onclick="showPage('streamflow')">GA Streamflow</a><a onclick="showPage('streamflow-ca')">CA Streamflow</a><a onclick="showPage('groundwater')">GA Groundwater</a><a onclick="showPage('groundwater-ca')">CA Groundwater</a></div>
     <div class="course-card">
       <h3>Every Georgia Gage, 1883 to Present</h3>
       <p class="course-desc">Explore daily streamflow from more than 600 U.S. Geological Survey gaging stations across Georgia and the Georgia–Florida border strip — including the shared border rivers (St Marys, Suwannee, Apalachicola) whose gages USGS files under Florida — more than 5.4 million daily discharge values spanning 1883 to the present. Search or map-select a station, zoom through its full period of record, and examine seasonal flow regimes, flow duration curves, and annual water-year trends. The dataset refreshes automatically every morning from the USGS National Water Information System, so the record shown is always current. Any station’s records can be downloaded as CSV directly from the explorer — or grab the complete nightly-refreshed archive.</p>
@@ -475,11 +475,25 @@ img { max-width:100%; display:block; }
   </div>
 </div>
 
+<!-- ═══════ STREAMFLOW CA ═══════ -->
+<div class="page" id="page-streamflow-ca">
+  <div class="section">
+    <div class="section-head"><h2>California Streamflow Explorer</h2><p>Interactive daily discharge records for every USGS gaging station in California</p></div>
+    <div class="subnav"><a onclick="showPage('streamflow')">GA Streamflow</a><a class="active" onclick="showPage('streamflow-ca')">CA Streamflow</a><a onclick="showPage('groundwater')">GA Groundwater</a><a onclick="showPage('groundwater-ca')">CA Groundwater</a></div>
+    <div class="course-card">
+      <h3>Every Gage, 1891 to Present</h3>
+      <p class="course-desc">Explore daily streamflow from 2,444 U.S. Geological Survey gaging stations across California — 26 million daily discharge values from 1891 to the present, from the Sacramento and San Joaquin to Sierra snowmelt creeks and Southern California flood-control channels. Search or map-select a station, zoom through its full period of record, and examine seasonal patterns, probability-scale flow duration curves, and annual water-year trends. Any station's records download as CSV directly from the explorer, and the complete dataset is available as a nightly-refreshed archive. The dataset refreshes automatically every morning from the USGS National Water Information System.</p>
+      <p style="margin-top:0.8rem;"><a href="https://j-evaristo.github.io/ca-streamflow/" target="_blank" style="font-size:0.82rem; font-weight:600;">Open in a new tab →</a></p>
+    </div>
+    <iframe src="https://j-evaristo.github.io/ca-streamflow/" style="width:100%; height:850px; border:1px solid var(--rule-light); border-radius:10px; margin-top:1.2rem; background:#fcfcfb;" loading="lazy" title="California Streamflow Explorer"></iframe>
+  </div>
+</div>
+
 <!-- ═══════ GROUNDWATER ═══════ -->
 <div class="page" id="page-groundwater">
   <div class="section">
     <div class="section-head"><h2>Georgia Groundwater Explorer</h2><p>Interactive daily water-level records for every USGS recorder well in Georgia</p></div>
-    <div class="subnav"><a onclick="showPage('streamflow')">GA Streamflow</a><a class="active" onclick="showPage('groundwater')">GA Groundwater</a><a onclick="showPage('groundwater-ca')">CA Groundwater</a></div>
+    <div class="subnav"><a onclick="showPage('streamflow')">GA Streamflow</a><a onclick="showPage('streamflow-ca')">CA Streamflow</a><a class="active" onclick="showPage('groundwater')">GA Groundwater</a><a onclick="showPage('groundwater-ca')">CA Groundwater</a></div>
     <div class="course-card">
       <h3>Every Well, 1900 to Present</h3>
       <p class="course-desc">Explore groundwater levels from nearly 3,000 U.S. Geological Survey wells across Georgia: 409 continuous recorder wells (2.6 million daily readings back to 1942) plus 2,536 periodic wells measured by field visits (315,000 measurements back to 1900), from the surficial aquifers of the coast to the Upper Floridan and the Piedmont crystalline rocks. Every well is labeled by type — recorder or periodic — with a type filter, and wells with fewer than three usable measurements are left out of the viewer. Search or map-select a well, zoom through its full record, and examine seasonal patterns, level duration curves, annual means, and water-table trends. The dataset refreshes automatically every morning from the USGS National Water Information System. Any station’s records can be downloaded as CSV directly from the explorer — or grab the complete nightly-refreshed archive.</p>
@@ -493,7 +507,7 @@ img { max-width:100%; display:block; }
 <div class="page" id="page-groundwater-ca">
   <div class="section">
     <div class="section-head"><h2>California Groundwater Explorer</h2><p>Interactive daily water-level records for every USGS recorder well in California</p></div>
-    <div class="subnav"><a onclick="showPage('streamflow')">GA Streamflow</a><a onclick="showPage('groundwater')">GA Groundwater</a><a class="active" onclick="showPage('groundwater-ca')">CA Groundwater</a></div>
+    <div class="subnav"><a onclick="showPage('streamflow')">GA Streamflow</a><a onclick="showPage('streamflow-ca')">CA Streamflow</a><a onclick="showPage('groundwater')">GA Groundwater</a><a class="active" onclick="showPage('groundwater-ca')">CA Groundwater</a></div>
     <div class="course-card">
       <h3>Every Well, 1900 to Present</h3>
       <p class="course-desc">Explore groundwater levels from nearly 13,000 U.S. Geological Survey wells across California: 486 continuous recorder wells (10 million daily readings across depth and elevation series) plus 12,369 periodic wells measured by field visits (2.3 million measurements back to 1900), from the Coastal Basin aquifers to the Central Valley and the Basin and Range. Every well is labeled by type — recorder or periodic — with a type filter, and wells with fewer than three usable measurements are left out of the viewer. Many recorder wells report both depth to water and water-surface elevation; switch between series, overlay field measurements, and examine seasonal patterns, level duration curves, annual means, and water-table trends. The dataset refreshes automatically every morning from the USGS National Water Information System. Any station’s records can be downloaded as CSV directly from the explorer — or grab the complete nightly-refreshed archive.</p>
@@ -548,7 +562,7 @@ img { max-width:100%; display:block; }
 <footer class="footer">
   <div class="footer-inner">
     <div><div class="footer-brand">Evaristo CZ Hydrology Lab</div><div style="font-size:0.75rem; margin-top:0.3rem;">University of Georgia</div></div>
-    <div class="footer-links"><a onclick="showPage('home')">Home</a><a onclick="showPage('people')">People</a><a onclick="showPage('research')">Research</a><a onclick="showPage('publications')">Publications</a><a onclick="showPage('teaching')">Teaching</a><a onclick="showPage('samples')">Samples</a><a onclick="showPage('streamflow')">GA Streamflow</a><a onclick="showPage('groundwater')">GA Groundwater</a><a onclick="showPage('groundwater-ca')">CA Groundwater</a><a onclick="showPage('utrecht')">Utrecht</a></div>
+    <div class="footer-links"><a onclick="showPage('home')">Home</a><a onclick="showPage('people')">People</a><a onclick="showPage('research')">Research</a><a onclick="showPage('publications')">Publications</a><a onclick="showPage('teaching')">Teaching</a><a onclick="showPage('samples')">Samples</a><a onclick="showPage('streamflow')">GA Streamflow</a><a onclick="showPage('streamflow-ca')">CA Streamflow</a><a onclick="showPage('groundwater')">GA Groundwater</a><a onclick="showPage('groundwater-ca')">CA Groundwater</a><a onclick="showPage('utrecht')">Utrecht</a></div>
   </div>
 </footer>
 
@@ -562,7 +576,7 @@ function showPage(id) {
   document.querySelectorAll('.nav-links a').forEach(a => {
     a.classList.toggle('active', a.dataset.page === id ||
       (id === 'publications' && a.dataset.page === 'research') ||
-      ((id === 'groundwater' || id === 'groundwater-ca') && a.dataset.page === 'streamflow'));
+      ((id === 'groundwater' || id === 'groundwater-ca' || id === 'streamflow-ca') && a.dataset.page === 'streamflow'));
   });
   document.getElementById('navLinks').classList.remove('open');
   window.scrollTo({ top: 0, behavior: 'smooth' });
