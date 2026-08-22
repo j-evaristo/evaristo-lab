@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Jaivime Evaristo">
+<meta name="description" content="Fingerprints of Water — an interactive primer on δ-notation, isotope fractionation, the meteoric water lines, deuterium excess, conservative vs. reactive tracers, and the decay law, for WASR 8000 (Week 2, Fall 2026).">
+<title>Fingerprints of Water · WASR 8000 Week 2</title>
+<style>
+/* ================= Design tokens (shared with the Week 1 primer) ================= */
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb; --surface-2:#f3f2ee;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --baseline:#c3c2b7; --hairline:rgba(11,11,11,0.10);
+  --s1:#2a78d6; /* blue — meteoric / equilibrium / primary accent */
+  --s2:#eb6834; /* orange — evaporation / kinetic / "off the line" */
+  --s3:#1baf7a; /* aqua — derived curves, vapour */
+  --s4:#8a63d2; /* violet — plant / soil compartment */
+  --age-young:#86b6ef; --age-mid:#2a78d6; --age-old:#104281;
+  --wash1:rgba(42,120,214,0.10); --wash2:rgba(235,104,52,0.10); --wash4:rgba(138,99,210,0.10);
+  --good-text:#006300;
+  --chip:#eef3fb;
+  --shadow:0 1px 2px rgba(11,11,11,0.05), 0 8px 24px rgba(11,11,11,0.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232322;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --baseline:#383835; --hairline:rgba(255,255,255,0.10);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#a184e0;
+    --age-young:#184f95; --age-mid:#2a78d6; --age-old:#86b6ef;
+    --wash1:rgba(57,135,229,0.14); --wash2:rgba(217,89,38,0.14); --wash4:rgba(161,132,224,0.14);
+    --good-text:#0ca30c;
+    --chip:#20293a;
+    --shadow:0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+  }
+}
+html[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232322;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --baseline:#383835; --hairline:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#a184e0;
+  --age-young:#184f95; --age-mid:#2a78d6; --age-old:#86b6ef;
+  --wash1:rgba(57,135,229,0.14); --wash2:rgba(217,89,38,0.14); --wash4:rgba(161,132,224,0.14);
+  --good-text:#0ca30c;
+  --chip:#20293a;
+  --shadow:0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+}
+/* ================= Base ================= */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+main{max-width:1000px; margin:0 auto; padding:0 20px 80px}
+h1,h2,h3,h4{line-height:1.25; margin:0 0 .5em; text-wrap:balance}
+h1{font-size:clamp(1.9rem,4.5vw,3rem); letter-spacing:-0.02em}
+h2{font-size:clamp(1.35rem,2.6vw,1.8rem); letter-spacing:-0.01em}
+h3{font-size:1.08rem}
+p{margin:.4em 0 1em}
+a{color:var(--s1)}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:2px solid var(--s1); outline-offset:2px; border-radius:4px}
+.small{font-size:.85rem; color:var(--ink-2)}
+.mono{font-variant-numeric:tabular-nums}
+.nowrap{white-space:nowrap}
+code{background:var(--surface-2); border:1px solid var(--hairline); border-radius:4px; padding:0 .3em; font-size:.9em}
+.eq{
+  font-family:"Cambria Math","STIX Two Math",Cambria,Georgia,"Times New Roman",serif; font-size:1.12rem; text-align:center;
+  padding:10px 14px; margin:10px 0; background:var(--surface-2); border:1px solid var(--hairline); border-radius:10px; overflow-x:auto;
+}
+.eq .eqnum{float:right; font-size:.8rem; color:var(--muted); font-family:system-ui,sans-serif}
+sup,sub{line-height:0}
+.kbd{font-size:.8rem; border:1px solid var(--hairline); border-bottom-width:2px; border-radius:5px; padding:0 5px; background:var(--surface)}
+
+/* ================= Top bar & nav ================= */
+.topbar{
+  position:sticky; top:0; z-index:50; background:color-mix(in srgb, var(--page) 88%, transparent);
+  backdrop-filter:blur(8px); border-bottom:1px solid var(--hairline);
+}
+.topbar-inner{max-width:1000px; margin:0 auto; padding:8px 20px; display:flex; align-items:center; gap:12px}
+.topbar .course{font-size:.8rem; font-weight:600; color:var(--ink-2); white-space:nowrap}
+.navchips{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; flex:1}
+.navchips::-webkit-scrollbar{display:none}
+.navchips a{
+  font-size:.78rem; padding:4px 10px; border-radius:999px; white-space:nowrap;
+  color:var(--ink-2); text-decoration:none; border:1px solid transparent;
+}
+.navchips a:hover{background:var(--surface-2)}
+.navchips a.active{background:var(--chip); color:var(--s1); font-weight:600}
+.theme-btn{
+  border:1px solid var(--hairline); background:var(--surface); border-radius:999px;
+  padding:4px 10px; font-size:.78rem; color:var(--ink-2); flex-shrink:0;
+}
+.theme-btn:hover{background:var(--surface-2)}
+
+/* ================= Hero ================= */
+.hero{padding:64px 0 28px}
+.hero .kicker{font-size:.8rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--s1); margin-bottom:10px}
+.hero .sub{font-size:1.12rem; color:var(--ink-2); max-width:46em}
+.hero .meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px}
+.hero .meta span{font-size:.78rem; color:var(--ink-2); background:var(--surface); border:1px solid var(--hairline); border-radius:999px; padding:4px 12px}
+
+/* ================= Sections & cards ================= */
+section{padding:34px 0 6px; scroll-margin-top:64px}
+.sec-label{font-size:.75rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin-bottom:6px}
+.lede{font-size:1.05rem; color:var(--ink-2); max-width:50em}
+.card{
+  background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+  padding:20px 22px; margin:16px 0; box-shadow:var(--shadow);
+}
+.callout{
+  border-left:3px solid var(--s1); background:var(--wash1);
+  border-radius:0 10px 10px 0; padding:12px 16px; margin:14px 0; font-size:.95rem;
+}
+.callout.warn{border-left-color:var(--s2); background:var(--wash2)}
+.callout.plant{border-left-color:var(--s4); background:var(--wash4)}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+@media (max-width:760px){ .grid2,.grid3,.grid4{grid-template-columns:1fr} }
+.duo{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+@media (max-width:760px){ .duo{grid-template-columns:1fr} }
+.duo .col h3{display:flex; align-items:center; gap:8px}
+.dot{width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0}
+.duo ul{margin:.3em 0; padding-left:1.2em}
+.duo li{margin:.35em 0}
+.duo li b{font-weight:600}
+ul.tight{margin:.3em 0 .6em; padding-left:1.2em}
+ul.tight li{margin:.3em 0; font-size:.92rem}
+
+/* ================= Poll ================= */
+.poll-opts{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0}
+@media (max-width:760px){ .poll-opts{grid-template-columns:1fr} }
+.poll-btn{
+  text-align:left; background:var(--surface); border:1px solid var(--hairline); border-radius:12px;
+  padding:14px 16px; transition:border-color .15s, transform .15s;
+}
+.poll-btn:hover{border-color:var(--s1); transform:translateY(-1px)}
+.poll-btn .letter{
+  display:inline-flex; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center;
+  background:var(--chip); color:var(--s1); font-weight:700; font-size:.85rem; margin-bottom:8px;
+}
+.poll-btn.picked{border-color:var(--s1); box-shadow:0 0 0 1px var(--s1) inset}
+.reveal{display:none; margin-top:6px}
+.reveal.open{display:block; animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+@media (prefers-reduced-motion: reduce){ .reveal.open{animation:none} .poll-btn:hover{transform:none} }
+
+/* ================= Chips ================= */
+.chiprow{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0}
+.chip-btn{
+  border:1px solid var(--hairline); background:var(--surface); border-radius:999px;
+  padding:6px 14px; font-size:.88rem;
+}
+.chip-btn:hover{border-color:var(--s1)}
+.chip-btn[aria-pressed="true"]{background:var(--chip); border-color:var(--s1); color:var(--s1); font-weight:600}
+.explain-panel{min-height:70px}
+
+/* ================= Accordion ================= */
+.acc{border:1px solid var(--hairline); border-radius:12px; overflow:hidden; margin:14px 0; background:var(--surface)}
+.acc-item + .acc-item{border-top:1px solid var(--hairline)}
+.acc-head{
+  width:100%; display:flex; align-items:center; gap:12px; text-align:left;
+  padding:13px 16px; background:none; border:none;
+}
+.acc-head:hover{background:var(--surface-2)}
+.acc-head .tag{
+  font-size:.7rem; font-weight:700; letter-spacing:.08em; color:var(--s1);
+  background:var(--chip); padding:3px 9px; border-radius:999px; flex-shrink:0; min-width:74px; text-align:center;
+}
+.acc-head .q{flex:1; font-weight:600; font-size:.95rem}
+.acc-head .caret{transition:transform .2s; color:var(--muted); flex-shrink:0}
+.acc-head[aria-expanded="true"] .caret{transform:rotate(90deg)}
+.acc-body{display:none; padding:2px 16px 16px 16px; font-size:.93rem}
+.acc-body.open{display:block}
+.acc-body p{margin:.4em 0 .7em}
+.acc-body ul{margin:.2em 0 .7em; padding-left:1.2em}
+.acc-body li{margin:.3em 0}
+
+/* ================= Controls, tiles, charts ================= */
+.sim-controls{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 14px; align-items:center}
+.btn{
+  border:1px solid var(--hairline); border-radius:10px; padding:8px 16px;
+  background:var(--surface); font-weight:600; font-size:.9rem;
+}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--s1); border-color:var(--s1); color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.seg{display:inline-flex; border:1px solid var(--hairline); border-radius:10px; overflow:hidden}
+.seg button{border:none; background:var(--surface); padding:8px 14px; font-size:.85rem}
+.seg button + button{border-left:1px solid var(--hairline)}
+.seg button[aria-pressed="true"]{background:var(--chip); color:var(--s1); font-weight:700}
+.readouts{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:12px 0}
+.readouts.four{grid-template-columns:repeat(4,1fr)}
+.readouts.two{grid-template-columns:repeat(2,1fr)}
+@media (max-width:760px){ .readouts,.readouts.four,.readouts.two{grid-template-columns:1fr 1fr} }
+@media (max-width:480px){ .readouts,.readouts.four,.readouts.two{grid-template-columns:1fr} }
+.tile{background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:12px 14px}
+.tile .lab{font-size:.75rem; color:var(--ink-2); margin-bottom:2px}
+.tile .val{font-size:1.35rem; font-weight:650; letter-spacing:-0.01em}
+.tile .sub{font-size:.75rem; color:var(--muted)}
+.legend{display:flex; flex-wrap:wrap; gap:16px; font-size:.8rem; color:var(--ink-2); margin:8px 0}
+.legend .key{display:inline-flex; align-items:center; gap:6px}
+.legend .swatch{width:12px; height:12px; border-radius:3px; display:inline-block}
+.legend .linekey{width:16px; height:0; border-top:2px solid; display:inline-block; border-radius:2px}
+.chart-card{background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px; margin:12px 0}
+.chart-card h4{margin:0 0 2px; font-size:.9rem}
+.chart-card .small{margin:0 0 8px}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.chart-card svg{width:100%;height:auto}
+.sim-wrap svg, .card > div > svg{max-width:100%; height:auto}
+.tile .val.wrap{font-size:1rem; font-weight:600; line-height:1.35}
+details.tableview{margin-top:8px; font-size:.85rem}
+details.tableview summary{cursor:pointer; color:var(--ink-2)}
+details.tableview table{border-collapse:collapse; margin-top:8px; width:100%; max-width:560px}
+details.tableview th, details.tableview td{border-bottom:1px solid var(--grid); padding:4px 8px; text-align:right; font-variant-numeric:tabular-nums}
+details.tableview th:first-child, details.tableview td:first-child{text-align:left}
+details.tableview th{color:var(--ink-2); font-weight:600}
+.slider-row{display:grid; grid-template-columns:170px 1fr 90px; gap:12px; align-items:center; margin:8px 0}
+@media (max-width:560px){ .slider-row{grid-template-columns:120px 1fr 70px} }
+.slider-row label{font-size:.85rem; font-weight:600; display:flex; align-items:center; gap:7px}
+.slider-row output{font-size:.85rem; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-2)}
+input[type=range]{width:100%; accent-color:var(--s1); height:22px}
+.preset-row{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px}
+.sim-wrap{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
+@media (max-width:760px){ .sim-wrap{grid-template-columns:1fr} }
+
+/* ================= Tables ================= */
+.tablewrap{overflow-x:auto; margin:10px 0}
+table.data{border-collapse:collapse; width:100%; font-size:.86rem}
+table.data th, table.data td{border-bottom:1px solid var(--grid); padding:7px 9px; text-align:left; vertical-align:top}
+table.data th{color:var(--ink-2); font-weight:600; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase}
+table.data td.num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+
+/* ================= Isotopologue cards ================= */
+.mol-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:12px 0}
+@media (max-width:760px){ .mol-grid{grid-template-columns:repeat(2,1fr)} }
+.mol{
+  text-align:left; background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:14px 14px 12px;
+}
+.mol:hover{border-color:var(--s1)}
+.mol[aria-pressed="true"]{border-color:var(--s1); box-shadow:0 0 0 1px var(--s1) inset}
+.mol .formula{font-size:1.3rem; font-weight:700; letter-spacing:-0.01em}
+.mol .mass{font-size:.78rem; color:var(--ink-2); margin-top:2px}
+.mol .abund{margin-top:8px; height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden}
+.mol .abund i{display:block; height:100%; background:var(--s1); border-radius:4px}
+.mol .abund-lab{font-size:.74rem; color:var(--muted); margin-top:4px; font-variant-numeric:tabular-nums}
+
+/* ================= Process walk ================= */
+.steps{display:flex; flex-wrap:wrap; gap:6px; margin:10px 0}
+.step-btn{
+  border:1px solid var(--hairline); background:var(--surface); border-radius:10px; padding:7px 12px; font-size:.85rem;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.step-btn .n{width:20px; height:20px; border-radius:50%; background:var(--chip); color:var(--s1); font-weight:700; font-size:.75rem; display:inline-flex; align-items:center; justify-content:center}
+.step-btn[aria-pressed="true"]{background:var(--chip); border-color:var(--s1); color:var(--s1); font-weight:600}
+.step-btn:hover{border-color:var(--s1)}
+
+/* ================= Sorter / scenarios / quiz ================= */
+.scen{border:1px solid var(--hairline); border-radius:14px; background:var(--surface); padding:18px 20px; margin:14px 0}
+.scen .scen-head{display:flex; gap:10px; align-items:baseline}
+.scen .letter{
+  width:28px;height:28px;border-radius:8px;background:var(--chip);color:var(--s1);
+  font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.scen h3{margin:0}
+.scen .scen-q{color:var(--ink-2); margin:.3em 0 .8em; font-size:.95rem}
+.opt-list{display:grid; gap:8px}
+.opt-list.row3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:760px){ .opt-list.row3{grid-template-columns:1fr} }
+.opt-btn{
+  text-align:left; border:1px solid var(--hairline); background:var(--surface); border-radius:10px;
+  padding:10px 14px; font-size:.9rem;
+}
+.opt-btn:hover{border-color:var(--s1)}
+.opt-btn.sel-best{border-color:var(--s3); background:color-mix(in srgb, var(--s3) 9%, var(--surface))}
+.opt-btn.sel-weak{border-color:var(--s2); background:var(--wash2)}
+.opt-btn:disabled{cursor:default; opacity:1}
+.feedback{font-size:.88rem; margin-top:10px; display:none}
+.feedback.open{display:block; animation:fadeUp .3s ease}
+.debrief{margin-top:12px; border-top:1px solid var(--grid); padding-top:12px; font-size:.88rem; display:none}
+.debrief.open{display:block}
+.debrief b{font-weight:650}
+.sorter-item{border:1px solid var(--hairline); border-radius:12px; background:var(--surface); padding:14px 16px; margin:10px 0}
+.sorter-item h4{margin:0 0 8px; font-size:.95rem}
+.sorter-score{font-size:1rem; font-weight:650; margin:12px 0}
+.quiz-q{border:1px solid var(--hairline); border-radius:12px; background:var(--surface); padding:16px 18px; margin:12px 0}
+.quiz-q h4{font-size:.95rem; margin-bottom:10px}
+.quiz-q .opt-btn{width:100%}
+.quiz-score{font-size:1.05rem; font-weight:650; margin:14px 0}
+.tick{color:var(--good-text); font-weight:700}
+.cross{color:var(--s2); font-weight:700}
+
+/* ================= Paper guides ================= */
+.paper{border:1px solid var(--hairline); border-radius:14px; background:var(--surface); padding:18px 20px; margin:16px 0; box-shadow:var(--shadow)}
+.paper .ptag{font-size:.7rem; font-weight:700; letter-spacing:.1em; color:var(--s1); text-transform:uppercase}
+.paper h3{margin:.2em 0 .2em; font-size:1.05rem}
+.paper .cite{font-size:.86rem; color:var(--ink-2); margin:0 0 .6em}
+.paper .acc{margin:10px 0 4px}
+
+/* ================= Glossary & readings ================= */
+.gloss-search{
+  width:100%; max-width:380px; font:inherit; padding:8px 14px; border-radius:10px;
+  border:1px solid var(--hairline); background:var(--surface); color:var(--ink); margin-bottom:12px;
+}
+.gloss-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+@media (max-width:760px){ .gloss-grid{grid-template-columns:1fr} }
+details.gloss{border:1px solid var(--hairline); border-radius:10px; background:var(--surface); padding:10px 14px}
+details.gloss summary{cursor:pointer; font-weight:600; font-size:.92rem}
+details.gloss p{font-size:.86rem; color:var(--ink-2); margin:.5em 0 0}
+details.gloss .pill{font-size:.68rem; font-weight:700; letter-spacing:.06em; color:var(--muted); text-transform:uppercase; margin-left:6px}
+.reading{display:grid; grid-template-columns:86px 1fr; gap:14px; padding:13px 0; border-bottom:1px solid var(--grid)}
+.reading:last-child{border-bottom:none}
+.reading .rtag{font-size:.7rem; font-weight:700; letter-spacing:.08em; color:var(--s1); background:var(--chip); border-radius:999px; padding:3px 0; text-align:center; height:fit-content}
+.reading .rtag.supp{color:var(--ink-2); background:var(--surface-2)}
+.reading h4{margin:0 0 2px; font-size:.93rem}
+.reading p{margin:0; font-size:.84rem; color:var(--ink-2)}
+
+/* ================= Footer, tooltip, print ================= */
+footer{border-top:1px solid var(--hairline); margin-top:50px; padding:26px 0 10px; font-size:.8rem; color:var(--ink-2)}
+footer p{margin:.3em 0}
+.viz-tip{
+  position:fixed; z-index:99; pointer-events:none; background:var(--surface); border:1px solid var(--hairline);
+  border-radius:8px; box-shadow:var(--shadow); padding:7px 11px; font-size:.8rem; display:none; max-width:260px;
+}
+.viz-tip .tv{font-weight:700; font-variant-numeric:tabular-nums}
+.viz-tip .tk{display:inline-block; width:14px; border-top:2px solid; border-radius:2px; margin-right:5px; vertical-align:middle}
+@media print{
+  .topbar,.theme-btn{display:none}
+  body{background:#fff}
+  .card,.chart-card,.tile,.paper{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="course">WASR 8000 · Week 2</span>
+    <nav class="navchips" aria-label="Sections">
+      <a href="#s-hook">Two rains</a>
+      <a href="#s-isotopes">Heavy water</a>
+      <a href="#s-delta">δ-notation</a>
+      <a href="#s-fraction">Fractionation</a>
+      <a href="#s-rayleigh">Rainout</a>
+      <a href="#s-effects">The effects</a>
+      <a href="#s-mwl">Water lines</a>
+      <a href="#s-tww">Two worlds</a>
+      <a href="#s-conservative">Conservative?</a>
+      <a href="#s-decay">Decay</a>
+      <a href="#s-papers">The papers</a>
+      <a href="#s-practice">Practice</a>
+      <a href="#s-quiz">Self-check</a>
+      <a href="#s-glossary">Glossary</a>
+      <a href="#s-next">Next</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle dark mode">◐ Theme</button>
+  </div>
+</div>
+
+<main>
+<header class="hero">
+  <div class="kicker">WASR 8000 · Environmental Tracers in Hydrology · Fall 2026</div>
+  <h1>Fingerprints of Water</h1>
+  <p class="sub">An interactive primer on δ-notation, isotope fractionation, the meteoric water lines, deuterium excess, and the decay law — the physics that writes the signals every tracer study reads. Builds on Week 1; no isotope background needed.</p>
+  <div class="meta">
+    <span>Week 2 companion · read alongside the three papers</span>
+    <span>≈ 35–45 minutes</span>
+    <span>11 interactive demos · self-check quiz</span>
+  </div>
+</header>
+
+<!-- ================= 1. HOOK ================= -->
+<section id="s-hook">
+  <div class="sec-label">1 · The opening question</div>
+  <h2>Rain on Barbados and snow at 82°N are both H₂O. Can anyone tell them apart?</h2>
+  <p class="lede">Strip away the salts, the dust, and the dissolved gases. Pure water from the tropics and pure water from the Greenland coast — is there anything left to measure?</p>
+
+  <div class="poll-opts" role="group" aria-label="Pick a claim">
+    <button class="poll-btn" type="button" data-pick="A">
+      <span class="letter">A</span>
+      <div><b>No — water is water</b></div>
+      <div class="small">Two hydrogens, one oxygen. Once the impurities are gone, the molecules are identical.</div>
+    </button>
+    <button class="poll-btn" type="button" data-pick="B">
+      <span class="letter">B</span>
+      <div><b>Only through what is dissolved in it</b></div>
+      <div class="small">Sea salt, dust, gases — the water itself carries no information.</div>
+    </button>
+    <button class="poll-btn" type="button" data-pick="C">
+      <span class="letter">C</span>
+      <div><b>Yes — some of the water molecules themselves are heavier</b></div>
+      <div class="small">A small, measurable share of molecules carry a heavy isotope, and that share differs between waters.</div>
+    </button>
+  </div>
+
+  <div class="reveal card" id="pollReveal">
+    <h3 id="pollHeadline"></h3>
+    <p id="pollBody"></p>
+    <p>Ordinary water is mostly ¹H₂¹⁶O, but about <b>2,000 molecules in every million</b> carry a heavy oxygen (¹H₂¹⁸O) and about <b>320 in a million</b> carry a heavy hydrogen (¹HD¹⁶O) — the proportions Dansgaard (1964) quoted in the first pages of the paper you are reading this week. Those proportions are not fixed. Tropical island rain holds about 0.2% fewer heavy-oxygen molecules than the ocean; the monthly snowfall at Station Nord (82°N) holds up to about 3% fewer. In the language you will learn in Section 3, that is δ¹⁸O ≈ −1.6‰ for the islands and −9 to −33‰ for Nord (Dansgaard, 1964, Tables 10–11).</p>
+    <div class="callout">Differences of a few molecules per million are real, reproducible, and — since the 1950s — measurable to about 0.2‰. <b>That small difference is the whole of Week 2:</b> where it comes from (fractionation), how it is written down (δ), how it organizes itself (the meteoric water line), and when it can be trusted to travel unchanged (conservative behaviour).</div>
+    <p class="small">Week 1 defined a tracer as a signal plus a transport story plus a model of interpretation. This week supplies the physics behind the signal — and the first two ways a tracer can stop being conservative: reaction and radioactive decay.</p>
+  </div>
+</section>
+
+<!-- ================= 2. ISOTOPES OF WATER ================= -->
+<section id="s-isotopes">
+  <div class="sec-label">2 · The molecules</div>
+  <h2>Water comes in light and heavy versions</h2>
+  <p class="lede">Hydrogen has two stable isotopes (¹H and ²H, "deuterium", D) and one radioactive one (³H, tritium). Oxygen has three stable isotopes (¹⁶O, ¹⁷O, ¹⁸O). Combine them and you get a family of water molecules — <i>isotopologues</i> — that differ only in mass. Click a molecule.</p>
+
+  <div class="card">
+    <div class="mol-grid" id="molGrid" role="group" aria-label="Water isotopologues"></div>
+    <div class="explain-panel" id="molExplain" aria-live="polite"><p class="small">Pick a molecule above to see why it matters.</p></div>
+  </div>
+
+  <div class="duo">
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--s1)"></span>Stable isotopes: a signal, not a clock</h3>
+      <ul>
+        <li><b>They never disappear.</b> ²H and ¹⁸O are stable; their proportions change only when physics sorts molecules by mass — most importantly when water changes phase.</li>
+        <li><b>They ride inside the water molecule.</b> Nothing has to dissolve; the label is the water itself, so below ground it travels with the water (Kendall et al., 2014).</li>
+        <li><b>They are cheap to measure.</b> A modern laser analyser or mass spectrometer resolves ~0.1–0.2‰ in δ¹⁸O and ~1‰ in δ²H.</li>
+      </ul>
+    </div>
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--s2)"></span>Tritium: the same molecule, with a clock</h3>
+      <ul>
+        <li><b>³H decays</b> (half-life 12.32 years), so its abundance falls predictably with time — the basis of the bomb-pulse dating you met in Week 1.</li>
+        <li><b>It is vanishingly rare:</b> 1 tritium unit (TU) is one ³H per 10¹⁸ hydrogen atoms; its mass effect on fractionation is irrelevant at that abundance.</li>
+        <li><b>Section 10</b> returns to the decay law that governs it.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout">Why does mass matter? A heavier molecule vibrates more slowly and is held a little more tightly in the liquid: its <b>vapour pressure is lower</b> and it <b>diffuses more slowly</b>. H₂¹⁶O is the most volatile of the family (Dansgaard, 1964, §1.2). Every isotope effect in this primer descends from that one fact.</div>
+</section>
+
+<!-- ================= 3. DELTA ================= -->
+<section id="s-delta">
+  <div class="sec-label">3 · The notation</div>
+  <h2>δ: a ratio of ratios, reported in parts per thousand</h2>
+  <p class="lede">Nobody can measure the absolute number of ¹⁸O atoms in a sample precisely, but a mass spectrometer measures the <i>difference</i> between a sample and a reference water superbly. So the convention is to report that difference, relative to the reference, in per mil (‰):</p>
+  <div class="eq"><span class="eqnum">Dansgaard 1964, p. 437</span>δ = (R<sub>sample</sub> − R<sub>standard</sub>) / R<sub>standard</sub> × 1000 ‰ = (R<sub>sample</sub>/R<sub>standard</sub> − 1) × 1000 ‰</div>
+  <p>where R is the ratio of heavy to light isotope (¹⁸O/¹⁶O or ²H/¹H). The reference is <b>SMOW</b> — "Standard Mean Ocean Water", defined by Craig (1961b) from a reference water held by the U.S. National Bureau of Standards and the ocean measurements of Epstein &amp; Mayeda (1953). Today the scale is anchored by its successor, <b>VSMOW</b> (²H/¹H = 155.76 × 10⁻⁶; ¹⁸O/¹⁶O = 2005.2 × 10⁻⁶), with a second water, SLAP, fixing the far end of the scale at δ²H = −428‰ and δ¹⁸O = −55.5‰.</p>
+
+  <div class="card">
+    <h3>Count the heavy atoms</h3>
+    <p class="small">Imagine counting one million oxygen atoms in the reference water: about 2,005 of them are ¹⁸O. Now count a million in your sample. The slider sets how many you find; the readout converts the count to δ. Switch to hydrogen to do the same with deuterium.</p>
+    <div class="sim-controls">
+      <div class="seg" role="group" aria-label="Isotope system">
+        <button type="button" id="dmodeO" aria-pressed="true">Oxygen: ¹⁸O per million</button>
+        <button type="button" id="dmodeH" aria-pressed="false">Hydrogen: ²H per million</button>
+      </div>
+    </div>
+    <div class="preset-row" id="deltaPresets" role="group" aria-label="Example waters"></div>
+    <div class="slider-row">
+      <label for="deltaN" id="deltaNLabel">Heavy atoms per million</label>
+      <input type="range" id="deltaN" min="1880" max="2060" value="2005" step="0.5">
+      <output id="deltaNOut">2005</output>
+    </div>
+    <div class="chart-card" style="margin:6px 0">
+      <svg id="deltaBar" width="900" height="150" viewBox="0 0 900 150" role="img" aria-label="Heavy-isotope count of the sample compared with the reference water"></svg>
+    </div>
+    <div class="readouts">
+      <div class="tile"><div class="lab">Your sample</div><div class="val mono" id="deltaVal">0.0‰</div><div class="sub" id="deltaValSub">δ¹⁸O relative to VSMOW</div></div>
+      <div class="tile"><div class="lab">Ratio R</div><div class="val mono" id="deltaR">0.0020052</div><div class="sub" id="deltaRSub">¹⁸O / ¹⁶O</div></div>
+      <div class="tile"><div class="lab">In words</div><div class="val" id="deltaWords" style="font-size:1rem">identical to the ocean</div><div class="sub">negative = "lighter", depleted in the heavy isotope</div></div>
+    </div>
+    <div class="callout" id="deltaMsg"></div>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><h3 style="font-size:.95rem">Sign language</h3><p class="small">δ &lt; 0: the sample has <i>fewer</i> heavy atoms than the ocean ("depleted", "lighter"). δ &gt; 0: <i>more</i> ("enriched", "heavier"). Almost all fresh water is negative, because the ocean is where the water cycle starts and each evaporation–condensation step strips heavy isotopes preferentially.</p></div>
+    <div class="card"><h3 style="font-size:.95rem">Precision and range</h3><p class="small">Dansgaard's laboratory measured to ±2‰ in δ²H and ±0.2‰ in δ¹⁸O, against a natural range of more than 400‰ and 40‰ — "at least 200 times the measuring accuracy" (1964, §1.2). Today's laser analysers do about as well, and the Picarro session in Week 8 will show you where that precision comes from and where it fails.</p></div>
+    <div class="card"><h3 style="font-size:.95rem">A small trap</h3><p class="small">δ values are not simply additive. If a sample is δ′ relative to a working standard that is itself δ<sub>st</sub> relative to SMOW, then δ = δ′ + δ<sub>st</sub> + δ′δ<sub>st</sub>/1000 (Dansgaard, 1964, eq. 1). The cross term is tiny for small values and matters for large ones — one reason laboratories calibrate on the VSMOW–SLAP scale rather than adding offsets.</p></div>
+  </div>
+</section>
+
+<!-- ================= 4. FRACTIONATION ================= -->
+<section id="s-fraction">
+  <div class="sec-label">4 · The physics</div>
+  <h2>Fractionation: heavy molecules are slower to leave</h2>
+  <p class="lede">When liquid water and its vapour sit in equilibrium, the vapour is poorer in heavy isotopes than the liquid, because the heavy molecules have the lower vapour pressure. The size of that difference is the <b>fractionation factor</b>:</p>
+  <div class="eq"><span class="eqnum">Dansgaard 1964, §1.2</span>α = R<sub>liquid</sub> / R<sub>vapour</sub> = p / p′ &nbsp;&nbsp;(p = vapour pressure of the light molecule, p′ of the heavy one; α &gt; 1)</div>
+  <p>At "normal temperature" Dansgaard quotes α ≈ 1.08 for HDO and ≈ 1.009 for H₂¹⁸O: vapour in equilibrium with the ocean is depleted by some 80‰ in deuterium and 9‰ in ¹⁸O. The factor depends on temperature — colder means larger — which is what turns isotopes into thermometers. Drag the slider.</p>
+
+  <div class="card">
+    <h3>Equilibrium fractionation versus temperature</h3>
+    <p class="small">Values interpolated from Dansgaard's Table 1 (Merlivat et al., 1963 for deuterium; Zhavoronkov et al., 1955 for ¹⁸O; extrapolated below 0 °C). Modern determinations are slightly different — about 1.084 and 1.0098 at 20 °C (Horita &amp; Wesolowski, 1994) — but the pattern is identical.</p>
+    <div class="slider-row">
+      <label for="fracT">Temperature</label>
+      <input type="range" id="fracT" min="-20" max="40" value="20" step="1">
+      <output id="fracTOut">20 °C</output>
+    </div>
+    <div class="sim-wrap">
+      <div>
+        <svg id="fracDiagram" width="440" height="300" viewBox="0 0 440 300" role="img" aria-label="Liquid water at 0 per mil in equilibrium with its vapour; the vapour is depleted in heavy isotopes"></svg>
+      </div>
+      <div>
+        <div class="readouts two">
+          <div class="tile"><div class="lab">α for deuterium (HDO)</div><div class="val mono" id="fracAD">1.079</div><div class="sub">ε<sub>D</sub> = (α − 1) × 1000 = <span id="fracED">79</span>‰</div></div>
+          <div class="tile"><div class="lab">α for oxygen-18 (H₂¹⁸O)</div><div class="val mono" id="fracAO">1.0091</div><div class="sub">ε<sub>18</sub> = <span id="fracEO">9.1</span>‰</div></div>
+          <div class="tile"><div class="lab">Vapour in equilibrium with the ocean</div><div class="val mono" id="fracVap">δ²H −73‰ · δ¹⁸O −9.0‰</div><div class="sub">δ<sub>v</sub> = (1/α − 1) × 1000 — eq. 2</div></div>
+          <div class="tile"><div class="lab">Ratio of the two effects</div><div class="val mono" id="fracRatio">8.1</div><div class="sub">ε<sub>v,D</sub>/ε<sub>v,18</sub> — the slope a δ²H–δ¹⁸O plot inherits (§7)</div></div>
+        </div>
+        <div class="callout" id="fracMsg"></div>
+      </div>
+    </div>
+    <p class="small" style="margin-top:10px"><b>And the first drop of rain?</b> Condense a little of that vapour back to liquid at the same temperature and it is enriched by the same factor — so the first condensate from ocean-equilibrium vapour has exactly the ocean's composition, δ = 0 (Dansgaard's eq. 5). Everything lighter than the ocean comes from what happens <i>next</i>: Section 5.</p>
+  </div>
+
+  <div class="duo">
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--s1)"></span>Equilibrium fractionation</h3>
+      <ul>
+        <li><b>Slow and reversible.</b> Molecules cross the interface in both directions; the ratio settles to a value fixed by temperature alone.</li>
+        <li><b>Where it holds:</b> condensation inside clouds, evaporation into saturated air, a raindrop falling through air at 100% humidity.</li>
+        <li><b>Signature:</b> deuterium and ¹⁸O move together in a ratio near 8 — the origin of the meteoric water line's slope.</li>
+      </ul>
+    </div>
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--s2)"></span>Kinetic fractionation</h3>
+      <ul>
+        <li><b>Fast and one-way.</b> When vapour is removed faster than it can exchange — evaporation into dry, windy air, diffusion through still air — the lightest molecule escapes fastest: c(H₂¹⁶O) &gt; c(HDO) &gt; c(H₂¹⁸O) (Dansgaard's eq. 14).</li>
+        <li><b>It hits ¹⁸O harder than deuterium.</b> In the thin-water-jet evaporation experiments Dansgaard reports, the ¹⁸O effect grew by ~200% while the deuterium effect changed by no more than 15%. The δ²H/δ¹⁸O slope collapses from ~8 to ~3–5.</li>
+        <li><b>Signature:</b> waters that have evaporated fall <i>below</i> the meteoric water line. Ocean vapour formed this way carries a <i>surplus</i> of deuterium — the deuterium excess of Section 7.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><b>Where fractionation does not happen:</b> in water flowing through soil and rock at ordinary temperatures. Oxygen and hydrogen exchange with minerals is negligible below ground except in hot geothermal systems, which is why δ¹⁸O and δ²H behave conservatively once water has infiltrated (Kendall et al., 2014) — the premise of Sections 8 and 9. Fractionation is a phase-change phenomenon: evaporation, condensation, sublimation, freezing.</div>
+</section>
+
+<!-- ================= 5. RAYLEIGH ================= -->
+<section id="s-rayleigh">
+  <div class="sec-label">5 · The engine</div>
+  <h2>Rainout: a cooling air mass distils itself</h2>
+  <p class="lede">Precipitation forms when moist air cools. The first condensate takes more than its share of heavy isotopes, leaving the remaining vapour lighter; the next condensate forms from that lighter vapour, and so on. If each increment of condensate is removed as it forms — the <b>Rayleigh</b> condition — the isotopic composition runs away toward very negative values as the vapour is used up:</p>
+  <div class="eq"><span class="eqnum">Dansgaard 1964, eq. 6</span>δ<sub>c</sub> = (α/α₀) · F<sub>v</sub><sup>(α<sub>m</sub> − 1)</sup> − 1 &nbsp;&nbsp;&nbsp; δ<sub>v</sub> = (1/α₀) · F<sub>v</sub><sup>(α<sub>m</sub> − 1)</sup> − 1</div>
+  <p>where F<sub>v</sub> is the fraction of the initial vapour still remaining, α₀ is the fractionation factor at the starting temperature t₀, α at the current temperature, and α<sub>m</sub> at the mean of the two. Dansgaard computed F<sub>v</sub> from the saturation mixing ratio of the air as it cools at constant pressure — the same is done here.</p>
+
+  <div class="card">
+    <h3>Cool an air mass and watch its rain get lighter</h3>
+    <p class="small">Vapour leaves the ocean in equilibrium at the dew point t₀ (its first condensate is SMOW, 0‰). Drag the temperature down and read the composition of the <b>newly forming condensate</b> and the <b>remaining vapour</b>. Presets reproduce Dansgaard's C₀, C₂₀ and C₃₀ curves (Fig. 5).</p>
+    <div class="sim-controls">
+      <div class="seg" role="group" aria-label="Starting dew point">
+        <button type="button" data-t0="0">Start at 0 °C</button>
+        <button type="button" data-t0="20" aria-pressed="true">Start at 20 °C</button>
+        <button type="button" data-t0="30">Start at 30 °C</button>
+      </div>
+      <button class="chip-btn" id="rayShowD" type="button" aria-pressed="false">Show δ²H in the temperature chart</button>
+    </div>
+    <div class="slider-row">
+      <label for="rayT">Condensation temperature</label>
+      <input type="range" id="rayT" min="-25" max="20" value="0" step="0.5">
+      <output id="rayTOut">0 °C</output>
+    </div>
+    <div class="readouts four">
+      <div class="tile"><div class="lab">Vapour remaining, F<sub>v</sub></div><div class="val mono" id="rayF">—</div><div class="sub">of the vapour the air mass started with</div></div>
+      <div class="tile"><div class="lab">New condensate (rain/snow)</div><div class="val mono" id="rayC">—</div><div class="sub">δ¹⁸O · δ²H</div></div>
+      <div class="tile"><div class="lab">Remaining vapour</div><div class="val mono" id="rayV">—</div><div class="sub">δ¹⁸O · δ²H</div></div>
+      <div class="tile"><div class="lab">Temperature effect here</div><div class="val mono" id="raySlope">—</div><div class="sub">dδ¹⁸O/dt of new condensate</div></div>
+    </div>
+    <div class="sim-wrap">
+      <div class="chart-card">
+        <h4>Composition along the cooling path</h4>
+        <p class="small">condensate (blue) and remaining vapour (aqua) as the air mass cools from t₀</p>
+        <svg id="rayChart" width="480" height="300" viewBox="0 0 480 300" role="img" aria-label="Isotopic composition of condensate and vapour versus temperature during Rayleigh cooling"></svg>
+      </div>
+      <div class="chart-card">
+        <h4>The same path in δ²H–δ¹⁸O space</h4>
+        <p class="small">the C-curve of new condensate; grey line = δ²H = 8 δ¹⁸O + 10</p>
+        <svg id="rayXY" width="480" height="300" viewBox="0 0 480 300" role="img" aria-label="Track of condensate composition in delta-2H versus delta-18O space"></svg>
+      </div>
+    </div>
+    <div class="callout" id="rayMsg"></div>
+    <details class="tableview"><summary>Check against Dansgaard's Table 2</summary>
+      <p class="small">Isobaric cooling from t₀ = 20 °C. Dansgaard: at 0 °C, F<sub>v</sub> = 26%, δ²H = −95‰, δ¹⁸O = −11.7‰; at −20 °C, F<sub>v</sub> = 5.2%, δ²H = −223‰, δ¹⁸O = −28.2‰. The table below is this page's calculation with the same fractionation factors.</p>
+      <div id="rayTable"></div>
+    </details>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><h3 style="font-size:.95rem">Why the slope is ~8</h3><p class="small">Both isotopes obey the same equation; only α differs. Over 40° of cooling from 20 °C the δ²H–δ¹⁸O track is nearly straight with mean slope 8.0 ± 0.2 (Dansgaard's Table 5) — not the naive ratio (α<sub>D</sub> − 1)/(α<sub>18</sub> − 1), which would give 10.9, because α itself changes along the path (eq. 8). Craig's global slope of 8 is Rayleigh condensation made visible.</p></div>
+    <div class="card"><h3 style="font-size:.95rem">Two extremes, one reality</h3><p class="small">Rayleigh removal is one limit; condensate that stays and re-equilibrates with the vapour (a closed system) is the other and fractionates far less (Dansgaard's Fig. 1; Kendall et al., 2014, Fig. 1, for the analogous evaporation case). "In nature, exchange will, more or less, smooth out the phenomenon" — real clouds sit between the curves.</p></div>
+    <div class="card"><h3 style="font-size:.95rem">Temperature, not thermometer</h3><p class="small">A single rain cannot be read as a condensation temperature — its δ depends on the starting vapour, the dew point, the degree of cooling and the way of cooling (Dansgaard, §2.5). Only <i>long-term means</i> smooth the scatter enough to correlate with temperature. That is Section 6.</p></div>
+  </div>
+</section>
+
+<!-- ================= 6. EFFECTS ================= -->
+<section id="s-effects">
+  <div class="sec-label">6 · The patterns</div>
+  <h2>Temperature, amount, latitude, altitude, continent: Dansgaard's "effects"</h2>
+  <p class="lede">The IAEA–WMO precipitation survey (begun 1961; over one hundred stations by 1964) let Dansgaard compare monthly rain across the world. Out of the scatter came a handful of regularities that every hydrologist still uses. The names are his.</p>
+
+  <div class="grid3">
+    <div class="card"><h3 style="font-size:.95rem">Temperature effect</h3><p class="small">Annual mean δ¹⁸O of precipitation falls linearly with mean annual air temperature — about <b>0.7‰ per °C</b> across North Atlantic coastal stations and the Greenland ice cap (eq. 9). It also drives the <b>seasonal</b> cycle at high-latitude continental stations: summer rain is 5–10‰ heavier than winter snow at Chicago, Edmonton, Nord (Table 12).</p></div>
+    <div class="card"><h3 style="font-size:.95rem">Amount effect</h3><p class="small">In the tropics, where temperature barely varies, rainy months are isotopically <b>light</b> and sparse months heavy: about <b>−1.6‰ per 100 mm</b> at tropical islands and −2.0‰ at partly continental stations (§4.2.3). Deep cooling in big storms, plus less evaporation and exchange from falling drops in humid air, explain it.</p></div>
+    <div class="card"><h3 style="font-size:.95rem">Latitude, altitude, continent</h3><p class="small">Island groups average −1.6‰ at 0–23°, −3.4‰ at 23–45°, −6.6‰ at 45–90° (Table 11). Rain gets lighter going inland (Valentia → Stuttgart → Vienna) and over mountains (Holsteinsborg → Søndre Strømfjord). Elevation gradients are typically −0.1 to −0.5‰ per 100 m in δ¹⁸O (Jasechko, 2019).</p></div>
+  </div>
+
+  <div class="card">
+    <h3>Station explorer — Dansgaard's Table 10, one station at a time</h3>
+    <p class="small">Each station's monthly samples (1961–62) define a δ¹⁸O range, a δ²H–δ¹⁸O slope, a deuterium surplus <i>d</i>, and whether a temperature or amount effect was visible. Pick a station; the small plot shows its line against Dansgaard's reference line L (δ²H = 8 δ¹⁸O + 10), and the note explains what Dansgaard read into it.</p>
+    <div class="chiprow" id="stationChips" role="group" aria-label="Stations"></div>
+    <div class="sim-wrap">
+      <div>
+        <svg id="stationPlot" width="440" height="320" viewBox="0 0 440 320" role="img" aria-label="Station delta-2H versus delta-18O line compared with the reference line"></svg>
+      </div>
+      <div>
+        <div class="readouts two">
+          <div class="tile"><div class="lab">Monthly δ¹⁸O range</div><div class="val mono" id="stRange">—</div><div class="sub" id="stN">monthly samples</div></div>
+          <div class="tile"><div class="lab">δ²H–δ¹⁸O slope</div><div class="val mono wrap" id="stSlope">—</div><div class="sub">8 ≈ equilibrium; &lt;8 evaporation; &gt;8 rare</div></div>
+          <div class="tile"><div class="lab">Deuterium surplus d</div><div class="val mono wrap" id="stD">—</div><div class="sub">δ²H − 8 δ¹⁸O (‰)</div></div>
+          <div class="tile"><div class="lab">Effects Dansgaard saw</div><div class="val wrap" id="stEff">—</div><div class="sub" id="stGroup">correlation group</div></div>
+        </div>
+        <div class="callout" id="stMsg">Pick a station.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>The temperature effect, as Dansgaard drew it (Fig. 3)</h3>
+    <p class="small">Slide the mean annual air temperature; the line is his regression through 38 stations — 17 North Atlantic continental stations, 6 islands, and 15 Greenland and Antarctic ice-cap sites — spanning some 75 °C. The curve "should not exceed δ¹⁸O = 0 (SMOW), since positive δ's occur only as a result of special processes like accidental evaporation from liquid precipitation."</p>
+    <div class="eq" style="margin:6px 0 10px"><span class="eqnum">eqs. 9 and 11</span>δ¹⁸O = 0.695 t<sub>a</sub> − 13.6‰ &nbsp;&nbsp;&nbsp;&nbsp; δ²H = 5.6 t<sub>a</sub> − 100‰</div>
+    <div class="slider-row">
+      <label for="tempTa">Mean annual air temperature</label>
+      <input type="range" id="tempTa" min="-50" max="25" value="8" step="1">
+      <output id="tempTaOut">8 °C</output>
+    </div>
+    <div class="sim-wrap">
+      <div class="chart-card" style="margin:0">
+        <svg id="tempChart" width="480" height="320" viewBox="0 0 480 320" role="img" aria-label="Annual mean delta-18O of precipitation versus mean annual air temperature"></svg>
+        <p class="small" style="margin:6px 0 0">Points: island-group means from Table 11; Station Nord, Horlick Mountains and the South Pole as plotted in Fig. 3.</p>
+      </div>
+      <div>
+        <div class="readouts two">
+          <div class="tile"><div class="lab">Predicted annual δ¹⁸O</div><div class="val mono" id="tempO">—</div><div class="sub">from eq. 9</div></div>
+          <div class="tile"><div class="lab">Predicted annual δ²H</div><div class="val mono" id="tempH">—</div><div class="sub">from eq. 11</div></div>
+        </div>
+        <div class="callout" id="tempMsg"></div>
+        <p class="small">Observed slope ≈ 0.70‰/°C; a simple Rayleigh process starting at 20 °C predicts 0.66–0.67‰/°C (eq. 8). "As a simplified model the Rayleigh condensation is, apparently, sufficient for the interpretation of most observations" — but note the continental effect: for t<sub>a</sub> above about −5 °C, inland stations fall below the line.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 7. METEORIC WATER LINES ================= -->
+<section id="s-mwl">
+  <div class="sec-label">7 · The diagram</div>
+  <h2>The δ²H–δ¹⁸O plane and the meteoric water lines</h2>
+  <p class="lede">Plot δ²H against δ¹⁸O and the world's precipitation collapses onto a line. Craig (1961) drew it from about 400 samples of rivers, lakes, rain and snow from many parts of the world: δ²H = 8 δ¹⁸O + 10, for waters "which have not undergone excessive evaporation". Dansgaard's Northern Hemisphere continental stations gave 8.04 δ¹⁸O + 9.5 (unweighted) and 8.1 δ¹⁸O + 11 (weighted means); a modern compilation of 68,382 precipitation samples gives 7.93 δ¹⁸O + 8.99 (Jasechko, 2019). The slope is Rayleigh condensation; the intercept is something else.</p>
+  <div class="eq"><span class="eqnum">Craig 1961 · Dansgaard 1964</span>GMWL: δ²H = 8 δ¹⁸O + 10 &nbsp;&nbsp;&nbsp;&nbsp; deuterium excess: d = δ²H − 8 δ¹⁸O</div>
+
+  <div class="card">
+    <h3>Walk a parcel of water around the diagram</h3>
+    <p class="small">Follow the steps. Each one applies a process from Sections 4–5 to the water and moves it in the diagram; the deuterium excess <i>d</i> tells you which kind of process it was. Hover anywhere on the plot to read δ and <i>d</i>; click to drop a sample marker.</p>
+    <div class="steps" id="walkSteps" role="group" aria-label="Process steps"></div>
+    <div class="sim-wrap">
+      <div class="chart-card" style="margin:0">
+        <svg id="walkPlot" width="480" height="420" viewBox="0 0 480 420" role="img" aria-label="delta-2H versus delta-18O diagram with the meteoric water line and process trajectories"></svg>
+      </div>
+      <div>
+        <div class="readouts" style="grid-template-columns:repeat(3,1fr)">
+          <div class="tile"><div class="lab">δ¹⁸O</div><div class="val mono" id="walkO">0.0‰</div></div>
+          <div class="tile"><div class="lab">δ²H</div><div class="val mono" id="walkH">0‰</div></div>
+          <div class="tile"><div class="lab">d-excess</div><div class="val mono" id="walkD">0‰</div></div>
+        </div>
+        <div class="callout" id="walkMsg"></div>
+        <div class="chiprow" style="margin-top:10px" id="lineToggles" role="group" aria-label="Reference lines"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="duo">
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--s1)"></span>What d-excess records</h3>
+      <ul>
+        <li><b>Equilibrium processes do not change d.</b> Condense, re-condense, cool further: the point slides along a slope-8 line and keeps its d (Dansgaard, §3.1).</li>
+        <li><b>Kinetic evaporation from the ocean raises the vapour's d</b>, the more so the drier and windier the air. Dansgaard called it a "rate of evaporation index" of the source region: Northern Hemisphere continental rain averages d ≈ +9.4‰; Africa and the Near East +14.8, South America +12.8, Australia +14.1 — vapour formed "farther from equilibrium" (Table 9).</li>
+        <li><b>Kinetic evaporation from a limited water body lowers d</b> of what remains: lakes, soil water, falling drops in dry air. Only one of more than a hundred stations had negative d: Horlick Mountains, Antarctica (−2.8‰).</li>
+      </ul>
+    </div>
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--s2)"></span>Slopes you will meet</h3>
+      <ul>
+        <li><b>≈ 8:</b> equilibrium condensation (and equilibrium evaporation: Dansgaard's s<sub>E</sub> ≈ 8–9). Most of Dansgaard's stations: 8 ± 1.</li>
+        <li><b>≈ 4–5 through SMOW:</b> first-stage rain at tropical islands, δ²H = 4.6 δ¹⁸O + 0.1 (eq. 15) — condensate from vapour with varying kinetic surplus.</li>
+        <li><b>≈ 2–6, off the line:</b> evaporation from open water or soil (Craig's closed basins ≈ 5; Lake Victoria and the Nile ≈ 5; Jasechko's compilation ~3–6, soils ~2–5, humid open water ~5–8).</li>
+        <li><b>&gt; 8:</b> rare — Entebbe and Addis Ababa, where light rains exchange with rapidly evaporated fresh water (Fig. 20).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout warn"><b>A local line is a measurement, not a constant.</b> A LMWL is a regression of <i>local</i> monthly precipitation; its slope and intercept depend on the years sampled, the weighting, and the season (Kendall et al., 2014, on when an intercept can be called d-excess; Jasechko, 2019, on LMWL methods). Evaristo et al. (2015) compute every offset against a site's own LMWL for exactly this reason — which makes the quality of that line part of the evidence.</div>
+</section>
+
+<!-- ================= 8. TWO WATER WORLDS ================= -->
+<section id="s-tww">
+  <div class="sec-label">8 · The fundamentals at work</div>
+  <h2>Below the line: a global test of "two water worlds"</h2>
+  <p class="lede">Evaristo, Jasechko &amp; McDonnell (2015) used nothing more than Sections 4–7. Precipitation, stream water and groundwater at a site plot along the local meteoric water line; water that has evaporated plots below it. So if the water that plants transpire has a different evaporation history from the water that becomes groundwater and streamflow, the two should separate in the diagram. They compiled dual-isotope data from 47 sites in five biomes — plant xylem water (n = 1,460), soil water (1,830), stream water (336), groundwater (2,749) and precipitation (488) — and measured each water's distance from its LMWL:</p>
+  <div class="eq"><span class="eqnum">Evaristo et al. 2015, eq. 1 (after Landwehr &amp; Coplen, 2006)</span>Precipitation offset = [δ²H − a·δ¹⁸O − b] / S</div>
+  <p>with a and b the slope and intercept of the site's LMWL and S the combined analytical uncertainty (≈1‰). Local precipitation has an offset of zero by definition; evaporation drives it negative.</p>
+
+  <div class="card">
+    <h3>Build a site and read the offsets</h3>
+    <p class="small">An idealized site: groundwater and stream water sit on the LMWL; soil water has evaporated along a shallow line; plant xylem water lies on the soil's evaporation line, bounded by soil water — as the compilation found at site level (Extended Data Fig. 4). Adjust how much the soil evaporated, how shallow its evaporation slope is, and whether groundwater recharged from different rain than the plants used.</p>
+    <div class="preset-row" id="twwPresets" role="group" aria-label="Presets"></div>
+    <div class="slider-row"><label for="twwEvap">Soil evaporation (Δδ¹⁸O)</label><input type="range" id="twwEvap" min="0" max="6" value="2.5" step="0.1"><output id="twwEvapOut">+2.5‰</output></div>
+    <div class="slider-row"><label for="twwSlope">Evaporation-line slope</label><input type="range" id="twwSlope" min="2" max="6" value="3.5" step="0.1"><output id="twwSlopeOut">3.5</output></div>
+    <div class="slider-row"><label for="twwGW">Groundwater source shift</label><input type="range" id="twwGW" min="-4" max="4" value="0" step="0.1"><output id="twwGWOut">0.0‰ δ¹⁸O</output></div>
+    <div class="slider-row"><label for="twwA">LMWL slope a</label><input type="range" id="twwA" min="7" max="8.5" value="8" step="0.1"><output id="twwAOut">8.0</output></div>
+    <div class="sim-wrap">
+      <div class="chart-card" style="margin:0">
+        <svg id="twwPlot" width="480" height="400" viewBox="0 0 480 400" role="img" aria-label="Site diagram of groundwater, stream, soil and xylem water relative to the local meteoric water line"></svg>
+        <div class="legend">
+          <span class="key"><span class="swatch" style="background:var(--s1)"></span>groundwater</span>
+          <span class="key"><span class="swatch" style="background:var(--s3)"></span>stream</span>
+          <span class="key"><span class="swatch" style="background:var(--muted)"></span>soil water</span>
+          <span class="key"><span class="swatch" style="background:var(--s4)"></span>plant xylem</span>
+          <span class="key"><span class="linekey" style="border-color:var(--s2); border-top-style:dashed"></span>evaporation line</span>
+        </div>
+      </div>
+      <div>
+        <div class="readouts two">
+          <div class="tile"><div class="lab">Groundwater offset</div><div class="val mono" id="twwOffGW">—</div><div class="sub">paper, 47-site median: −1.8 (IQR 3.2)</div></div>
+          <div class="tile"><div class="lab">Stream offset</div><div class="val mono" id="twwOffSt">—</div><div class="sub">paper: 0.22 (3.7)</div></div>
+          <div class="tile"><div class="lab">Soil water offset</div><div class="val mono" id="twwOffSo">—</div><div class="sub">paper: −6.2 (4.4)</div></div>
+          <div class="tile"><div class="lab">Plant xylem offset</div><div class="val mono" id="twwOffXy">—</div><div class="sub">paper: −5.6 (4.7)</div></div>
+        </div>
+        <div class="readouts two">
+          <div class="tile"><div class="lab">Xylem "δ source" on the LMWL</div><div class="val mono" id="twwSrc">—</div><div class="sub">evaporation line × LMWL (eqs. 2–3)</div></div>
+          <div class="tile"><div class="lab">Groundwater δ²H minus xylem source δ²H</div><div class="val mono" id="twwGap">—</div><div class="sub">paper medians: −52 vs −82‰ at 37 of 46 sites</div></div>
+        </div>
+        <div class="callout plant" id="twwMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><h3 style="font-size:.95rem">Separation</h3><p class="small">At 40 of 47 sites, groundwater offsets differed statistically from both soil and xylem offsets; groundwater and stream water sat on average 5.4 and 4.8 offset units closer to the LMWL. The gap was largest in the tropics (7.7) and Mediterranean (5.4), smallest in temperate forests (1.6) and grasslands (2.4).</p></div>
+    <div class="card"><h3 style="font-size:.95rem">Segregation</h3><p class="small">Tracing xylem water back along its evaporation line to the LMWL gives the precipitation it came from. At 80% of sites (37 of 46) that source differed from groundwater (median δ²H −82‰ vs −52‰): plants and aquifers were fed by different rain, "segregated in space and time", before the subsurface separated the waters further.</p></div>
+    <div class="card"><h3 style="font-size:.95rem">Why it matters</h3><p class="small">Land-surface models and isotope-based transpiration/evapotranspiration estimates assume one well-mixed soil reservoir feeds plants, recharge and streams. If the compartments differ, downstream isotopes are biased toward precipitation and groundwater and "do not reflect the composition of water seen in soil" — Weeks 3, 11 and 13 return to the consequences.</p></div>
+  </div>
+</section>
+
+<!-- ================= 9. CONSERVATIVE VS REACTIVE ================= -->
+<section id="s-conservative">
+  <div class="sec-label">9 · The classification</div>
+  <h2>Conservative, reactive, or decaying?</h2>
+  <p class="lede">A <b>conservative</b> tracer changes only by mixing: it moves with the water and nothing produces or consumes it on the way. A <b>reactive</b> tracer is transformed en route — a nuisance for source questions, a gift for process questions. A <b>decaying</b> tracer is lost at a rate fixed by physics, which is a predictable kind of non-conservation. Every tracer carries an assumption; classify each one and see the assumption it carries.</p>
+  <div id="sorter"></div>
+  <div class="sorter-score" id="sorterScore" aria-live="polite"></div>
+  <div class="callout"><b>"Solute isotopes only trace solutes"</b> (Kendall et al., 2014). Water isotopes trace the water because they are the water. Isotopes of nitrogen, carbon or sulfur trace the nitrate, the carbon, the sulfate — and any reaction that makes or consumes those solutes rewrites the signal. Conservative behaviour is never a property of a tracer alone; it is a property of a tracer <i>in a setting</i>, and the setting is what you must defend.</div>
+</section>
+
+<!-- ================= 10. DECAY ================= -->
+<section id="s-decay">
+  <div class="sec-label">10 · The clock</div>
+  <h2>The decay law: a clock that ignores temperature, pressure and chemistry</h2>
+  <p class="lede">Radioactive decay is probabilistic: in any small interval dt each unstable nucleus has the same chance λ dt of decaying, regardless of its history or surroundings. Among N nuclei the loss rate is therefore proportional to N — a first-order rate law from which "essentially all the significant equations of radiogenic isotope geochemistry and geochronology can be derived" (White, 2015, eq. 1.12):</p>
+  <div class="eq"><span class="eqnum">White 2015 · Study Guide 01</span>dN/dt = −λN &nbsp;&nbsp;⟹&nbsp;&nbsp; N(t) = N₀ e<sup>−λt</sup> &nbsp;&nbsp;&nbsp;&nbsp; t<sub>½</sub> = ln 2 / λ &nbsp;&nbsp;&nbsp;&nbsp; t = t<sub>½</sub> · log₂(N₀/N)</div>
+
+  <div class="card">
+    <h3>Pick a clock and run it</h3>
+    <p class="small">Each radionuclide used this term has its own half-life and therefore its own useful window — very roughly a tenth of a half-life to five half-lives, depending on how precisely the remaining fraction can be measured and how well the starting amount N₀ is known. Choose a nuclide and drag the time slider.</p>
+    <div class="chiprow" id="nucChips" role="group" aria-label="Radionuclides"></div>
+    <div class="slider-row">
+      <label for="decayT">Elapsed time</label>
+      <input type="range" id="decayT" min="0" max="6" value="1" step="0.02">
+      <output id="decayTOut">—</output>
+    </div>
+    <div class="sim-wrap">
+      <div class="chart-card" style="margin:0">
+        <svg id="decayChart" width="480" height="280" viewBox="0 0 480 280" role="img" aria-label="Fraction of a radionuclide remaining versus elapsed time"></svg>
+        <div class="sim-controls" style="margin:8px 0 0">
+          <button class="chip-btn" id="decayLog" type="button" aria-pressed="false">Logarithmic axis</button>
+        </div>
+      </div>
+      <div>
+        <div class="readouts two">
+          <div class="tile"><div class="lab">Half-life</div><div class="val mono" id="decayHalf">—</div><div class="sub" id="decayUse">—</div></div>
+          <div class="tile"><div class="lab">Half-lives elapsed</div><div class="val mono" id="decayNh">—</div><div class="sub" id="decayYears">—</div></div>
+          <div class="tile"><div class="lab">Fraction remaining N/N₀</div><div class="val mono" id="decayFrac">—</div><div class="sub">activity falls by the same factor</div></div>
+          <div class="tile"><div class="lab">Read backwards</div><div class="val mono" id="decayBack" style="font-size:1rem">—</div><div class="sub">the age implied by this fraction — if N₀ is known</div></div>
+        </div>
+        <div class="callout" id="decayMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="duo">
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--s1)"></span>What makes decay a clock</h3>
+      <ul>
+        <li><b>λ is a constant of the nuclide.</b> Temperature, pressure and chemistry do not touch it (electron capture shows a negligible pressure dependence — White, 2015). Fractionation, by contrast, depends on temperature and on how fast a process runs.</li>
+        <li><b>The remaining fraction is all you measure.</b> Turning it into a date needs N₀ — the input — and a transport model: the bomb-pulse lesson of Week 1, made quantitative in Weeks 3 and 5.</li>
+        <li><b>Mixtures break the arithmetic.</b> The mean of two ages is not the age of the mixture's mean activity. This is why "apparent age" is a distinct concept (Week 3).</li>
+      </ul>
+    </div>
+    <div class="card col">
+      <h3><span class="dot" style="background:var(--s2)"></span>Stable and radioactive, side by side</h3>
+      <ul>
+        <li><b>δ¹⁸O, δ²H:</b> stable; the signal is set at recharge and changes only by mixing (or phase change). No clock — but an origin, a pathway, a process.</li>
+        <li><b>³H:</b> the same water molecule, with a 12.32-year clock; tritium-helium (Week 5) recovers N₀ by counting the daughter.</li>
+        <li><b>¹⁴C, ³⁶Cl, ³⁹Ar, ⁸¹Kr, ³⁵S, ⁸⁵Kr:</b> clocks of different lengths, each carried by a different solute or gas with its own reactivity — why Section 9's classification and Section 10's clock have to be read together.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 11. THE PAPERS ================= -->
+<section id="s-papers">
+  <div class="sec-label">11 · Reading the three papers</div>
+  <h2>Three papers, three jobs</h2>
+  <p class="lede">Dansgaard (1964) built the physics; Craig (1961) drew the reference line; Evaristo et al. (2015) used both to test a hypothesis about where plants get their water. The guides below are maps, not substitutes: each says what the paper asks, where to find the load-bearing figures, which equations to recognize, and what a careful reader might press on. The notes and the critique are yours to write.</p>
+
+  <div class="paper">
+    <div class="ptag">Block 1 · Core reading</div>
+    <h3>Dansgaard, W. (1964). Stable isotopes in precipitation. <i>Tellus</i>, 16(4), 436–468.</h3>
+    <p class="cite">Thirty-three pages that go from the vapour pressure of HDO to the climate of Tokyo. Read chapters 1–2 slowly (the physics), skim the station-by-station detail of chapter 4 for the figures named below, and do not skip chapter 5 — it is two pages on hydrology. <a href="https://doi.org/10.1111/j.2153-3490.1964.tb00181.x" rel="noopener">doi:10.1111/j.2153-3490.1964.tb00181.x</a> (open access)</p>
+    <div class="acc" id="accDansgaard"></div>
+  </div>
+
+  <div class="paper">
+    <div class="ptag">Block 2 · Supplementary reading</div>
+    <h3>Craig, H. (1961). Isotopic variations in meteoric waters. <i>Science</i>, 133(3465), 1702–1703.</h3>
+    <p class="cite">Two pages and one figure, cited thousands of times. Read it with its companion note, Craig (1961b), which defined the SMOW standard the δ values are reported against. <a href="https://doi.org/10.1126/science.133.3465.1702" rel="noopener">doi:10.1126/science.133.3465.1702</a></p>
+    <div class="acc" id="accCraig"></div>
+  </div>
+
+  <div class="paper">
+    <div class="ptag">Block 3 · Supplementary reading</div>
+    <h3>Evaristo, J., Jasechko, S., &amp; McDonnell, J. J. (2015). Global separation of plant transpiration from groundwater and streamflow. <i>Nature</i>, 525, 91–94.</h3>
+    <p class="cite">A four-page Letter with a long Methods section and six Extended Data figures and three tables; the argument is in Figures 1–2 and equations 1–3, and the vulnerabilities are discussed in Methods. <a href="https://doi.org/10.1038/nature14983" rel="noopener">doi:10.1038/nature14983</a></p>
+    <div class="acc" id="accEvaristo"></div>
+  </div>
+
+  <div class="callout">Cross-paper synthesis, in one line: <b>Dansgaard explains why the line exists, Craig gives the line, Evaristo reads distance from the line as evidence.</b> The question that carries forward is whether "distance from the line" can be translated into a hydrological claim without the transport and sampling links of Week 1's evidence chain — which is precisely what the Discussant should test.</div>
+</section>
+
+<!-- ================= 12. PRACTICE ================= -->
+<section id="s-practice">
+  <div class="sec-label">12 · Practice</div>
+  <h2>Read four samples</h2>
+  <p class="lede">Each scenario gives you the kind of numbers a Week 2 reader should now be able to interpret. Pick the reading you would defend first, then compare with the debrief.</p>
+  <div id="scenarios"></div>
+  <div class="callout">Habit to keep: before announcing what an isotope value <i>means</i>, say what else would produce the same value. Evaporation and mixing with evaporated water can be indistinguishable on the diagram alone (Kendall et al., 2014); altitude and recharge season both lower δ¹⁸O; a low slope can be falling-drop evaporation or a low-humidity source.</div>
+</section>
+
+<!-- ================= 13. QUIZ ================= -->
+<section id="s-quiz">
+  <div class="sec-label">13 · Self-check</div>
+  <h2>Nine questions before Week 3</h2>
+  <p class="lede">Immediate feedback, no grade, no record. If you miss one, the linked section is the fix.</p>
+  <div id="quiz"></div>
+  <div class="quiz-score" id="quizScore" aria-live="polite"></div>
+</section>
+
+<!-- ================= 14. GLOSSARY ================= -->
+<section id="s-glossary">
+  <div class="sec-label">14 · Vocabulary</div>
+  <h2>Glossary</h2>
+  <p class="lede">The Week 2 working vocabulary, plus a few terms you will meet in Week 3. Search or browse.</p>
+  <input class="gloss-search" id="glossSearch" type="search" placeholder="Search terms… (e.g., Rayleigh, d-excess, half-life)" aria-label="Search glossary">
+  <div class="gloss-grid" id="glossGrid"></div>
+</section>
+
+<!-- ================= 15. NEXT ================= -->
+<section id="s-next">
+  <div class="sec-label">15 · Where to go next</div>
+  <h2>The Week 2 readings — and two optional companions</h2>
+  <p class="lede">Papers are not posted for this course: retrieving them from the citation and DOI — via UGA Libraries, GALILEO, or the publisher — is part of the training.</p>
+
+  <div class="card" style="padding-top:8px; padding-bottom:8px">
+    <div class="reading">
+      <span class="rtag">CORE</span>
+      <div><h4>Dansgaard, W. (1964). Stable isotopes in precipitation. <i>Tellus</i>, 16(4), 436–468.</h4>
+      <p>Fractionation factors, Rayleigh processes, the temperature and amount effects, the δ²H–δ¹⁸O relation, kinetic effects and d, and the first reading of the IAEA–WMO survey. <a href="https://doi.org/10.1111/j.2153-3490.1964.tb00181.x" rel="noopener">doi:10.1111/j.2153-3490.1964.tb00181.x</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">LINE</span>
+      <div><h4>Craig, H. (1961). Isotopic variations in meteoric waters. <i>Science</i>, 133(3465), 1702–1703.</h4>
+      <p>The global meteoric water line, δ²H = 8 δ¹⁸O + 10. Pair with Craig (1961b), <i>Science</i> 133(3467), 1833–1834, which defines SMOW. <a href="https://doi.org/10.1126/science.133.3465.1702" rel="noopener">doi:10.1126/science.133.3465.1702</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">TEST</span>
+      <div><h4>Evaristo, J., Jasechko, S., &amp; McDonnell, J. J. (2015). Global separation of plant transpiration from groundwater and streamflow. <i>Nature</i>, 525, 91–94.</h4>
+      <p>Stable isotopes as conservative tracers, and distance from the LMWL as a global diagnostic of ecohydrological separation. <a href="https://doi.org/10.1038/nature14983" rel="noopener">doi:10.1038/nature14983</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">OPTIONAL</span>
+      <div><h4>White, W. M. (2015). <i>Isotope Geochemistry</i>, Ch. 1 — Atoms and nuclei: their physics and origins. · Putman, A. L., et al. (2019). A global perspective on local meteoric water lines. <i>J. Hydrol.</i></h4>
+      <p>White grounds the decay law and the nuclides (pairs with Study Guide 01); Putman shows how much local lines vary and why. Not discussed in a block.</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Coming in Week 3 — Groundwater dating I: age concepts and radiometric methods</h3>
+    <p class="small">What "groundwater age" means; residence time as a distribution rather than a number; ¹⁴C, ³⁹Ar and ⁸¹Kr for old water. On the discussion table: Cook &amp; Herczeg (2000, Ch. 1), Bethke &amp; Johnson (2008), and the paired Evaristo et al. (2019, 2026) readings on age distributions in soil–plant systems. The decay law of Section 10 and the mixture lesson of Week 1 meet head-on.</p>
+    <p class="small" style="margin-bottom:0"><b>Carry-forward question:</b> for the tracer you are considering for your proposal, is it conservative, reactive, or decaying in <i>your</i> setting — and what observation would show you were wrong?</p>
+  </div>
+</section>
+
+<footer>
+  <p><b>WASR 8000 — Rates and Dates: Hydrological Methods and Applications</b> · Fall 2026 · Mondays 2:55–5:35 PM · Dr. Jaivime Evaristo · University of Georgia</p>
+  <p>This page accompanies the Week 2 meeting (Aug 24, 2026). Facts, equations and numbers are drawn from Dansgaard (1964), <i>Tellus</i> 16:436–468 (δ definition, Table 1 fractionation factors, eqs. 2, 5, 6, 9, 11, 14–17, Tables 2, 5, 9–12, Figs. 1, 3, 5, 6, 8–10, 15–23); Craig (1961), <i>Science</i> 133:1702–1703 and Craig (1961b), <i>Science</i> 133:1833–1834; Evaristo, Jasechko &amp; McDonnell (2015), <i>Nature</i> 525:91–94 (Table 1, Figs. 1–2, eqs. 1–4, Methods, Extended Data Figs. 1–6 and Tables 1–3); Kendall, Doctor &amp; Young (2014) on notation, Rayleigh fractionation and evaporation lines; Jasechko (2019), <i>Rev. Geophys.</i> 57:835–965 (global precipitation regression, d-excess ranges, elevation gradients); White (2015), <i>Isotope Geochemistry</i>, Ch. 1, and Study Guide 01 on the decay law; Horita &amp; Wesolowski (1994) for modern fractionation factors. The Rayleigh, process-walk and two-water-worlds demonstrations are reconstructions from those equations, not site data; the station explorer transcribes Dansgaard's Table 10.</p>
+  <p>The simulations run entirely in this page; nothing is recorded or submitted.</p>
+</footer>
+</main>
+
+<div class="viz-tip" id="vizTip" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const SVGNS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const n=document.createElementNS(SVGNS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);if(parent)parent.appendChild(n);return n;}
+function hel(tag,cls,parent,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;if(parent)parent.appendChild(n);return n;}
+function cssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const fmt=(x,d)=>{let s=(Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toFixed(d);if(s==="-0"||/^-0\.0*$/.test(s))s=s.replace("-","");return s.replace("-","−");};
+const pm=(x,d)=>(x>0?"+":"")+fmt(x,d)+"‰";
+const reduceMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* tooltip */
+const tip=$("#vizTip");
+function showTip(rows,x,y){tip.textContent="";rows.forEach(r=>{const d=hel("div",null,tip);if(r.key){const k=hel("span","tk",d);k.style.borderColor=r.key;}hel("span","tv",d,r.v+" ");hel("span",null,d,r.t);});tip.style.display="block";const w=tip.offsetWidth,h=tip.offsetHeight;let px=x+14,py=y-h-10;if(px+w>innerWidth-8)px=x-w-14;if(py<8)py=y+16;tip.style.left=px+"px";tip.style.top=py+"px";}
+function hideTip(){tip.style.display="none";}
+
+/* redraw registry for theme changes */
+const redraws=[];
+
+/* ============ theme ============ */
+const themeBtn=$("#themeBtn");
+let theme=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+function applyTheme(){document.documentElement.setAttribute("data-theme",theme);themeBtn.textContent=theme==="dark"?"◐ Light":"◐ Dark";redraws.forEach(f=>f());}
+themeBtn.addEventListener("click",()=>{theme=theme==="dark"?"light":"dark";applyTheme();});
+
+/* ============ nav active state ============ */
+const navLinks=$$(".navchips a");
+const secObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){navLinks.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+e.target.id));}});},{rootMargin:"-30% 0px -60% 0px"});
+$$("main section").forEach(s=>secObs.observe(s));
+
+/* ============ physics shared by several demos ============ */
+/* Dansgaard (1964) Table 1: liquid–vapour fractionation factors, extrapolated below 0 °C */
+const ALPHA_T=[-20,-10,0,20,40,60,80,100];
+const ALPHA_D=[1.146,1.123,1.106,1.079,1.060,1.046,1.037,1.029];
+const ALPHA_O=[1.0135,1.0123,1.0111,1.0091,1.0074,1.0058,1.0045,1.0033];
+function alphaAt(T,which){
+  const arr=which==="D"?ALPHA_D:ALPHA_O;T=clamp(T,ALPHA_T[0],ALPHA_T[ALPHA_T.length-1]);
+  for(let i=1;i<ALPHA_T.length;i++){if(T<=ALPHA_T[i]){const t=(T-ALPHA_T[i-1])/(ALPHA_T[i]-ALPHA_T[i-1]);return lerp(arr[i-1],arr[i],t);}}
+  return arr[arr.length-1];
+}
+/* saturation vapour pressure over water (Magnus), hPa; mixing ratio at 1000 hPa */
+const esat=T=>6.112*Math.exp(17.62*T/(243.12+T));
+const mixr=T=>{const e=esat(T);return 0.622*e/(1000-e);};
+/* Rayleigh condensate and vapour (Dansgaard eq. 6), with an optional non-SMOW initial vapour (delta as a fraction) */
+function rayleigh(t0,t,which,dv0){
+  const a0=alphaAt(t0,which),a=alphaAt(t,which),am=alphaAt((t+t0)/2,which);
+  if(dv0==null)dv0=1/a0-1;                 /* default: vapour in equilibrium with SMOW (Dansgaard eq. 2) */
+  const F=clamp(mixr(t)/mixr(t0),1e-9,1);
+  const pow=Math.pow(F,am-1);
+  const vap=(1+dv0)*pow-1;                 /* remaining vapour: R_v = R_v0 * F^(am-1), R_v0 = (1+dv0) R_std */
+  const con=a*(1+dv0)*pow-1;               /* new condensate: R_c = a * R_v  (eq. 6 when dv0 = 1/a0 - 1) */
+  return {F,vap,con};
+}
+
+/* ============ §1 poll ============ */
+const pollText={
+ A:{h:"The intuitive answer — and the one mass spectrometry retired in the 1930s.",b:"Chemically the molecules are the same compound, but not the same molecule. Isotopically heavy water molecules are real, they have measurably different physical properties, and their proportions differ between the tropics and the Arctic."},
+ B:{h:"Half right.",b:"Dissolved salts and gases do differ, and they are useful tracers of their own (solute tracers — Week 6 and beyond). But the water molecules themselves also differ, and that difference is what this week is about."},
+ C:{h:"Correct — and the key to everything that follows.",b:"Deuterium and oxygen-18 are built into a small fraction of water molecules, and that fraction shifts every time water evaporates or condenses. Measure the shift precisely and you can tell rain from snow, ocean vapour from re-evaporated lake water, and plant water from groundwater."}
+};
+$$(".poll-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  $$(".poll-btn").forEach(b=>{b.classList.toggle("picked",b===btn);b.setAttribute("aria-pressed",b===btn?"true":"false");});
+  const t=pollText[btn.dataset.pick];
+  $("#pollHeadline").textContent="You chose "+btn.dataset.pick+". "+t.h;
+  $("#pollBody").textContent=t.b;
+  $("#pollReveal").classList.add("open");
+}));
+
+/* ============ §2 molecules ============ */
+const mols=[
+ {f:"¹H₂¹⁶O",mass:"mass 18 · the light water",ppm:997680,note:"About 997,680 of every million water molecules (Dansgaard, 1964, §1.1). The most volatile member of the family: highest vapour pressure, fastest diffusion, first to leave a liquid and last to condense from a vapour. A water is \"light\" because it has relatively more of this."},
+ {f:"¹HD¹⁶O",mass:"mass 19 · one deuterium",ppm:320,note:"About 320 per million in Dansgaard's rounding; with the modern VSMOW ratio ²H/¹H = 155.76 × 10⁻⁶, roughly 311 molecules per million carry one deuterium. The molecule is 5.6% heavier than light water, and the atom that changed is twice as heavy as the one it replaced — the largest relative mass difference of any stable-isotope pair — which is why deuterium effects (~80‰) dwarf oxygen-18 effects (~9‰)."},
+ {f:"¹H₂¹⁷O",mass:"mass 19 · oxygen-17",ppm:380,note:"About 380 per million (¹⁷O/¹⁶O = 379.9 × 10⁻⁶). Its fractionation follows ¹⁸O almost exactly (about 0.53 of the ¹⁸O effect), so it is usually ignored — until Week 10, where tiny departures from that proportionality (the ¹⁷O-excess) become an emerging tracer of evaporation and humidity."},
+ {f:"¹H₂¹⁸O",mass:"mass 20 · oxygen-18",ppm:2000,note:"About 2,000 per million (VSMOW ¹⁸O/¹⁶O = 2005.2 × 10⁻⁶). Eleven per cent heavier than light water. The workhorse isotope: measured to ±0.1–0.2‰, the x-axis of every meteoric water line, and the quantity Dansgaard plotted against temperature."}
+];
+const molGrid=$("#molGrid"),molPanel=$("#molExplain");
+mols.forEach(m=>{
+  const b=hel("button","mol",molGrid);b.type="button";b.setAttribute("aria-pressed","false");
+  hel("div","formula",b,m.f);hel("div","mass",b,m.mass);
+  const bar=hel("div","abund",b);const i=hel("i",null,bar);i.style.width=(100*Math.log10(m.ppm)/6).toFixed(1)+"%";
+  hel("div","abund-lab",b,"≈ "+m.ppm.toLocaleString("en-US")+" per million (log scale)");
+  b.addEventListener("click",()=>{$$("#molGrid .mol").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));molPanel.textContent="";const h=hel("h4",null,molPanel,m.f+" — "+m.mass);h.style.margin="0 0 4px";hel("p","small",molPanel,m.note);});
+});
+
+/* ============ §3 delta counter ============ */
+const dmodes={
+ O:{std:2005.2,min:1880,max:2060,step:0.1,label:"¹⁸O atoms per million oxygen atoms",sys:"δ¹⁸O relative to VSMOW",rsub:"¹⁸O / ¹⁶O",unit:"¹⁸O",
+    presets:[["VSMOW (0‰)",0],["Tropical island rain (−1.6‰)",-1.6],["Islands 45–90° (−6.6‰)",-6.6],["South Greenland ice cap (≈ −30‰)",-30],["Horlick Mts, Antarctica (−41.9‰)",-41.94],["SLAP (−55.5‰)",-55.5],["Evaporated lake (+5‰, illustrative)",5]]},
+ H:{std:155.76,min:85,max:175,step:0.02,label:"²H atoms per million hydrogen atoms",sys:"δ²H relative to VSMOW",rsub:"²H / ¹H",unit:"²H",
+    presets:[["VSMOW (0‰)",0],["Tropical island rain (≈ −3‰)",-3],["Islands 45–90° (≈ −43‰)",-43],["South Greenland ice cap (≈ −230‰)",-230],["Horlick Mts, Antarctica (−338.3‰)",-338.3],["SLAP (−428‰)",-428],["Evaporated lake (+25‰, illustrative)",25]]}
+};
+let dmode="O";
+const deltaN=$("#deltaN");
+function setDmode(m){
+  dmode=m;const c=dmodes[m];
+  $("#dmodeO").setAttribute("aria-pressed",m==="O"?"true":"false");$("#dmodeH").setAttribute("aria-pressed",m==="H"?"true":"false");
+  deltaN.min=c.min;deltaN.max=c.max;deltaN.step=c.step;deltaN.value=c.std;
+  $("#deltaNLabel").textContent=c.label;$("#deltaValSub").textContent=c.sys;$("#deltaRSub").textContent=c.rsub;
+  const row=$("#deltaPresets");row.textContent="";
+  c.presets.forEach(p=>{const b=hel("button","chip-btn",row,p[0]);b.type="button";b.addEventListener("click",()=>{deltaN.value=c.std*(1+p[1]/1000);deltaUpdate();});});
+  deltaUpdate();
+}
+function deltaUpdate(){
+  const c=dmodes[dmode];const n=+deltaN.value;const d=(n/c.std-1)*1000;
+  $("#deltaNOut").textContent=fmt(n,dmode==="O"?1:2);
+  $("#deltaVal").textContent=pm(d,1);
+  $("#deltaR").textContent=(n*1e-6).toFixed(7);
+  const w=$("#deltaWords");
+  if(Math.abs(d)<0.3)w.textContent="identical to the ocean";
+  else w.textContent=(Math.abs(d/10)).toFixed(2)+"% "+(d<0?"fewer":"more")+" "+c.unit+" than the ocean";
+  /* bar */
+  const svg=$("#deltaBar");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),mut=cssVar("--muted"),ink2=cssVar("--ink-2"),base=cssVar("--baseline"),grid=cssVar("--grid");
+  const L=170,R=870,W=R-L;const xOf=v=>L+W*(v-c.min)/(c.max-c.min);
+  [["reference (VSMOW)",c.std,s1,40],["your sample",n,d<0?s2:s1,90]].forEach(([lab,v,col,y])=>{
+    el("text",{x:L-10,y:y+5,"text-anchor":"end","font-size":"12",fill:ink2},svg).textContent=lab;
+    el("rect",{x:L,y:y-10,width:Math.max(2,xOf(v)-L),height:20,rx:4,fill:col,"fill-opacity":lab.startsWith("ref")?"0.55":"1"},svg);
+    el("text",{x:xOf(v)+8,y:y+5,"font-size":"12","font-weight":"600",fill:ink2},svg).textContent=fmt(v,1);
+  });
+  el("line",{x1:xOf(c.std),y1:22,x2:xOf(c.std),y2:110,stroke:base,"stroke-dasharray":"3 3"},svg);
+  el("line",{x1:L,y1:118,x2:R,y2:118,stroke:grid},svg);
+  const ticks=dmode==="O"?[1900,1950,2000,2050]:[100,125,150,175];
+  ticks.forEach(t=>{if(t<c.min||t>c.max)return;el("line",{x1:xOf(t),y1:118,x2:xOf(t),y2:123,stroke:base},svg);el("text",{x:xOf(t),y:136,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=t.toLocaleString("en-US");});
+  el("text",{x:R,y:148,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent="heavy atoms per million — axis zoomed; from zero, both bars would look identical";
+  /* message */
+  const m=$("#deltaMsg");
+  if(Math.abs(d)<0.3)m.innerHTML="<b>Within measurement precision of the standard.</b> A laboratory resolves about 0.1–0.2‰ in δ¹⁸O and about 1‰ in δ²H — a couple of heavy atoms in ten million. Everything in this course rides on differences that small being reproducible.";
+  else if(d>0)m.innerHTML="<b>Enriched.</b> Waters heavier than the ocean are rare and almost always tell a story of evaporation: lakes in closed basins, soil water in summer, rain that partly evaporated while falling (Dansgaard, §2.2). Positive δ's \"occur only as a result of special processes\".";
+  else if(d>-12)m.innerHTML="<b>A typical rain or river.</b> Most precipitation outside the polar regions sits between 0 and about −12‰ in δ¹⁸O (−100‰ in δ²H). Where in that range a sample falls depends on temperature, latitude, altitude, distance inland and rainfall amount — Section 6.";
+  else if(d>-45)m.innerHTML="<b>Cold-region water.</b> Values this light come from high latitudes, high altitudes, or winter storms — or from groundwater recharged under a colder climate than today's (a Week 3 theme: fossil groundwater archives ice-age precipitation).";
+  else m.innerHTML="<b>Polar snow.</b> The Antarctic interior reaches −50‰ in δ¹⁸O; Dansgaard's single sample from the Horlick Mountains (85°S) measured −41.94‰ and −338.3‰. SLAP, the scale's second anchor, is Antarctic precipitation for exactly this reason.";
+}
+$("#dmodeO").addEventListener("click",()=>setDmode("O"));$("#dmodeH").addEventListener("click",()=>setDmode("H"));
+deltaN.addEventListener("input",deltaUpdate);
+redraws.push(deltaUpdate);
+setDmode("O");
+
+/* ============ §4 fractionation explorer ============ */
+const fracT=$("#fracT");
+function fracUpdate(){
+  const T=+fracT.value;const aD=alphaAt(T,"D"),aO=alphaAt(T,"O");
+  const vD=(1/aD-1)*1000,vO=(1/aO-1)*1000;
+  $("#fracTOut").textContent=T+" °C";
+  $("#fracAD").textContent=aD.toFixed(3);$("#fracED").textContent=fmt((aD-1)*1000,0);
+  $("#fracAO").textContent=aO.toFixed(4);$("#fracEO").textContent=fmt((aO-1)*1000,1);
+  $("#fracVap").textContent="δ²H "+pm(vD,0)+" · δ¹⁸O "+pm(vO,1);
+  $("#fracRatio").textContent=(vD/vO).toFixed(1);
+  /* diagram */
+  const svg=$("#fracDiagram");svg.textContent="";
+  const s1=cssVar("--s1"),s3=cssVar("--s3"),s2=cssVar("--s2"),mut=cssVar("--muted"),ink2=cssVar("--ink-2"),surf=cssVar("--surface"),hair=cssVar("--hairline");
+  /* vapour box */
+  el("rect",{x:40,y:30,width:300,height:95,rx:10,fill:s3,"fill-opacity":"0.12",stroke:s3},svg);
+  el("text",{x:190,y:56,"text-anchor":"middle","font-size":"12","font-weight":"700",fill:ink2},svg).textContent="vapour in equilibrium";
+  el("text",{x:190,y:80,"text-anchor":"middle","font-size":"15","font-weight":"650",fill:ink2},svg).textContent="δ²H "+pm(vD,0)+"   δ¹⁸O "+pm(vO,1);
+  el("text",{x:190,y:104,"text-anchor":"middle","font-size":"11",fill:mut},svg).textContent="poorer in heavy isotopes by 1/α";
+  /* liquid box */
+  el("rect",{x:40,y:185,width:300,height:85,rx:10,fill:s1,"fill-opacity":"0.14",stroke:s1},svg);
+  el("text",{x:190,y:212,"text-anchor":"middle","font-size":"12","font-weight":"700",fill:ink2},svg).textContent="liquid water (the ocean)";
+  el("text",{x:190,y:236,"text-anchor":"middle","font-size":"15","font-weight":"650",fill:ink2},svg).textContent="δ²H 0‰   δ¹⁸O 0‰  (SMOW)";
+  el("text",{x:190,y:258,"text-anchor":"middle","font-size":"11",fill:mut},svg).textContent="heavy molecules prefer to stay";
+  /* arrows */
+  el("path",{d:"M 120 182 L 120 132",stroke:ink2,"stroke-width":2,fill:"none","marker-end":"none"},svg);
+  el("path",{d:"M 114 140 L 120 130 L 126 140",stroke:ink2,"stroke-width":2,fill:"none"},svg);
+  el("text",{x:128,y:160,"font-size":"10",fill:mut},svg).textContent="evaporation";
+  el("path",{d:"M 260 130 L 260 180",stroke:ink2,"stroke-width":2,fill:"none"},svg);
+  el("path",{d:"M 254 172 L 260 182 L 266 172",stroke:ink2,"stroke-width":2,fill:"none"},svg);
+  el("text",{x:268,y:160,"font-size":"10",fill:mut},svg).textContent="condensation";
+  /* thermometer */
+  const ty0=40,ty1=260;const frac=(T+20)/60;
+  el("rect",{x:385,y:ty0,width:14,height:ty1-ty0,rx:7,fill:surf,stroke:hair},svg);
+  el("rect",{x:388,y:ty1-(ty1-ty0)*frac,width:8,height:(ty1-ty0)*frac,rx:4,fill:s2},svg);
+  el("circle",{cx:392,cy:ty1+10,r:12,fill:s2},svg);
+  el("text",{x:392,y:24,"text-anchor":"middle","font-size":"12","font-weight":"700",fill:ink2},svg).textContent=T+" °C";
+  [-20,0,20,40].forEach(v=>{const y=ty1-(ty1-ty0)*(v+20)/60;el("line",{x1:399,y1:y,x2:405,y2:y,stroke:mut},svg);el("text",{x:408,y:y+4,"font-size":"9",fill:mut},svg).textContent=v;});
+  const msg=$("#fracMsg");
+  if(T<=0)msg.innerHTML="<b>Below 0 °C the factors are extrapolated.</b> Dansgaard could not measure α for supercooled water or ice and warned that the values there are \"difficult to measure but very important for condensation processes in nature\". Vapour–ice equilibrium fractionates more strongly still (his Table 3 gives those values in parentheses). Snow is the most fractionated precipitation on Earth.";
+  else if(T<15)msg.innerHTML="<b>Cool condensation, large fractionation.</b> Every degree of cooling adds to the separation between vapour and condensate, which is why cold-season and high-latitude precipitation is so depleted. Compare the two ε values: the deuterium effect is roughly "+(vD/vO).toFixed(1)+" times the ¹⁸O effect at this temperature.";
+  else if(T<=25)msg.innerHTML="<b>Dansgaard's \"normal temperature\" case.</b> Vapour over a 20 °C ocean is about 73‰ lighter in deuterium and 9‰ in ¹⁸O than the water — and the first drop condensed from it, enriched by the same factor, is the ocean again (eq. 5). The starting point of every C-curve in Section 5.";
+  else msg.innerHTML="<b>Warm ocean, weaker fractionation.</b> At high temperature α approaches 1 — at 100 °C the deuterium effect is only 29‰. In the tropics the first condensate can even be <i>enriched</i> relative to SMOW when the vapour was made over a warmer sea than the cloud that condenses it (Dansgaard, p. 454): the ratio α₀/α<sub>e</sub> exceeds one.";
+}
+fracT.addEventListener("input",fracUpdate);redraws.push(fracUpdate);fracUpdate();
+
+/* ============ §5 Rayleigh ============ */
+const ray={t0:20,showD:false};
+const rayT=$("#rayT");
+function rayPath(t0){const out=[];for(let t=t0;t>=-25-1e-9;t-=0.5){const o=rayleigh(t0,t,"O"),d=rayleigh(t0,t,"D");out.push({t,F:o.F,cO:o.con*1000,vO:o.vap*1000,cD:d.con*1000,vD:d.vap*1000});}return out;}
+function rayUpdate(){
+  const t0=ray.t0;rayT.max=t0;const t=clamp(+rayT.value,-25,t0);rayT.value=t;
+  $("#rayTOut").textContent=t+" °C";
+  const path=rayPath(t0);const cur=path.find(p=>Math.abs(p.t-t)<1e-6)||path[0];
+  $("#rayF").textContent=fmt(cur.F*100,cur.F<0.1?1:0)+"%";
+  $("#rayC").textContent=pm(cur.cO,1)+" · "+pm(cur.cD,0);
+  $("#rayV").textContent=pm(cur.vO,1)+" · "+pm(cur.vD,0);
+  /* local temperature effect of new condensate, per degree of cooling */
+  const tb=clamp(t-1,-25,t0),ta=clamp(t+1,-25,t0);
+  const cb=rayleigh(t0,tb,"O").con*1000,ca=rayleigh(t0,ta,"O").con*1000;
+  const te=(ta-tb)>0?(ca-cb)/(ta-tb):0;
+  $("#raySlope").textContent=(t>=t0?"—":fmt(te,2)+" ‰/°C");
+  const s1=cssVar("--s1"),s3=cssVar("--s3"),grid=cssVar("--grid"),mut=cssVar("--muted"),base=cssVar("--baseline"),ink2=cssVar("--ink-2"),surf=cssVar("--surface"),s2=cssVar("--s2");
+  /* chart 1: composition vs temperature */
+  {
+    const svg=$("#rayChart");svg.textContent="";
+    const L=48,R=ray.showD?430:460,T=16,B=262,W=R-L,H=B-T;
+    const xOf=v=>L+W*(t0-v)/(t0+25);
+    const yO=v=>T+H*(5-v)/50;   /* δ18O from +5 to −45 */
+    const yD=v=>T+H*(40-v)/400; /* δ2H from +40 to −360 */
+    for(let v=0;v>=-45;v-=10){el("line",{x1:L,y1:yO(v),x2:R,y2:yO(v),stroke:v===0?base:grid},svg);el("text",{x:L-6,y:yO(v)+4,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent=v;}
+    if(ray.showD){for(let v=0;v>=-360;v-=80){el("text",{x:R+6,y:yD(v)+4,"font-size":"10",fill:s2},svg).textContent=v;}el("text",{x:R+6,y:T-4,"font-size":"10",fill:s2},svg).textContent="δ²H ‰";}
+    for(let v=t0;v>=-25;v-=5){el("line",{x1:xOf(v),y1:B,x2:xOf(v),y2:B+5,stroke:base},svg);if((v-t0)%10===0)el("text",{x:xOf(v),y:B+18,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=v+"°";}
+    el("text",{x:L,y:T-4,"font-size":"10",fill:mut},svg).textContent="δ¹⁸O ‰";
+    el("text",{x:R,y:B+32,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent="condensation temperature — cooling →";
+    const seg=(key,yf,col,dash)=>{let d="",pen=false;path.forEach(p=>{const y=yf(p[key]);if(y>B+2||y<T-2){pen=false;return;}d+=(pen?"L":"M")+" "+xOf(p.t)+" "+y+" ";pen=true;});el("path",{d,fill:"none",stroke:col,"stroke-width":2,"stroke-dasharray":dash||"none","stroke-linejoin":"round"},svg);};
+    seg("cO",yO,s1);seg("vO",yO,s3);
+    if(ray.showD){seg("cD",yD,s2,"5 4");seg("vD",yD,s2,"2 3");}
+    el("text",{x:xOf(t0-2),y:yO(path[4].cO)-8,"font-size":"10","font-weight":"600",fill:s1},svg).textContent="new condensate";
+    el("text",{x:xOf(t0-2),y:yO(path[4].vO)+18,"font-size":"10","font-weight":"600",fill:s3},svg).textContent="remaining vapour";
+    el("line",{x1:xOf(t),y1:T,x2:xOf(t),y2:B,stroke:mut,"stroke-dasharray":"4 3"},svg);
+    el("circle",{cx:xOf(t),cy:yO(cur.cO),r:5,fill:s1,stroke:surf,"stroke-width":2},svg);
+    if(yO(cur.vO)<B)el("circle",{cx:xOf(t),cy:yO(cur.vO),r:5,fill:s3,stroke:surf,"stroke-width":2},svg);
+    const hit=el("rect",{x:L,y:T,width:W,height:H,fill:"transparent",style:"cursor:crosshair"},svg);
+    hit.addEventListener("pointermove",e=>{const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(480/r.width);const tv=clamp(t0-(px-L)/W*(t0+25),-25,t0);const p=path.reduce((a,b)=>Math.abs(b.t-tv)<Math.abs(a.t-tv)?b:a);showTip([{v:p.t+" °C",t:"condensation temperature"},{key:s1,v:pm(p.cO,1)+" / "+pm(p.cD,0),t:"new condensate"},{key:s3,v:pm(p.vO,1)+" / "+pm(p.vD,0),t:"vapour"},{v:fmt(p.F*100,1)+"%",t:"vapour remaining"}],e.clientX,e.clientY);});
+    hit.addEventListener("pointerleave",hideTip);
+    hit.addEventListener("pointerdown",e=>{const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(480/r.width);const tv=Math.round(clamp(t0-(px-L)/W*(t0+25),-25,t0)*2)/2;rayT.value=tv;rayUpdate();});
+  }
+  /* chart 2: δD vs δ18O */
+  {
+    const svg=$("#rayXY");svg.textContent="";
+    const L=52,R=464,T=16,B=262,W=R-L,H=B-T;
+    const X0=-45,X1=5,Y0=-360,Y1=40;
+    const xOf=v=>L+W*(v-X0)/(X1-X0),yOf=v=>T+H*(Y1-v)/(Y1-Y0);
+    for(let v=-40;v<=0;v+=10){el("line",{x1:xOf(v),y1:T,x2:xOf(v),y2:B,stroke:v===0?base:grid},svg);el("text",{x:xOf(v),y:B+16,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=v;}
+    for(let v=-320;v<=0;v+=80){el("line",{x1:L,y1:yOf(v),x2:R,y2:yOf(v),stroke:v===0?base:grid},svg);el("text",{x:L-6,y:yOf(v)+4,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent=v;}
+    el("text",{x:R,y:B+30,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent="δ¹⁸O ‰";el("text",{x:L,y:T-4,"font-size":"10",fill:mut},svg).textContent="δ²H ‰";
+    /* L line */
+    el("line",{x1:xOf(X0),y1:yOf(8*X0+10),x2:xOf(3),y2:yOf(8*3+10),stroke:base,"stroke-width":1.5},svg);
+    el("text",{x:xOf(-20)+10,y:yOf(8*-20+10)+16,"font-size":"10",fill:mut},svg).textContent="δ²H = 8 δ¹⁸O + 10";
+    let d="";path.forEach(p=>{d+=(d?"L":"M")+" "+xOf(p.cO)+" "+yOf(p.cD)+" ";});
+    el("path",{d,fill:"none",stroke:s1,"stroke-width":2.2,"stroke-linejoin":"round"},svg);
+    let dv="";path.forEach(p=>{if(p.vO<X0||p.vD<Y0)return;dv+=(dv?"L":"M")+" "+xOf(p.vO)+" "+yOf(p.vD)+" ";});
+    el("path",{d:dv,fill:"none",stroke:s3,"stroke-width":1.6,"stroke-dasharray":"4 3"},svg);
+    path.forEach(p=>{if(Math.round(p.t*2)%20===0&&p.t<t0){el("circle",{cx:xOf(p.cO),cy:yOf(p.cD),r:2.6,fill:s1},svg);el("text",{x:xOf(p.cO)+6,y:yOf(p.cD)+4,"font-size":"9",fill:mut},svg).textContent=p.t+"°";}});
+    el("circle",{cx:xOf(0),cy:yOf(0),r:4,fill:base,stroke:surf,"stroke-width":2},svg);el("text",{x:xOf(0)+6,y:yOf(0)-6,"font-size":"10",fill:mut},svg).textContent="SMOW";
+    el("circle",{cx:xOf(cur.cO),cy:yOf(cur.cD),r:5.5,fill:s1,stroke:surf,"stroke-width":2},svg);
+    /* local slope */
+    const i=path.indexOf(cur);const p1=path[Math.max(0,i-2)],p2=path[Math.min(path.length-1,i+2)];
+    const sc=(p2.cO!==p1.cO)?(p2.cD-p1.cD)/(p2.cO-p1.cO):NaN;
+    el("text",{x:xOf(cur.cO)+10,y:yOf(cur.cD)+14,"font-size":"11","font-weight":"600",fill:ink2},svg).textContent=(isFinite(sc)?"local slope "+sc.toFixed(1):"");
+    const hit=el("rect",{x:L,y:T,width:W,height:H,fill:"transparent"},svg);
+    hit.addEventListener("pointermove",e=>{const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(480/r.width),py=(e.clientY-r.top)*(300/r.height);const xo=X0+(px-L)/W*(X1-X0),yd=Y1-(py-T)/H*(Y1-Y0);showTip([{v:pm(xo,1),t:"δ¹⁸O"},{v:pm(yd,0),t:"δ²H"},{v:pm(yd-8*xo,0),t:"d-excess at cursor"}],e.clientX,e.clientY);});
+    hit.addEventListener("pointerleave",hideTip);
+  }
+  /* message */
+  const m=$("#rayMsg");const cooled=t0-t;
+  if(cooled<0.25)m.innerHTML="<b>Start.</b> Vapour in equilibrium with the ocean at "+t0+" °C is "+pm(path[0].vO,1)+" / "+pm(path[0].vD,0)+"; its first condensate is SMOW. Nothing lighter than the ocean has formed yet. Drag the temperature down.";
+  else if(t>-20)m.innerHTML="<b>"+cooled+" degrees of cooling, "+fmt((1-cur.F)*100,0)+"% of the vapour already rained out.</b> New condensate is now "+pm(cur.cO,1)+" in δ¹⁸O — lighter than SMOW by the amount the earlier rain carried away. The track in the right-hand chart runs parallel to the meteoric line: the local slope stays near 8 because both isotopes obey the same Rayleigh law.";
+  else m.innerHTML="<b>Deep cooling.</b> With only "+fmt(cur.F*100,1)+"% of the vapour left, condensate is "+pm(cur.cO,1)+" / "+pm(cur.cD,0)+" — polar-snow values. Below −20 °C Dansgaard stopped tabulating: α is extrapolated, and in nature vapour–ice equilibrium (stronger fractionation) and exchange (weaker) both intervene. The runaway toward −∞ as F<sub>v</sub> → 0 is the signature of Rayleigh removal.";
+  /* table */
+  const rtb=$("#rayTable");rtb.textContent="";const table=hel("table",null,rtb);const tr0=hel("tr",null,hel("thead",null,table));
+  ["t (°C)","F_v (%)","δ¹⁸O condensate","δ²H condensate"].forEach(h=>hel("th",null,tr0,h));
+  const tbody=hel("tbody",null,table);
+  for(let tt=t0;tt>=-25;tt-=5){const o=rayleigh(t0,tt,"O"),dd=rayleigh(t0,tt,"D");const tr=hel("tr",null,tbody);hel("td",null,tr,String(tt));hel("td",null,tr,fmt(o.F*100,1));hel("td",null,tr,fmt(o.con*1000,1));hel("td",null,tr,fmt(dd.con*1000,0));}
+}
+rayT.addEventListener("input",rayUpdate);
+$$("[data-t0]").forEach(b=>b.addEventListener("click",()=>{ray.t0=+b.dataset.t0;$$("[data-t0]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));rayT.value=Math.min(+rayT.value,ray.t0);rayUpdate();}));
+$("#rayShowD").addEventListener("click",e=>{ray.showD=!ray.showD;e.currentTarget.setAttribute("aria-pressed",ray.showD?"true":"false");rayUpdate();});
+redraws.push(rayUpdate);rayUpdate();
+
+/* ============ §6 station explorer (Dansgaard 1964, Table 10) ============ */
+const stations=[
+ {n:"Barbados",where:"13°N, tropical North Atlantic island",samples:22,max:2,min:-4,slope:8,slopeTxt:"8 ± 1.5",d:5,dTxt:"+5",temp:"none",amount:"−1.2‰ per 100 mm",group:"II — slope ≈ 8 over a wide δ range",note:"A trade-wind island with a modest monthly rainfall (under 100 mm) and a low surplus of deuterium: Atlantic vapour formed not far from equilibrium. The amount effect is visible all the same, and Barbados sits at the upper, heavy end of the tropical island line."},
+ {n:"Wake Island",where:"19°N, central Pacific",samples:12,max:0,min:-5,slope:8,slopeTxt:"8 ± 1",d:8,dTxt:"+8",temp:"none (Δt ≈ 2 °C)",amount:"−1.6‰ per 100 mm (band 2‰)",group:"II — slope ≈ 8",note:"Dansgaard's archetype of the amount effect (Fig. 21): δ and monthly rainfall vary in antiphase all year, while the air temperature barely changes. The heavy rain that dominates the weighted mean comes from vapour released by very fast evaporation, which is why weighted means at the western Pacific islands split off along their own line (Fig. 9)."},
+ {n:"Hilo, Hawaii",where:"20°N, Pacific island",samples:23,max:-1,min:-4,slope:null,slopeTxt:"no correlation",d:12,dTxt:"+12",temp:"none",amount:"none",group:"I — all samples close together",note:"No dry season, little seasonal temperature variation, rain uniformly distributed over the months: nothing to correlate, and no amount effect even though the island is wet (Fig. 15). 1962 brought only half the normal rain, which displaced Hawaii in the annual-mean plots."},
+ {n:"Bombay",where:"19°N, monsoon coast of India",samples:10,max:0,min:-3,slope:8,slopeTxt:"8 ± 1.5",d:5,dTxt:"+5",temp:"none",amount:"none",group:"II — slope ≈ 8",note:"The odd station of Fig. 10, with higher δ's than the rest of the Northern Hemisphere. In the rainy season the monsoon winds reach only 700–1000 m; the 550 mm per month of rain is released by convection above them, and the drops exchange with the monsoon vapour on the way down — so Bombay rain records the monsoon vapour rather than a Rayleigh stage."},
+ {n:"Binza (Léopoldville)",where:"4°S, Congo basin",samples:16,max:0,min:-9,slope:8,slopeTxt:"8 ± 1",d:14,dTxt:"+14",temp:"none",amount:"−2.2‰ per 100 mm (band 4‰)",group:"II — slope ≈ 8",note:"Where Dansgaard tested what the amount effect is really about (Fig. 22, Table 4): δ¹⁸O correlates with the monthly amount of rain (r = 0.82) but not at all with its intensity (r = 0.07). November 1961 rained three times as much as September at the same intensity and was 6.7‰ lighter: deep cooling by high lifting plus a humid column that spared the drops from evaporation."},
+ {n:"Entebbe",where:"0°, shore of Lake Victoria, Uganda",samples:12,max:0,min:-8,slope:10,slopeTxt:"10 ± 1",d:null,dTxt:"+11 to −28 (individual months)",temp:"none",amount:"−2.2‰ per 100 mm (band 3‰)",group:"VI — slope above 8",note:"One of only two stations with a slope steeper than 8 (Fig. 20). Dansgaard's tentative reading: light rains (high δ by the amount effect) exchange with rapidly evaporated fresh water (high d by the kinetic effect) more than heavy rains do. Lake Victoria itself evaporates off the line along a slope of about 5 (Fig. 14)."},
+ {n:"Kano",where:"12°N, Sahel, Nigeria",samples:11,max:10,min:-8,slope:5.2,slopeTxt:"5.2 ± 0.5 overall; 8 in the rainy season",d:null,dTxt:"+19 to −20 (individual months)",temp:"none",amount:"−2.2‰ per 100 mm (band 5‰)",group:"III — two slopes",note:"Two lines in one station (Fig. 17): the rainy-season months lie along slope 8, while the months at its beginning and end — sparse rain falling through dry air — lie along a low-slope line produced by evaporation from the falling drops. The +10‰ maximum is among the heaviest monthly rains in the survey."},
+ {n:"Bahrain",where:"26°N, Persian Gulf",samples:8,max:6,min:-2,slope:3,slopeTxt:"3 ± 1",d:null,dTxt:"+23 to −12 (individual months)",temp:"none",amount:"none",group:"IV — slope below 8",note:"A dry climate with sparse rain: in the text the amount effect sets the δ's and non-equilibrium evaporation from the falling drops flattens the slope to 3 (Fig. 18, with Mahé in the Seychelles) — although Table 10 marks no distinct amount effect for Bahrain, a small inconsistency worth noticing. Near-Eastern vapour also carries a higher d than Europe's — Table 9 gives +14.8‰ for Africa and the Near East against +9.4‰ for other Northern Hemisphere continental stations."},
+ {n:"Alice Springs",where:"24°S, central Australia",samples:10,max:5,min:-4,slope:5,slopeTxt:"5 ± 1 (excluding January, δ¹⁸O −8)",d:null,dTxt:"+18 to −10 (individual months)",temp:"none",amount:"present (?)",group:"IV — slope below 8",note:"Generally dry, with one wet January at −8‰ that falls off the station's own line. The amount effect accounts for the δ variation; evaporation from falling drops in dry air for the low slope. Australia's mean d of +14.1‰ (Table 9) points to maritime vapour formed far from equilibrium."},
+ {n:"Tokyo",where:"36°N, mid-latitude, Pacific coast",samples:22,max:-4,min:-12,slope:4.7,slopeTxt:"4.7 ± 1",d:null,dTxt:"+21 to 0; all winter months above +14",temp:"present",amount:"present (except winter)",group:"V — seasonal variation of d",note:"Dansgaard's example of a station with both effects (Figs. 19, 23). In winter the north-westerly winds from the continent collect moisture from the Sea of Japan in a fast evaporation, giving high d; the temperature effect dominates while the monthly mean is near 5 °C. The rest of the year, south-easterly monsoon-type rain brings the amount effect and lower d."},
+ {n:"Chicago",where:"42°N, continental interior, North America",samples:12,max:-2,min:-19,slope:7,slopeTxt:"7 ± 1 in winter; 5 ± 1 in summer",d:null,dTxt:"+22 to −15 (individual months)",temp:"0.35‰ per °C",amount:"present in summer",group:"III — two slopes",note:"A 17‰ seasonal range driven mainly by temperature (summer minus winter δ¹⁸O = +8.6‰, Table 12). The low summer slope is \"a pronounced summer phenomenon with intense evaporation under relatively dry and warm (hot) conditions\" — falling-drop evaporation again, this time at mid-latitude."},
+ {n:"Stuttgart",where:"49°N, central Europe",samples:23,max:-4,min:-16,slope:8,slopeTxt:"8 ± 1; 6.5 ± 1 in summer",d:4,dTxt:"+4",temp:"present",amount:"none",group:"III — two slopes",note:"Inland from Valentia and before Vienna in the sequence Dansgaard used to show the continental effect in Fig. 10: at a given mean temperature, δ decreases as an air mass loses moisture crossing Europe. Summer evaporation from falling drops lowers the slope; the low d reflects Atlantic vapour near equilibrium."},
+ {n:"Valentia",where:"52°N, oceanic west coast of Ireland",samples:12,max:-2,min:-7,slope:8,slopeTxt:"8 ± 1",d:7,dTxt:"+7",temp:"present",amount:"uncertain",group:"II — slope ≈ 8 (seasonal temperature variation)",note:"A small range, a clean slope of 8 and a modest d: maritime precipitation from Atlantic cyclones with little chance to evaporate on the way down. The start of the Valentia → Stuttgart → Vienna gradient in Fig. 10 and one of the 17 North Atlantic continental stations behind the temperature-effect line of Fig. 3."},
+ {n:"Edmonton",where:"54°N, continental Canada",samples:17,max:-11,min:-26,slope:8,slopeTxt:"8.0 ± 0.5",d:7,dTxt:"+7",temp:"0.4‰ per °C",amount:"none",group:"II — slope ≈ 8 (seasonal temperature variation)",note:"High-latitude continental: a 15‰ seasonal range mainly from temperature (summer minus winter δ¹⁸O = +7.6‰, Table 12) with no dry season and a near-perfect slope of 8. One of the three group-II stations far from an ocean, with Flagstaff and New Delhi."},
+ {n:"Whitehorse",where:"61°N, Yukon interior",samples:24,max:-16,min:-28,slope:5.5,slopeTxt:"5.5 ± 1 (excluding April)",d:null,dTxt:"+22 to −18 (individual months)",temp:"present",amount:"none",group:"IV — slope below 8",note:"Sparse precipitation at high latitude. The temperature effect sets the δ's; summer rain has higher δ but lower d than winter snow, and non-equilibrium evaporation from the liquid summer precipitation \"probably accounts for the low slope\"."},
+ {n:"Station Nord",where:"82°N, northeast Greenland",samples:17,max:-9,min:-33,slope:7.4,slopeTxt:"7.4 ± 0.5",d:10,dTxt:"+10",temp:"present",amount:"none",group:"IV — slope slightly below 8",note:"Mean annual air temperature −17 °C and the lightest monthly precipitation in the table (Fig. 4). A pure temperature effect: summer minus winter δ¹⁸O = +9.7‰ (Table 12), no amount effect, negligible convection, and snow crystals that neither evaporate nor exchange on the way down. The seasonal cycle recorded here is what makes annual layers countable in polar ice."}
+];
+const stChips=$("#stationChips");let stIdx=-1;
+stations.forEach((s,i)=>{const b=hel("button","chip-btn",stChips,s.n);b.type="button";b.setAttribute("aria-pressed","false");b.addEventListener("click",()=>{stIdx=i;stationUpdate();});});
+function stationUpdate(){
+  $$("#stationChips .chip-btn").forEach((b,i)=>b.setAttribute("aria-pressed",i===stIdx?"true":"false"));
+  const svg=$("#stationPlot");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),grid=cssVar("--grid"),mut=cssVar("--muted"),base=cssVar("--baseline"),ink2=cssVar("--ink-2"),surf=cssVar("--surface");
+  const L=52,R=424,T=16,B=282,W=R-L,H=B-T;const X0=-36,X1=12,Y0=-290,Y1=110;
+  const xOf=v=>L+W*(v-X0)/(X1-X0),yOf=v=>T+H*(Y1-v)/(Y1-Y0);
+  for(let v=-30;v<=10;v+=10){el("line",{x1:xOf(v),y1:T,x2:xOf(v),y2:B,stroke:v===0?base:grid},svg);el("text",{x:xOf(v),y:B+16,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=v;}
+  for(let v=-240;v<=80;v+=80){el("line",{x1:L,y1:yOf(v),x2:R,y2:yOf(v),stroke:v===0?base:grid},svg);el("text",{x:L-6,y:yOf(v)+4,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent=v;}
+  el("text",{x:R,y:B+30,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent="δ¹⁸O ‰";el("text",{x:L,y:T-4,"font-size":"10",fill:mut},svg).textContent="δ²H ‰";
+  el("line",{x1:xOf(X0),y1:yOf(8*X0+10),x2:xOf(10),y2:yOf(90),stroke:base,"stroke-width":1.5},svg);
+  el("text",{x:xOf(-18)+8,y:yOf(8*-18+10)+18,"font-size":"10",fill:mut},svg).textContent="L: δ²H = 8 δ¹⁸O + 10";
+  if(stIdx<0){$("#stMsg").textContent="Pick a station.";return;}
+  const s=stations[stIdx];
+  const dMean=s.d!=null?s.d:(()=>{const m=s.dTxt.match(/([+−-]?\d+)\s*to\s*([+−-]?\d+)/);if(!m)return 10;const a=+m[1].replace("−","-"),b=+m[2].replace("−","-");return (a+b)/2;})();
+  const slope=s.slope!=null?s.slope:8;
+  const xc=(s.max+s.min)/2,yc=8*xc+dMean;
+  const x1=s.min,x2=s.max;const y1=yc+slope*(x1-xc),y2=yc+slope*(x2-xc);
+  el("rect",{x:xOf(x1),y:T,width:xOf(x2)-xOf(x1),height:H,fill:s1,"fill-opacity":"0.06"},svg);
+  if(s.slope!=null){el("line",{x1:xOf(x1),y1:yOf(y1),x2:xOf(x2),y2:yOf(y2),stroke:slope<7.5||slope>8.5?s2:s1,"stroke-width":3,"stroke-linecap":"round"},svg);}
+  else{for(let k=0;k<9;k++){const a=k*2.4,r=1.4+0.6*Math.sin(k*1.7);el("circle",{cx:xOf(xc+r*Math.cos(a)),cy:yOf(yc+8*r*Math.sin(a)),r:3.5,fill:s1},svg);}}
+  el("circle",{cx:xOf(xc),cy:yOf(yc),r:4,fill:surf,stroke:s1,"stroke-width":2},svg);
+  el("text",{x:xOf(x2)+6,y:yOf(y2)+4,"font-size":"11","font-weight":"600",fill:ink2},svg).textContent=s.n;
+  el("text",{x:L,y:B+30,"font-size":"9",fill:mut},svg).textContent=(s.slope!=null&&s.d!=null)?"line drawn from the table's slope and d":"schematic placement from the table's range, slope and d";
+  $("#stRange").textContent=pm(s.max,0).replace("‰","")+" to "+pm(s.min,0);
+  $("#stN").textContent=s.samples+" monthly samples · "+s.where;
+  $("#stSlope").textContent=s.slopeTxt;
+  $("#stD").textContent=s.dTxt;
+  $("#stEff").textContent="temperature: "+s.temp+" · amount: "+s.amount;
+  $("#stGroup").textContent="Dansgaard's group "+s.group;
+  $("#stMsg").innerHTML="<b>"+s.n+".</b> "+s.note;
+}
+redraws.push(stationUpdate);stationUpdate();
+
+/* ============ §6b temperature effect (Dansgaard Fig. 3) ============ */
+const tempTa=$("#tempTa");
+const tempPts=[
+ {t:26.2,o:-1.6,lab:"islands 0–23°",dx:-8,dy:-12,anchor:"end"},{t:18.9,o:-3.4,lab:"islands 23–45°",dx:-8,dy:18,anchor:"end"},{t:6.8,o:-6.6,lab:"islands 45–90°",dx:-8,dy:-8,anchor:"end"},
+ {t:-17,o:-25.4,lab:"Station Nord, 82°N (t = −17 °C)",dx:8,dy:16,anchor:"start"},{t:-40.8,o:-41.94,lab:"Horlick Mts, 85°S (δ¹⁸O −41.94‰)",dx:8,dy:16,anchor:"start"},{t:-50,o:-50,lab:"South Pole, 90°S",dx:8,dy:-8,anchor:"start"}
+];
+function tempUpdate(){
+  const ta=+tempTa.value;$("#tempTaOut").textContent=ta+" °C";
+  const o=Math.min(0,0.695*ta-13.6),h=Math.min(10,5.6*ta-100);
+  $("#tempO").textContent=pm(o,1);$("#tempH").textContent=pm(h,0);
+  const svg=$("#tempChart");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),grid=cssVar("--grid"),mut=cssVar("--muted"),base=cssVar("--baseline"),ink2=cssVar("--ink-2"),surf=cssVar("--surface");
+  const L=48,R=464,T=16,B=282,W=R-L,H=B-T;const X0=-55,X1=30,Y0=-55,Y1=5;
+  const xOf=v=>L+W*(v-X0)/(X1-X0),yOf=v=>T+H*(Y1-v)/(Y1-Y0);
+  for(let v=-50;v<=30;v+=10){el("line",{x1:xOf(v),y1:T,x2:xOf(v),y2:B,stroke:v===0?base:grid},svg);el("text",{x:xOf(v),y:B+16,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=v;}
+  for(let v=-50;v<=0;v+=10){el("line",{x1:L,y1:yOf(v),x2:R,y2:yOf(v),stroke:v===0?base:grid},svg);el("text",{x:L-6,y:yOf(v)+4,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent=v;}
+  el("text",{x:R,y:B+30,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent="mean annual air temperature, °C";el("text",{x:L,y:T-4,"font-size":"10",fill:mut},svg).textContent="annual mean δ¹⁸O ‰";
+  const tz=13.6/0.695;
+  el("line",{x1:xOf(-52),y1:yOf(0.695*-52-13.6),x2:xOf(tz),y2:yOf(0),stroke:s1,"stroke-width":2.2},svg);
+  el("line",{x1:xOf(tz),y1:yOf(0),x2:xOf(30),y2:yOf(0),stroke:s1,"stroke-width":1.5,"stroke-dasharray":"4 3"},svg);
+  el("text",{x:xOf(-28),y:yOf(0.695*-28-13.6)-10,"font-size":"10","font-weight":"600",fill:s1,transform:"rotate(-35 "+xOf(-28)+" "+(yOf(0.695*-28-13.6)-10)+")"},svg).textContent="δ¹⁸O = 0.695 t − 13.6‰";
+  el("text",{x:xOf(-20),y:yOf(0)-10,"font-size":"9",fill:mut},svg).textContent="SMOW: the curve should not exceed 0";
+  tempPts.forEach(p=>{el("circle",{cx:xOf(p.t),cy:yOf(p.o),r:4,fill:surf,stroke:ink2,"stroke-width":1.5},svg);});
+  tempPts.forEach(p=>{el("text",{x:xOf(p.t)+p.dx,y:yOf(p.o)+p.dy,"text-anchor":p.anchor,"font-size":"9",fill:mut},svg).textContent=p.lab;});
+
+  el("line",{x1:xOf(ta),y1:T,x2:xOf(ta),y2:B,stroke:mut,"stroke-dasharray":"4 3"},svg);
+  el("circle",{cx:xOf(ta),cy:yOf(o),r:6,fill:s2,stroke:surf,"stroke-width":2},svg);
+  const hit=el("rect",{x:L,y:T,width:W,height:H,fill:"transparent",style:"cursor:crosshair"},svg);
+  hit.addEventListener("pointermove",e=>{const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(480/r.width);const tv=clamp(X0+(px-L)/W*(X1-X0),-50,25);showTip([{v:fmt(tv,0)+" °C",t:"mean annual temperature"},{key:s1,v:pm(Math.min(0,0.695*tv-13.6),1),t:"δ¹⁸O from eq. 9"}],e.clientX,e.clientY);});
+  hit.addEventListener("pointerleave",hideTip);
+  hit.addEventListener("pointerdown",e=>{const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(480/r.width);tempTa.value=Math.round(clamp(X0+(px-L)/W*(X1-X0),-50,25));tempUpdate();});
+  const m=$("#tempMsg");
+  if(ta>=18)m.innerHTML="<b>Top of the line.</b> Tropical and subtropical maritime stations crowd against SMOW; here the temperature effect fades and the amount effect takes over as the main control on δ — which is why Dansgaard's tropical islands needed a separate treatment (Figs. 8–9).";
+  else if(ta>-5)m.innerHTML="<b>Mid-latitude range.</b> Coastal stations follow the line; inland stations fall below it — the continental effect. At this temperature the same δ could be a coastal site at "+ta+" °C or an interior site a few degrees warmer, so the line predicts best where the air masses have a short, simple history.";
+  else if(ta>-30)m.innerHTML="<b>Greenland ice-cap range.</b> \"For all Greenland stations (except Scoresbysund) there is a very close correlation\" — close enough that Dansgaard used it to locate where West Greenland icebergs had formed, and that it became the basis for reading past temperatures from ice cores.";
+  else m.innerHTML="<b>Antarctic interior.</b> The relation holds to −50 °C and −50‰, but Antarctica is harder than Greenland: a site can receive precipitation from different directions and air masses with different histories, the topography is complex, and accumulation is so sparse that drift and ablation disturb the annual layering (Dansgaard, §2.3.1).";
+}
+tempTa.addEventListener("input",tempUpdate);redraws.push(tempUpdate);tempUpdate();
+
+/* ============ §7 process walk ============ */
+const A20D=alphaAt(20,"D"),A20O=alphaAt(20,"O");
+const Ve={o:(1/A20O-1)*1000,h:(1/A20D-1)*1000};
+const Vk={o:-12.5,h:-90};
+const R1={o:(A20O*(1+Vk.o/1000)-1)*1000,h:(A20D*(1+Vk.h/1000)-1)*1000};
+function rayFrom(t,which){return rayleigh(20,t,which,(which==="O"?Vk.o:Vk.h)/1000).con*1000;}
+const R0c={o:rayFrom(0,"O"),h:rayFrom(0,"D")};
+const Rm20={o:rayFrom(-20,"O"),h:rayFrom(-20,"D")};
+const Lake={o:R0c.o+6,h:R0c.h+6*5};
+const Mix={o:(Lake.o+R0c.o)/2,h:(Lake.h+R0c.h)/2};
+const dx=p=>p.h-8*p.o;
+const walk=[
+ {n:"Ocean",p:{o:0,h:0},kind:"point",text:"<b>Start in the ocean.</b> SMOW by definition: δ¹⁸O = 0, δ²H = 0, d = 0. Every other water on the diagram was once here."},
+ {n:"Equilibrium vapour",p:Ve,kind:"jump",text:"<b>Evaporate slowly into saturated air.</b> Vapour in equilibrium at 20 °C is lighter by 1/α: "+pm(Ve.o,1)+" and "+pm(Ve.h,0)+". Its d is "+pm(dx(Ve),0)+" — essentially unchanged, because the two depletions are in the ratio 8. Dansgaard's V<sub>e</sub> in Fig. 6."},
+ {n:"Fast (kinetic) vapour",p:Vk,kind:"jump",text:"<b>Evaporate fast into dry, windy air instead.</b> The lightest molecule escapes fastest and ¹⁸O is affected more than deuterium, so the vapour lands <i>above</i> the line with a positive d of "+pm(dx(Vk),0)+" (magnitudes here are illustrative; the real values depend on humidity, temperature and wind). This surplus is what the ocean hands to the continents: V<sub>n−e</sub> in Fig. 6."},
+ {n:"First rain",p:R1,kind:"jump",text:"<b>Condense the first drops in equilibrium at 20 °C.</b> The condensate is enriched by α and lands at "+pm(R1.o,1)+" / "+pm(R1.h,0)+" — it keeps the vapour's d of "+pm(dx(R1),0)+", and it lies on a line through SMOW with slope "+(R1.h/R1.o).toFixed(1)+". Vapour with different kinetic surpluses gives first rains along that low-slope line: Dansgaard's tropical-island line, δ²H = 4.6 δ¹⁸O + 0.1 (eq. 15)."},
+ {n:"Rain out to 0 °C",p:R0c,kind:"curve",text:"<b>Cool the air mass to 0 °C under Rayleigh conditions.</b> New condensate slides down a slope-8 track to "+pm(R0c.o,1)+" / "+pm(R0c.h,0)+"; d stays near "+pm(dx(R0c),0)+". Equilibrium condensation conserves d to first order — so continental precipitation everywhere remembers the surplus the ocean gave its vapour. This is why Craig's line has an intercept of 10."},
+ {n:"…to −20 °C",p:Rm20,kind:"curve",text:"<b>Keep cooling to −20 °C.</b> With only a few per cent of the vapour left the condensate reaches "+pm(Rm20.o,1)+" / "+pm(Rm20.h,0)+" — high-latitude snow. Its d has drifted to "+pm(dx(Rm20),0)+" because the C-curve's slope is slightly below 8 at low temperature (Dansgaard's Table 5: 7.5–7.9 after 40° of cooling). Slopes, like intercepts, are approximations."},
+ {n:"Lake evaporation",p:Lake,kind:"line",from:R0c,text:"<b>Let the 0 °C rain fill a lake and evaporate part of it.</b> Kinetic evaporation from a limited body of water moves the remaining water up a shallow line — slope 5 here, Craig's closed-basin value — to "+pm(Lake.o,1)+" / "+pm(Lake.h,0)+". d collapses to "+pm(dx(Lake),0)+": an evaporated water is recognized by sitting <i>below</i> the line, whatever its δ¹⁸O."},
+ {n:"Mix lake and rain",p:Mix,kind:"line",from:Lake,text:"<b>Mix the lake water 1:1 with fresh 0 °C rain.</b> Mixing is linear in δ (the concentrations of O and H in water are constant), so the mixture lies halfway along the straight line between the end-members, with d = "+pm(dx(Mix),0)+". The trap: a mixing line between a meteoric water and an evaporated water can look exactly like an evaporation line (Kendall et al., 2014). Section 8 lives inside that ambiguity."}
+];
+let walkIdx=0;const walkSteps=$("#walkSteps");
+walk.forEach((w,i)=>{const b=hel("button","step-btn",walkSteps);b.type="button";b.setAttribute("aria-pressed",i===0?"true":"false");hel("span","n",b,String(i));b.appendChild(document.createTextNode(w.n));b.addEventListener("click",()=>{walkIdx=i;walkSample=null;walkDraw();});});
+const refLines=[
+ {k:"craig",lab:"Craig 1961: 8x + 10 (GMWL)",a:8,b:10,on:true},
+ {k:"gnip",lab:"68,382 precipitation samples: 7.93x + 8.99 (Jasechko 2019)",a:7.93,b:8.99,on:false},
+ {k:"dans",lab:"Dansgaard NH continental: 8.04x + 9.5",a:8.04,b:9.5,on:false},
+ {k:"trop",lab:"Dansgaard tropical islands: 4.6x + 0.1",a:4.6,b:0.1,on:false},
+ {k:"wisc",lab:"Wisconsin LMWL 8.03x + 10.95 & lake line (Kendall 2014)",a:8.03,b:10.95,on:false}
+];
+const lineTog=$("#lineToggles");
+refLines.forEach(r=>{const b=hel("button","chip-btn",lineTog,r.lab);b.type="button";b.setAttribute("aria-pressed",r.on?"true":"false");b.addEventListener("click",()=>{r.on=!r.on;b.setAttribute("aria-pressed",r.on?"true":"false");walkDraw();});});
+let walkSample=null;
+function walkDraw(){
+  $$("#walkSteps .step-btn").forEach((b,i)=>b.setAttribute("aria-pressed",i===walkIdx?"true":"false"));
+  const svg=$("#walkPlot");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),s3=cssVar("--s3"),grid=cssVar("--grid"),mut=cssVar("--muted"),base=cssVar("--baseline"),ink2=cssVar("--ink-2"),surf=cssVar("--surface"),ink=cssVar("--ink");
+  const L=52,R=464,T=16,B=380,W=R-L,H=B-T;
+  const full=walkIdx===5||(walkSample&&(walkSample.o<-23||walkSample.h<-180));
+  const X0=full?-36:-24,X1=full?6:4,Y0=full?-290:-180,Y1=full?46:32;
+  const xOf=v=>L+W*(v-X0)/(X1-X0),yOf=v=>T+H*(Y1-v)/(Y1-Y0);
+  const defs=el("defs",{},svg);const cp=el("clipPath",{id:"walkClip"},defs);el("rect",{x:L,y:T,width:W,height:H},cp);
+  const xs=full?5:2,ys=full?40:20;
+  for(let v=Math.ceil(X0/xs)*xs;v<=X1;v+=xs){el("line",{x1:xOf(v),y1:T,x2:xOf(v),y2:B,stroke:v===0?base:grid},svg);el("text",{x:xOf(v),y:B+16,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=v;}
+  for(let v=Math.ceil(Y0/ys)*ys;v<=Y1;v+=ys){el("line",{x1:L,y1:yOf(v),x2:R,y2:yOf(v),stroke:v===0?base:grid},svg);el("text",{x:L-6,y:yOf(v)+4,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent=v;}
+  el("text",{x:R,y:B+30,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent="δ¹⁸O ‰";el("text",{x:L,y:T-4,"font-size":"10",fill:mut},svg).textContent="δ²H ‰";
+  el("text",{x:R,y:T-4,"text-anchor":"end","font-size":"9",fill:mut},svg).textContent=full?"full range":"zoomed to the upper part of the line";
+  const g=el("g",{"clip-path":"url(#walkClip)"},svg);
+  const lineAB=(a,b,col,dash,w)=>{el("line",{x1:xOf(X0-5),y1:yOf(a*(X0-5)+b),x2:xOf(X1+5),y2:yOf(a*(X1+5)+b),stroke:col,"stroke-width":w||1.5,"stroke-dasharray":dash||"none"},g);};
+  refLines.forEach((r,i)=>{if(!r.on)return;lineAB(r.a,r.b,i===0?base:mut,i===0?"none":"6 4",i===0?1.8:1.3);
+    if(r.k==="wisc"){const xi=-9.6,yi=8.03*xi+10.95;el("line",{x1:xOf(xi),y1:yOf(yi),x2:xOf(xi+11),y2:yOf(yi+5.2*11),stroke:s2,"stroke-width":1.3,"stroke-dasharray":"2 3"},g);el("text",{x:xOf(xi+6)+4,y:yOf(yi+5.2*6)+12,"font-size":"9",fill:s2},g).textContent="Wisconsin lake evaporation, slope 5.2";}});
+  {const xl=full?-30:-20;el("text",{x:xOf(xl)+8,y:yOf(8*xl+10)+16,"font-size":"10",fill:mut},g).textContent="GMWL";}
+  /* trajectory through completed steps */
+  for(let i=1;i<=walkIdx;i++){
+    const w=walk[i],prev=w.from||walk[i-1].p;const col=i===walkIdx?s1:mut;
+    if(w.kind==="curve"){let d="";const tStart=i===4?20:0,tEnd=i===4?0:-20;for(let t=tStart;t>=tEnd-1e-9;t-=0.5){const o=rayFrom(t,"O"),h=rayFrom(t,"D");d+=(d?"L":"M")+" "+xOf(o)+" "+yOf(h)+" ";}el("path",{d,fill:"none",stroke:col,"stroke-width":2.2,"stroke-linejoin":"round"},g);}
+    else if(w.kind==="line"){el("line",{x1:xOf(prev.o),y1:yOf(prev.h),x2:xOf(w.p.o),y2:yOf(w.p.h),stroke:i===6?s2:col,"stroke-width":2.2,"stroke-dasharray":i===6?"6 4":"none"},g);}
+    else{el("line",{x1:xOf(prev.o),y1:yOf(prev.h),x2:xOf(w.p.o),y2:yOf(w.p.h),stroke:col,"stroke-width":1.4,"stroke-dasharray":"3 3"},g);}
+  }
+  if(walkIdx>=3){const sl=R1.h/R1.o;lineAB(sl,0,s3,"2 3",1.2);const xl=full?-34:-23;const ang=-Math.atan2(sl*H/(Y1-Y0),W/(X1-X0))*180/Math.PI;const tx=xOf(xl)+2,ty=yOf(sl*xl)-5;el("text",{x:tx,y:ty,"font-size":"9",fill:s3,transform:"rotate("+ang.toFixed(1)+" "+tx+" "+ty+")"},g).textContent="first-stage line through SMOW, slope "+sl.toFixed(1);}
+  for(let i=0;i<=walkIdx;i++){const w=walk[i];const cur=i===walkIdx;
+    el("circle",{cx:xOf(w.p.o),cy:yOf(w.p.h),r:cur?9:6.5,fill:cur?s1:surf,stroke:cur?surf:s1,"stroke-width":cur?2:1.5},g);
+    el("text",{x:xOf(w.p.o),y:yOf(w.p.h)+3.5,"text-anchor":"middle","font-size":"9","font-weight":"700",fill:cur?"#fff":s1},g).textContent=String(i);
+    if(cur||i===0){el("text",{x:xOf(w.p.o)+12,y:yOf(w.p.h)+(i===0?-8:4),"font-size":"10","font-weight":"600",fill:ink2},g).textContent=w.n;}}
+  if(walkSample){el("circle",{cx:xOf(walkSample.o),cy:yOf(walkSample.h),r:6,fill:s2,stroke:surf,"stroke-width":2},g);el("text",{x:xOf(walkSample.o)+9,y:yOf(walkSample.h)+4,"font-size":"10","font-weight":"600",fill:s2},g).textContent="your sample, d = "+pm(dx(walkSample),0);}
+  const hit=el("rect",{x:L,y:T,width:W,height:H,fill:"transparent",style:"cursor:crosshair"},svg);
+  const coords=e=>{const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(480/r.width),py=(e.clientY-r.top)*(420/r.height);return {o:clamp(X0+(px-L)/W*(X1-X0),X0,X1),h:clamp(Y1-(py-T)/H*(Y1-Y0),Y0,Y1)};};
+  hit.addEventListener("pointermove",e=>{const c=coords(e);showTip([{v:pm(c.o,1),t:"δ¹⁸O"},{v:pm(c.h,0),t:"δ²H"},{v:pm(c.h-8*c.o,0),t:"d-excess"}],e.clientX,e.clientY);});
+  hit.addEventListener("pointerleave",hideTip);
+  hit.addEventListener("pointerdown",e=>{walkSample=coords(e);walkDraw();});
+  const cur=walkSample||walk[walkIdx].p;
+  $("#walkO").textContent=pm(cur.o,1);$("#walkH").textContent=pm(cur.h,0);$("#walkD").textContent=pm(dx(cur),0);
+  const m=$("#walkMsg");
+  if(walkSample){const d=dx(walkSample);m.innerHTML="<b>Your sample.</b> d = "+pm(d,0)+". "+(d>18?"Unusually high — vapour from a fast-evaporating source region (eastern Mediterranean winters reach +20 and more), or a measurement worth repeating.":d>=0?"Within the range of ordinary precipitation and of most groundwater (90% of compiled groundwaters fall between 0 and +20‰; Jasechko, 2019).":"Negative: this water has evaporated, or mixed with water that has. Before concluding which, find the end-members.")+" Click a step to return to the walk.";}
+  else m.innerHTML=walk[walkIdx].text;
+}
+redraws.push(walkDraw);walkDraw();
+
+/* ============ §8 two water worlds ============ */
+const tww={evap:2.5,slope:3.5,gw:0,a:8,b:10,xyl:0.7};
+const twwIds={evap:"twwEvap",slope:"twwSlope",gw:"twwGW",a:"twwA"};
+const twwPresets=[
+ ["Typical site",{evap:2.5,slope:3.5,gw:2.5,a:8}],
+ ["Humid tropics",{evap:1.8,slope:3.0,gw:2.0,a:8.2}],
+ ["Mediterranean",{evap:1.75,slope:3.0,gw:2.0,a:7.1}],
+ ["Arid",{evap:0.7,slope:2.5,gw:1.0,a:8.0}],
+ ["No evaporation",{evap:0,slope:3.5,gw:2.5,a:8}]
+];
+const twwRow=$("#twwPresets");
+twwPresets.forEach(p=>{const b=hel("button","chip-btn",twwRow,p[0]);b.type="button";b.addEventListener("click",()=>{Object.keys(p[1]).forEach(k=>{tww[k]=p[1][k];$("#"+twwIds[k]).value=p[1][k];});twwUpdate();});});
+function twwUpdate(){
+  Object.keys(twwIds).forEach(k=>{tww[k]=+$("#"+twwIds[k]).value;});
+  $("#twwEvapOut").textContent="+"+fmt(tww.evap,1)+"‰";$("#twwSlopeOut").textContent=fmt(tww.slope,1);$("#twwGWOut").textContent=pm(tww.gw,1)+" δ¹⁸O";$("#twwAOut").textContent=fmt(tww.a,1);
+  const a=tww.a,b=tww.b,S=Math.sqrt(1+0.2*0.2);
+  const P={o:-8,h:a*-8+b};
+  const GW={o:P.o+tww.gw,h:a*(P.o+tww.gw)+b};
+  const ST={o:P.o+0.4,h:a*(P.o+0.4)+b};
+  const SO={o:P.o+tww.evap,h:P.h+tww.slope*tww.evap};
+  const XY={o:P.o+tww.xyl*tww.evap,h:P.h+tww.slope*tww.xyl*tww.evap};
+  const off=p=>(p.h-a*p.o-b)/S;
+  const offs={gw:off(GW),st:off(ST),so:off(SO),xy:off(XY)};
+  /* xylem δ source: evaporation line (slope m through XY) meets the LMWL */
+  const m=tww.slope;let src=P;
+  if(tww.evap>0.05){const xo=(XY.h-m*XY.o-b)/(a-m);src={o:xo,h:a*xo+b};}
+  const gap=GW.h-src.h;const offGap=offs.gw-(offs.so+offs.xy)/2;
+  $("#twwOffGW").textContent=pm(offs.gw,1);$("#twwOffSt").textContent=pm(offs.st,1);$("#twwOffSo").textContent=pm(offs.so,1);$("#twwOffXy").textContent=pm(offs.xy,1);
+  $("#twwSrc").textContent=pm(src.o,1)+" / "+pm(src.h,0);
+  $("#twwGap").textContent=pm(gap,0);
+  /* plot */
+  const svg=$("#twwPlot");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),s3=cssVar("--s3"),s4=cssVar("--s4"),grid=cssVar("--grid"),mut=cssVar("--muted"),base=cssVar("--baseline"),ink2=cssVar("--ink-2"),surf=cssVar("--surface");
+  const L=52,R=464,T=16,B=360,W=R-L,H=B-T;const X0=-11.5,X1=-0.5,Y0=-86,Y1=-8;
+  const xOf=v=>L+W*(v-X0)/(X1-X0),yOf=v=>T+H*(Y1-v)/(Y1-Y0);
+  for(let v=-11;v<=-1;v+=1){el("line",{x1:xOf(v),y1:T,x2:xOf(v),y2:B,stroke:grid},svg);el("text",{x:xOf(v),y:B+16,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=v;}
+  for(let v=-80;v<=-10;v+=10){el("line",{x1:L,y1:yOf(v),x2:R,y2:yOf(v),stroke:grid},svg);el("text",{x:L-6,y:yOf(v)+4,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent=v;}
+  el("text",{x:R,y:B+30,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent="δ¹⁸O ‰";el("text",{x:L,y:T-4,"font-size":"10",fill:mut},svg).textContent="δ²H ‰";
+  const lineClip=(aa,bb,col,dash,w)=>{let xa=X0,xb=X1,ya=aa*xa+bb,yb=aa*xb+bb;if(ya<Y0){xa=(Y0-bb)/aa;ya=Y0;}if(yb>Y1){xb=(Y1-bb)/aa;yb=Y1;}el("line",{x1:xOf(xa),y1:yOf(ya),x2:xOf(xb),y2:yOf(yb),stroke:col,"stroke-width":w,"stroke-dasharray":dash},svg);};
+  lineClip(8,10,grid,"none",1.2);el("text",{x:xOf(-2.6)-6,y:yOf(8*-2.6+10)+12,"text-anchor":"end","font-size":"9",fill:mut},svg).textContent="GMWL";
+  lineClip(a,b,base,"none",2);el("text",{x:xOf(-10.8)+8,y:yOf(a*-10.8+b)+16,"font-size":"10","font-weight":"600",fill:ink2},svg).textContent="LMWL: δ²H = "+fmt(a,1)+" δ¹⁸O + "+b;
+  if(tww.evap>0.05){el("line",{x1:xOf(src.o),y1:yOf(src.h),x2:xOf(SO.o+2),y2:yOf(SO.h+2*m),stroke:s2,"stroke-width":1.6,"stroke-dasharray":"6 4"},svg);el("text",{x:xOf(SO.o+2)+4,y:yOf(SO.h+2*m)+4,"font-size":"9",fill:s2},svg).textContent="evaporation line, slope "+fmt(m,1);}
+  el("circle",{cx:xOf(src.o),cy:yOf(src.h),r:5,fill:surf,stroke:s4,"stroke-width":2},svg);el("text",{x:xOf(src.o)-9,y:yOf(src.h)+4,"text-anchor":"end","font-size":"10",fill:s4},svg).textContent="xylem δ source";
+  const pt=(p,col,lab,dx,dy,anchor)=>{el("circle",{cx:xOf(p.o),cy:yOf(p.h),r:6.5,fill:col,stroke:surf,"stroke-width":2},svg);el("text",{x:xOf(p.o)+dx,y:yOf(p.h)+dy,"text-anchor":anchor||"start","font-size":"10","font-weight":"600",fill:col},svg).textContent=lab;};
+  pt(ST,s3,"stream",-10,-8,"end");pt(GW,s1,"groundwater",-10,-8,"end");pt(SO,mut,"soil water",10,5);pt(XY,s4,"plant xylem",8,18);
+  [[GW,"groundwater",s1],[ST,"stream",s3],[SO,"soil water",mut],[XY,"plant xylem",s4]].forEach(([p,lab,col])=>{const c=el("circle",{cx:xOf(p.o),cy:yOf(p.h),r:12,fill:"transparent"},svg);c.addEventListener("pointermove",e=>showTip([{key:col,v:lab,t:""},{v:pm(p.o,1)+" / "+pm(p.h,0),t:"δ¹⁸O / δ²H"},{v:pm(off(p),1),t:"precipitation offset"}],e.clientX,e.clientY));c.addEventListener("pointerleave",hideTip);});
+  const msg=$("#twwMsg");
+  if(tww.evap<0.3)msg.innerHTML="<b>No evaporation, no signal.</b> Soil and xylem water sit on the LMWL with groundwater and stream water, and the offset test has nothing to work with. Ecohydrological separation might still exist — but stable isotopes could not show it. The test has power only where near-surface water evaporates before plants take it up.";
+  else msg.innerHTML="<b>Soil and xylem water fall below the line</b> (offsets "+pm(offs.so,1)+" and "+pm(offs.xy,1)+") while groundwater and stream water sit on it: the pattern the compilation found at 40 of 47 sites. The offset gap here is "+fmt(offGap,1)+" (the paper's biome averages: tropics 7.7, Mediterranean 5.4, arid 3.6, grasslands 2.4, temperate forests 1.6)."+(Math.abs(tww.gw)>0.2?" Groundwater is also "+pm(gap,0)+" in δ²H from the precipitation the plants drew on — \"segregation\" of the rain that recharges aquifers from the rain that supplies transpiration, found at 37 of 46 sites (the paper's medians: −52 vs −82‰).":" Groundwater here recharged from the same rain the plants used; drag the source shift to see the segregation signal.")+" Two questions the paper's Methods confront: is the evaporation line straight, and does the groundwater come from the same place and time as the plants?";
+}
+Object.values(twwIds).forEach(id=>$("#"+id).addEventListener("input",twwUpdate));
+redraws.push(twwUpdate);$("#twwGW").value=2.5;twwUpdate();
+
+/* ============ §9 sorter ============ */
+const bins=["Conservative","Reactive","Decays"];
+const sorterItems=[
+ {t:"δ¹⁸O and δ²H of water, below the root zone",best:["Conservative"],ok:[],fb:{Conservative:"Yes — in soil and rock at ordinary temperatures there is no exchange worth the name, so the signal set at recharge changes only by mixing (Kendall et al., 2014). The assumption you carry: no evaporation after infiltration and no high-temperature water–rock exchange.",Reactive:"Not below ground at low temperature. Fractionation is a phase-change phenomenon; once infiltrated, water keeps its fingerprint until it mixes. (At the surface, in soil pores open to the air, evaporation does alter it — Section 8.)",Decays:"Stable isotopes do not decay. That is the radioactive hydrogen, tritium."}},
+ {t:"Chloride",best:["Conservative"],ok:[],fb:{Conservative:"The classic conservative solute: not consumed, not produced, not sorbed in most settings. Evaporation concentrates it — which is precisely what the chloride mass balance uses to estimate recharge. Assumption: no evaporite dissolution, no road salt or sewage.",Reactive:"Rarely. Chloride's value is that almost nothing reacts with it; its failure mode is an extra source (salt, brine, fertilizer), not a reaction.",Decays:"Stable chlorine does not decay — ³⁶Cl, its cosmogenic cousin, does (Week 9)."}},
+ {t:"Tritium (³H) in the water molecule",best:["Decays"],ok:["Conservative"],fb:{Conservative:"Defensible for its transport: it is part of the water molecule and moves with it. But it is lost at 12.32-year half-life, so the conservative label hides the property that makes it a clock.",Reactive:"No reaction is involved. Tritium is lost by radioactive decay at a rate that chemistry cannot alter.",Decays:"Yes. Transported conservatively, lost predictably: that combination is what makes it a dating tracer. Assumption: you know the input history (Week 1, Section 7)."}},
+ {t:"δ¹⁵N and δ¹⁸O of nitrate",best:["Reactive"],ok:[],fb:{Conservative:"Not in most aquifers. Denitrification consumes nitrate and shifts both isotopes along predictable slopes; assimilation and nitrification rewrite the signal too (Week 6).",Reactive:"Yes — \"solute isotopes only trace solutes\", and this solute reacts. For source apportionment the assumption is that no transformation occurred, which is often false; for process questions the reactivity is the information.",Decays:"Stable isotopes; nothing decays."}},
+ {t:"¹⁴C in dissolved inorganic carbon",best:["Reactive","Decays"],ok:[],fb:{Conservative:"Neither the carbon nor the clock is conservative. The carbon exchanges with soil CO₂ and dissolves carbonate rock (adding ¹⁴C-free 'dead' carbon), and the ¹⁴C decays.",Reactive:"Defensible: the isotope is carried by a solute that gains dead carbon from carbonate dissolution and exchange, so the clock must be corrected before it reads an age (Week 3).",Decays:"Defensible: a 5,730-year clock for millennial groundwater. The catch is that the carbon is reactive, so the clock starts from an uncertain N₀ — both labels apply, and both must be modelled."}},
+ {t:"Heat (water temperature)",best:["Reactive"],ok:[],fb:{Conservative:"No: heat exchanges freely with the aquifer matrix, so it moves predictably relative to the water rather than with it — useful over short distances (streambed exchange), useless as a long memory.",Reactive:"Yes, in the sense that matters: the signal is exchanged with the surroundings along the way, and a heat-transport model is needed to interpret it (Week 1, Section 3).",Decays:"Heat is not radioactive; it is conducted and exchanged."}},
+ {t:"CFCs dissolved at recharge",best:["Conservative"],ok:["Reactive"],fb:{Conservative:"The working assumption of CFC dating, with known caveats: degradation under anoxic conditions, sorption to organic matter, and local contamination (Week 5). Conservative enough, in the right aquifer.",Reactive:"Defensible as a warning: CFC-11 in particular degrades in anoxic groundwater, and urban air can add CFCs. Reactive in the wrong setting, conservative in the right one — the setting is the claim.",Decays:"CFCs are not radioactive; their clock is the known rise of atmospheric concentrations, not decay."}},
+ {t:"SF₆ dissolved at recharge",best:["Conservative"],ok:[],fb:{Conservative:"Chemically inert and stable; dated by its atmospheric history. Assumption: no terrigenic SF₆ from certain rocks and no excess air artefacts (Week 5).",Reactive:"Not chemically; SF₆ is among the least reactive gases known. Its failure modes are extra sources, not reactions.",Decays:"Not radioactive."}},
+ {t:"Dissolved noble gases (Ne, Ar, Kr, Xe)",best:["Conservative"],ok:[],fb:{Conservative:"Yes — physically set at recharge by temperature, pressure and excess air, then carried unchanged. That is why their concentrations record recharge temperature (Week 7). ⁴He is the exception in reverse: it accumulates from radioactive decay in the rock (Week 10).",Reactive:"Noble gases do not react; their concentrations change only by gas exchange, which stops once water is below the water table.",Decays:"The stable noble gases do not decay; their radioactive isotopes (³⁹Ar, ⁸¹Kr, ⁸⁵Kr) do, and those are separate tracers."}},
+ {t:"³⁵S in dissolved sulfate",best:["Decays"],ok:["Reactive"],fb:{Conservative:"No — an 87-day half-life makes it the shortest clock in the course (Week 9).",Reactive:"Defensible: sulfate can be reduced or taken up, so the carrier is not inert. The dominant behaviour, though, is decay.",Decays:"Yes. Cosmogenic ³⁵S decays with a half-life of about 87 days, which resolves sub-annual water ages — if the sulfate carrying it behaves."}},
+ {t:"⁸¹Kr dissolved at recharge",best:["Decays"],ok:["Conservative"],fb:{Conservative:"Defensible for its transport — it is a noble gas, so nothing reacts with it or produces it underground.",Reactive:"No; krypton is inert.",Decays:"Yes, with a 229,000-year half-life: an inert carrier with a long, clean clock — the nearest thing to an ideal dating tracer for very old groundwater (Week 3)."}}
+];
+const sorterWrap=$("#sorter");let sAnswered=0,sBest=0;
+sorterItems.forEach((it,i)=>{
+  const card=hel("div","sorter-item",sorterWrap);hel("h4",null,card,(i+1)+". "+it.t);
+  const list=hel("div","opt-list row3",card);const fb=hel("div","feedback",card);const btns=[];
+  bins.forEach(bn=>{const b=hel("button","opt-btn",list,bn);b.type="button";btns.push(b);
+    b.addEventListener("click",()=>{if(fb.classList.contains("open"))return;btns.forEach(x=>x.disabled=true);
+      const isBest=it.best.includes(bn),isOk=it.ok.includes(bn);b.classList.add(isBest||isOk?"sel-best":"sel-weak");
+      sAnswered++;if(isBest)sBest++;
+      fb.textContent="";hel("b",null,fb,isBest?"Best label. ":(isOk?"Defensible. ":"Less defensible. "));fb.appendChild(document.createTextNode(it.fb[bn]));
+      if(it.best.length>1)fb.appendChild(document.createTextNode(" (Both \""+it.best.join("\" and \"")+"\" count as best here.)"));
+      fb.classList.add("open");
+      $("#sorterScore").textContent="Best label on first click: "+sBest+" of "+sAnswered+(sAnswered===sorterItems.length?" — done. The pattern to keep: conservative is a property of tracer plus setting.":"");});});
+});
+
+/* ============ §10 decay ============ */
+const nuclides=[
+ {n:"³H",name:"tritium",half:12.32,unit:"y",carrier:"the water molecule",use:"young groundwater; bomb pulse (Weeks 1, 5)"},
+ {n:"⁸⁵Kr",name:"krypton-85",half:10.76,unit:"y",carrier:"dissolved noble gas",use:"young groundwater; rising anthropogenic input (Week 5)"},
+ {n:"³⁵S",name:"sulfur-35",half:87.4,unit:"d",carrier:"dissolved sulfate",use:"sub-annual water ages (Week 9)"},
+ {n:"³²Si",name:"silicon-32",half:150,unit:"y",carrier:"dissolved silica",use:"decades to centuries; half-life still uncertain (Week 9)"},
+ {n:"³⁹Ar",name:"argon-39",half:269,unit:"y",carrier:"dissolved noble gas",use:"centuries — the gap between ³H and ¹⁴C (Week 3)"},
+ {n:"¹⁴C",name:"radiocarbon",half:5730,unit:"y",carrier:"dissolved inorganic carbon",use:"millennial groundwater, with carbon-chemistry corrections (Week 3)"},
+ {n:"⁸¹Kr",name:"krypton-81",half:229000,unit:"y",carrier:"dissolved noble gas",use:"very old groundwater, 10⁵–10⁶ years (Week 3)"},
+ {n:"³⁶Cl",name:"chlorine-36",half:301000,unit:"y",carrier:"chloride",use:"very old groundwater and the bomb pulse (Week 9)"}
+];
+let nucIdx=0;const nucChips=$("#nucChips");const decayT=$("#decayT");let decayLog=false;
+nuclides.forEach((nu,i)=>{const b=hel("button","chip-btn",nucChips,nu.n+" · "+nu.name);b.type="button";b.setAttribute("aria-pressed",i===0?"true":"false");b.addEventListener("click",()=>{nucIdx=i;decayUpdate();});});
+function sig3(x){if(x===0)return 0;const m=Math.pow(10,Math.floor(Math.log10(Math.abs(x)))-2);return Math.round(x/m)*m;}
+function fmtTime(x,unit){if(unit==="d"){return x<120?fmt(x,x<100?1:0)+" days":x<700?fmt(x/30.44,1)+" months":fmt(x/365.25,1)+" years";}
+  if(x<1)return fmt(x*12,0)+" months";if(x<20)return fmt(x,2).replace(/\.?0+$/,"")+" years";if(x<100)return fmt(x,1)+" years";if(x<1e4)return Math.round(x).toLocaleString("en-US")+" years";const r=sig3(x);return r>=1e6?fmt(r/1e6,2)+" million years":Math.round(r).toLocaleString("en-US")+" years";}
+function decayUpdate(){
+  $$("#nucChips .chip-btn").forEach((b,i)=>b.setAttribute("aria-pressed",i===nucIdx?"true":"false"));
+  const nu=nuclides[nucIdx];const nh=+decayT.value;const f=Math.pow(2,-nh);const t=nh*nu.half;
+  $("#decayTOut").textContent=fmtTime(t,nu.unit);
+  $("#decayHalf").textContent=fmtTime(nu.half,nu.unit);$("#decayUse").textContent=nu.n+" rides in "+nu.carrier+" — "+nu.use;
+  $("#decayNh").textContent=fmt(nh,2);$("#decayYears").textContent=fmtTime(t,nu.unit)+" elapsed";
+  $("#decayFrac").textContent=f>=0.01?fmt(f*100,1)+"%":(f*100).toExponential(1)+"%";
+  const sig=0.02;const sigT=nu.half*(sig/f)/Math.LN2;
+  $("#decayBack").textContent=(f<0.005?"beyond the clock":fmtTime(t,nu.unit)+" ± "+fmtTime(sigT,nu.unit));
+  /* chart */
+  const svg=$("#decayChart");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),grid=cssVar("--grid"),mut=cssVar("--muted"),base=cssVar("--baseline"),ink2=cssVar("--ink-2"),surf=cssVar("--surface"),s3=cssVar("--s3");
+  const L=52,R=464,T=16,B=236,W=R-L,H=B-T;const X1=8;
+  const xOf=v=>L+W*v/X1;const yOf=v=>decayLog?T+H*(0-Math.log10(Math.max(v,1e-4)))/4:T+H*(1-v);
+  el("rect",{x:xOf(0.1),y:T,width:xOf(5)-xOf(0.1),height:H,fill:s3,"fill-opacity":"0.08"},svg);
+  el("text",{x:xOf(2.55),y:B-8,"text-anchor":"middle","font-size":"9",fill:mut},svg).textContent="rule-of-thumb dating window: 0.1 to 5 half-lives";
+  if(decayLog){[1,0.1,0.01,0.001,0.0001].forEach(v=>{el("line",{x1:L,y1:yOf(v),x2:R,y2:yOf(v),stroke:v===1?base:grid},svg);el("text",{x:L-6,y:yOf(v)+4,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent=v>=0.01?(v*100)+"%":(v*100)+"%";});}
+  else{[1,0.75,0.5,0.25,0].forEach(v=>{el("line",{x1:L,y1:yOf(v),x2:R,y2:yOf(v),stroke:v===0?base:grid},svg);el("text",{x:L-6,y:yOf(v)+4,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent=(v*100)+"%";});}
+  for(let v=0;v<=X1;v++){el("line",{x1:xOf(v),y1:B,x2:xOf(v),y2:B+5,stroke:base},svg);el("text",{x:xOf(v),y:B+18,"text-anchor":"middle","font-size":"10",fill:mut},svg).textContent=v;}
+  el("text",{x:R,y:B+32,"text-anchor":"end","font-size":"10",fill:mut},svg).textContent="half-lives elapsed  (1 half-life of "+nu.n+" = "+fmtTime(nu.half,nu.unit)+")";
+  el("text",{x:L,y:T-4,"font-size":"10",fill:mut},svg).textContent="fraction remaining";
+  let d="";for(let x=0;x<=X1;x+=0.05){const v=Math.pow(2,-x);const y=yOf(v);if(y>B)break;d+=(d?"L":"M")+" "+xOf(x)+" "+y+" ";}
+  el("path",{d,fill:"none",stroke:s1,"stroke-width":2.2},svg);
+  el("line",{x1:xOf(nh),y1:T,x2:xOf(nh),y2:B,stroke:mut,"stroke-dasharray":"4 3"},svg);
+  if(yOf(f)<=B)el("circle",{cx:xOf(nh),cy:yOf(f),r:6,fill:s2,stroke:surf,"stroke-width":2},svg);
+  const hit=el("rect",{x:L,y:T,width:W,height:H,fill:"transparent",style:"cursor:crosshair"},svg);
+  hit.addEventListener("pointermove",e=>{const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(480/r.width);const x=clamp((px-L)/W*X1,0,X1);showTip([{v:fmt(x,2),t:"half-lives"},{v:fmtTime(x*nu.half,nu.unit),t:"elapsed"},{key:s1,v:fmt(Math.pow(2,-x)*100,2)+"%",t:"remaining"}],e.clientX,e.clientY);});
+  hit.addEventListener("pointerleave",hideTip);
+  hit.addEventListener("pointerdown",e=>{const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)*(480/r.width);decayT.value=clamp((px-L)/W*X1,0,6);decayUpdate();});
+  const m=$("#decayMsg");
+  if(nh<0.1)m.innerHTML="<b>Too young for this clock.</b> Less than a tenth of a half-life has passed: "+fmt((1-f)*100,1)+"% lost, which is within the precision of most measurements. For water this young you want a shorter clock — or a rising input curve (CFCs, SF₆, ⁸⁵Kr) instead of decay.";
+  else if(nh<=5)m.innerHTML="<b>Inside the window.</b> "+fmt(f*100,1)+"% of the "+nu.n+" remains after "+fmtTime(t,nu.unit)+". If the remaining fraction were measured to ±2% (absolute), the age would be known to about ±"+fmtTime(sigT,nu.unit)+" — and that is before the real uncertainties: the starting amount N₀, and whether the sample is one parcel or a mixture of ages.";
+  else m.innerHTML="<b>Beyond the clock.</b> After "+fmt(nh,1)+" half-lives only "+(f*100).toExponential(1)+"% remains — indistinguishable from zero for most methods. Tritium-dead water is older than about 60 years; radiocarbon-dead water older than about 30,000; for anything older you need ⁸¹Kr, ³⁶Cl, or ⁴He accumulation (Weeks 3, 9, 10).";
+}
+decayT.addEventListener("input",decayUpdate);
+$("#decayLog").addEventListener("click",e=>{decayLog=!decayLog;e.currentTarget.setAttribute("aria-pressed",decayLog?"true":"false");decayUpdate();});
+redraws.push(decayUpdate);decayUpdate();
+
+/* ============ §11 paper guides ============ */
+function buildAcc(id,rows){
+  const acc=$(id);
+  rows.forEach(r=>{
+    const item=hel("div","acc-item",acc);
+    const head=hel("button","acc-head",item);head.type="button";head.setAttribute("aria-expanded","false");
+    hel("span","tag",head,r.tag);hel("span","q",head,r.q);hel("span","caret",head,"▸");
+    const body=hel("div","acc-body",item);body.innerHTML=r.html;
+    head.addEventListener("click",()=>{const open=body.classList.toggle("open");head.setAttribute("aria-expanded",open?"true":"false");});
+  });
+}
+buildAcc("#accDansgaard",[
+ {tag:"QUESTION",q:"What is the paper trying to establish?",html:"<p>How the deuterium and oxygen-18 content of precipitation varies around the world, and which physical processes — condensation temperature, Rayleigh removal, evaporation and exchange from falling drops, kinetic effects at the ocean surface — account for the variation. The data come from the IAEA–WMO survey organized in 1961, whose stated aims were to provide the tritium input function for hydrology and to learn something about the global circulation of water (§1).</p><p>Dansgaard is candid about where he stands: \"the interpretation is far from completion and several of the problems are still open for discussion.\" Read the paper as a set of calculable models (chapters 2–3) held up against one or two years of station data (chapter 4).</p>"},
+ {tag:"MAP",q:"Where things are in 33 pages",html:"<ul><li><b>Ch. 1</b> — the δ definition and SMOW (§1.1); the fractionation factors, Table 1 (§1.2). Two pages you will reuse all term.</li><li><b>Ch. 2, equilibrium processes</b> — closed-system versus Rayleigh condensation (eq. 6, Fig. 1, Table 2); isothermal evaporation (eq. 7); the temperature effect (eqs. 8–11, Table 3, Fig. 3) and its glaciological use (§2.3.1, Fig. 4); the amount effect (§2.4); the δ²H–δ¹⁸O relation (eqs. 12–13, Fig. 5, Table 5).</li><li><b>Ch. 3, non-equilibrium</b> — the kinetic effect and the d-index (§3.1, Fig. 6); the evaporating ocean (§3.2, Table 7); exchange with falling drops (§3.3, Table 8).</li><li><b>Ch. 4, the survey</b> — annual means for islands (Figs. 8–9, eq. 15), Northern Hemisphere continents (Fig. 10, eqs. 16–17), Africa, South America, Australia (Figs. 11–13, Table 9), the Nile (Fig. 14); then monthly data: Table 10, six correlation groups (Figs. 15–20), the amount effect again (Figs. 21–23), seasonal contrasts (Table 12).</li><li><b>Ch. 5</b> — two pages of hydrological applications: altitude, amount and evaporation effects as tools; \"the natural labelling of water occurs in a much larger scale than in any hydrological experiment with artificially induced tracers.\"</li></ul>"},
+ {tag:"FIGURES",q:"Figures worth being able to point to",html:"<ul><li><b>Fig. 1</b> — Rayleigh versus closed-system fractionation against the remaining vapour fraction: the two extremes nature sits between.</li><li><b>Fig. 3</b> — annual mean δ¹⁸O against mean annual air temperature, 38 stations from Barbados to the South Pole, and the equation δ¹⁸O = 0.695 t − 13.6‰. Ask what is plotted: surface temperature, not condensation temperature.</li><li><b>Fig. 5</b> — calculated δ²H–δ¹⁸O curves for condensation from 0, 20 and 30 °C and for evaporation: the slope ≈ 8 derived, not assumed.</li><li><b>Fig. 6</b> — the schematic that defines d: equilibrium vapour on L, kinetic vapour above it, first-stage rains along a low-slope line through SMOW, later rains parallel to L.</li><li><b>Fig. 10</b> — Northern Hemisphere continental stations on one line (8.04 δ¹⁸O + 9.5) with Bombay off it; the continental effect shown as Valentia → Stuttgart → Vienna.</li><li><b>Figs. 21–23</b> — the amount effect at Wake and Binza, and Tokyo with temperature and amount effects superimposed.</li></ul>"},
+ {tag:"EQUATIONS",q:"Equations to recognize on sight",html:"<ul><li>δ = (a<sub>sample</sub> − a<sub>standard</sub>)/a<sub>standard</sub> × 10³‰ (p. 437) and eq. 1, the non-additivity of δ.</li><li>eq. 2: δ<sub>v</sub> = 1/α − 1 — equilibrium vapour; eq. 5 — the first condensate of that vapour is SMOW.</li><li>eq. 6 — Rayleigh condensate and vapour; eq. 7 — isothermal Rayleigh evaporation.</li><li>eq. 8 — the temperature derivative, with the dα/dt term that the naive slope formula (eq. 13) ignores.</li><li>eqs. 9–11 — δ¹⁸O and δ²H against mean annual temperature.</li><li>eq. 14 — the kinetic ordering c(H₂¹⁶O) &gt; c(HDO) &gt; c(H₂¹⁸O), and the definition d = δ²H − 8 δ¹⁸O (p. 450).</li><li>eqs. 15–17 — the tropical-island line (4.6 δ¹⁸O + 0.1) and the continental lines (8.04 δ¹⁸O + 9.5 unweighted; 8.1 δ¹⁸O + 11 weighted). Note that the abstract labels the two continental lines the other way round; quote the equations in §4.1.2.</li></ul>"},
+ {tag:"NUMBERS",q:"Numbers you should be able to quote",html:"<ul><li>Abundances 997,680 : 320 : 2,000 ppm; measuring accuracy ±2‰ (δ²H) and ±0.2‰ (δ¹⁸O); natural range &gt;400‰ and 40‰.</li><li>α at 20 °C: 1.079 (D), 1.0091 (¹⁸O); at 0 °C: 1.106, 1.0111; at −20 °C: 1.146, 1.0135 (extrapolated).</li><li>Temperature effect: 0.69–0.70‰ per °C observed; 0.66–0.67 calculated for Rayleigh cooling from 20 °C.</li><li>Amount effect: −1.6‰ per 100 mm (six tropical islands), −2.0‰ per 100 mm (eight partly continental stations).</li><li>d: +9.4‰ Northern Hemisphere continents; +14.8 Africa and Near East; +12.8 South America; +14.1 Australia; −2.8 at the Horlick Mountains, the only negative value.</li><li>Slopes: 8.0 ± 0.2 for condensation from 20 °C; 4.6 for tropical island unweighted means; 3.5 for their weighted means; ~5 for Lake Victoria and the Nile; 3.2 for fast evaporation at 20 °C (calculated).</li></ul>"},
+ {tag:"PRESS ON",q:"Where a careful reader might press",html:"<ul><li><b>Fractionation factors below 0 °C are extrapolated</b>, and the whole temperature-effect calculation depends on them; later measurements (Majoube, 1971; Horita &amp; Wesolowski, 1994) revised Table 1 by a few per mil. Does the argument survive the revision?</li><li><b>One or two years of data</b> per station, interpreted \"tentatively as normals\" — Dansgaard says so himself. Which conclusions rest on single stations (Bombay, Entebbe, Hawaii)?</li><li><b>Surface air temperature stands in for condensation temperature</b> in Fig. 3; the fit is across stations, not a process measurement. What does the continental effect do to a thermometer built this way?</li><li><b>Weighted versus unweighted means</b> change the tropical slope from 4.6 to 3.5 and the continental intercept from 9.5 to 11. Which average is the physically meaningful one, and for which question?</li><li><b>The kinetic theory is \"only a rough, qualitative consideration\"</b>; vapour compositions were never measured in the survey. How much of chapter 4's interpretation is explanation, and how much is re-description?</li><li><b>The amount effect has several candidate mechanisms</b> (deep cooling, exchange, drop evaporation); the Binza test separates amount from intensity but not the mechanisms from each other.</li></ul>"},
+ {tag:"THREAD",q:"How it connects — backwards and forwards",html:"<p><b>Back to Week 1:</b> this is the physics behind \"a structured signal\" — why water isotopes vary with season, elevation and distance inland, and why a conservative tracer of water exists at all.</p><p><b>Forward:</b> the temperature relation became ice-core palaeothermometry; the d-index became the deuterium excess used to diagnose evaporation in every groundwater survey (Jasechko, 2019, Fig. 3); the altitude effect became the recharge-elevation method; the amount effect underlies tropical and monsoon hydrology; and chapter 5's closing remark — that nature labels water on a scale no injected tracer can match — is the manifesto of environmental tracing.</p>"}
+]);
+buildAcc("#accCraig",[
+ {tag:"QUESTION",q:"What is the paper trying to establish?",html:"<p>Whether a single relationship links the deuterium and oxygen-18 content of natural meteoric waters worldwide. The abstract answers in two sentences: the relationship \"has been determined with a mass spectrometer\", and \"the isotopic enrichments, relative to ocean water, display a linear correlation over the entire range for waters which have not undergone excessive evaporation.\"</p>"},
+ {tag:"MAP",q:"Two pages, one figure",html:"<ul><li>The data: about 400 samples of rivers, lakes, rain and snow from many parts of the world, measured relative to ocean water (the standard is defined in the companion note, Craig 1961b, <i>Science</i> 133:1833–1834).</li><li>The figure: δ²H against δ¹⁸O over the whole natural range of meteoric waters, with the line δ²H = 8 δ¹⁸O + 10 through the points.</li><li>The exception: waters from closed basins, where evaporation is the dominant loss, branch off the line along much shallower trends, with slopes near 5.</li></ul>"},
+ {tag:"EQUATIONS",q:"The one equation",html:"<p>δ²H = 8 δ¹⁸O + 10, in per mil relative to SMOW. Dansgaard reports that his Northern Hemisphere continental fits (8.04 δ¹⁸O + 9.5; 8.1 δ¹⁸O + 11) are \"in essential agreement with that given by Craig (1961a)\", and a modern regression of 68,382 precipitation samples gives 7.93 δ¹⁸O + 8.99 (Jasechko, 2019). Sixty years of data have moved the line by less than its own scatter.</p>"},
+ {tag:"PRESS ON",q:"Where a careful reader might press",html:"<ul><li><b>\"Not excessively evaporated\" is partly judged by the line itself.</b> How are the points that define the line separated from the points that depart from it, and what would it take for the criterion to be circular?</li><li><b>Rivers and lakes integrate precipitation</b> over basins and seasons; rain and snow samples are events. Why should they share one line — and what does Dansgaard's tropical-island line (slope 4.6) do to the claim of a single global relation?</li><li><b>The intercept.</b> Which parts of the two-page paper are empirical and which interpretive — and what did the +10 mean before Dansgaard's kinetic argument (1964) and the Craig–Gordon evaporation model (1965) gave it a mechanism?</li><li><b>The samples predate the IAEA–WMO network.</b> Where on Earth were there few or no samples, and does it matter for a global line?</li></ul>"},
+ {tag:"THREAD",q:"How it connects",html:"<p>Craig's line is the reference frame for everything that follows: Dansgaard's d is distance from it, Evaristo's precipitation offset is distance from a local version of it, and the evaporation slope of ~5 that Craig saw in closed basins is the marker Block 3 relies on. Craig (1961b), the companion note, gave the field its standard — without an agreed zero, no two laboratories' δ values could be compared.</p>"}
+]);
+buildAcc("#accEvaristo",[
+ {tag:"QUESTION",q:"What is the paper trying to establish?",html:"<p>Whether ecohydrological separation — plants transpiring soil water that does not itself recharge groundwater or feed streams — is widespread, rather than a local finding from Oregon and Mexico. The hypothesis under test: \"the isotopic composition of waters that supply plant transpiration differs from that of waters that supply groundwater and streamflow.\" The tool: the distance of each water type from its local meteoric water line.</p>"},
+ {tag:"MAP",q:"Where the argument lives",html:"<ul><li><b>Table 1</b> — the 47 sites by biome: arid (7 papers), Mediterranean (6), temperate forests (17), temperate grasslands (7), tropics (10); LMWL slopes 7.1–8.2; median δ²H of plant, soil, stream and groundwater.</li><li><b>Fig. 1</b> — four panels: groundwater and stream water along the GMWL; plant xylem and soil water below it (with median δ¹⁸O/δ²H: −7.7/−51.5, −6.2/−37.1, −5.5/−50.6, −7.5/−63.9).</li><li><b>eq. 1 and Fig. 2</b> — the precipitation offset, site by site, grouped by biome: xylem −5.6 (IQR 4.7), soil −6.2 (4.4), groundwater −1.8 (3.2), stream 0.22 (3.7).</li><li><b>eqs. 2–3, Extended Data Fig. 1</b> — tracing xylem water back along its evaporation line to the LMWL to find its source precipitation; the \"segregation\" result (80% of sites) follows.</li><li><b>Methods</b> — data compilation (tables and digitized figures), groundwater from the compiled papers (24 sites) or the global database within 200–500 km (21 sites) with a sensitivity analysis, transpiration-weighted xylem values, the partial-mixing coefficient (eqs. 6–7), extraction-technique comparison (Extended Data Fig. 5), and the global map (Extended Data Fig. 6).</li></ul>"},
+ {tag:"NUMBERS",q:"Numbers you should be able to quote",html:"<ul><li>47 sites, five biomes; n = 1,460 xylem, 1,830 soil, 336 stream, 2,749 groundwater, 488 precipitation samples.</li><li>40 of 47 sites: groundwater offsets statistically distinct from soil and xylem offsets. Groundwater and stream water 5.4 and 4.8 offset units closer to the line than soil and xylem; largest gaps in the tropics (7.7) and Mediterranean (5.4), smallest in temperate forests (1.6).</li><li>37 of 46 sites (80%): groundwater (median −52‰ δ²H) differs from the xylem source value (−82‰); 29 of 35 sites (83%) for soil water (−104‰).</li><li>Analytical errors assumed 1‰ (δ²H) and 0.2‰ (δ¹⁸O); uncertainty of the evaporation-line slope m: 1.07‰ (δ¹⁸O) and 5.54‰ (δ²H) at 2σ.</li><li>Soil offsets by biome (Extended Data Table 3): arid −3.7, Mediterranean −7, temperate forests −5.2, grasslands −5.1, tropics −9.3.</li></ul>"},
+ {tag:"PRESS ON",q:"Where a careful reader might press",html:"<ul><li><b>\"Below the line\" demonstrates evaporation, not isolation.</b> The step from an evaporated soil-water signal to a compartment that \"does not contribute to groundwater recharge or streamflow\" is an inference. What transport model connects them, and what else could produce the pattern (seasonal timing of recharge; sampling soils in the dry season; mixing)?</li><li><b>Groundwater often comes from elsewhere</b> — within 200 to 500 km for 21 sites. The paper's sensitivity analyses (groundwater offsets invariant with search radius, in Methods; xylem-source minus groundwater differences invariant with distance, Extended Data Fig. 3) answer one objection; do they answer the spatial one for a site-by-site test?</li><li><b>Two different quantities are compared:</b> the xylem δ source (an intercept, with the slope uncertainty of eqs. 2–3) against a mean groundwater value. Are their uncertainties comparable, and are straight evaporation lines a safe assumption?</li><li><b>Extraction artefacts.</b> Cryogenic extraction and azeotropic distillation agree with each other but both differ from liquid–vapour equilibration in δ¹⁸O (Extended Data Fig. 5); the authors argue the offsets survive the differences. Week 13 (Orlowski et al., 2018; the 2021 PNAS exchange) takes this up.</li><li><b>The LMWL is part of the evidence.</b> An offset is only as good as the local line it is measured from — its slope, intercept, years and weighting.</li><li><b>What the data cannot do:</b> the authors say so — the compilation links neither plant uptake nor recharge to storm intensity, and temporal contrasts could be tested only where a source paper sampled at two or more times (38 of 47 sites; separation held at 32 of them).</li></ul>"},
+ {tag:"THREAD",q:"How it connects",html:"<p>This is the week's fundamentals doing work: conservative mixing (straight lines), kinetic evaporation (shallow slopes), and a reference line (Craig's) turned into a site-scale diagnostic. It feeds Week 3 (age distributions in the soil–plant system — Evaristo et al., 2019), Week 8 and 13 (what extraction and analysis do to the signal), and Week 11 (hydrograph separation and mixing models, which assume the compartments this paper says are separate).</p>"}
+]);
+
+/* ============ §12 scenarios ============ */
+const scenarios=[
+ {letter:"A",title:"A well below the line",q:"A shallow well plots 10‰ below the local meteoric water line in δ²H (d-excess +2‰ against +12‰ in local rain), along a trend of slope ≈ 4 toward the line. What do you conclude first?",
+  opts:[
+   {t:"The recharge water evaporated before it reached the water table — from ponded water, an irrigation canal, or the upper soil — and I should look for the evaporated source and test with chloride and water levels.",best:true,fb:"Evaporation is the simplest reading of a shallow-slope departure below the line (Sections 4, 7). The check is mandatory: mixing between unevaporated groundwater and an evaporated lake or canal water produces an identical trend (Kendall et al., 2014), so find the end-members before naming the process."},
+   {t:"The aquifer is geothermal: high-temperature exchange with rock has shifted δ¹⁸O.",best:false,fb:"High-temperature water–rock exchange does lower d by raising δ¹⁸O (Jasechko, 2019, Fig. 3b), but it needs a hot system and leaves other signatures (temperature, silica, chemistry). For a shallow well in an ordinary setting it is the exotic hypothesis, not the first one."},
+   {t:"The laboratory made an error; re-run the sample.",best:false,fb:"Both isotopes were measured and they are internally consistent with a physical process. Re-analysis is cheap insurance, but a 10‰ departure along a slope of 4 is a pattern, not noise."}],
+  debrief:{choice:"Evaporation before recharge, held provisionally.",check:"Characterize the candidate evaporated source (lake, canal, soil) and the unevaporated groundwater; a mixing line and an evaporation line look alike on this diagram."}},
+ {letter:"B",title:"A spring in the mountains",q:"A spring has δ¹⁸O = −9.5‰; amount-weighted annual precipitation at a valley station (800 m) is −6.5‰, and the regional gradient is −0.25‰ per 100 m. What is the recharge elevation?",
+  opts:[
+   {t:"About 1,200 m above the valley station (≈ 2,000 m) — with the caveat that if recharge is biased to the cold season, the seasonal depletion mimics altitude and the estimate is too high.",best:true,fb:"H = (δ_spring − δ_precip)/m + h = (−9.5 + 6.5)/(−0.25‰ per 100 m) × 100 m + 800 m ≈ 2,000 m (Jasechko, 2019, eq. 6). The caveat is Week 1's Finding 1: aquifers fill disproportionately from cold and wet seasons, whose precipitation is lighter than the annual mean — 2‰ of seasonal bias would remove 800 m of apparent altitude."},
+   {t:"It cannot be estimated: the spring must be fossil water recharged under a colder climate.",best:false,fb:"Possible — fossil groundwater does record colder recharge (Week 3) — but a 3‰ difference is within the ordinary altitude and seasonal range, and the hypothesis needs an age tracer before it displaces the simpler reading."},
+   {t:"The spring water has evaporated, which is why it differs from local rain.",best:false,fb:"Evaporation makes water heavier, not lighter, and pushes it below the meteoric line. A spring that is 3‰ lighter than valley rain has the opposite signature."}],
+  debrief:{choice:"≈ 2,000 m from the lapse rate, stated with the seasonal-bias caveat.",check:"Compare the spring with the seasonally weighted recharge composition, not just the annual mean, and use a locally measured gradient — windward and leeward slopes can differ threefold (Jasechko, 2019)."}},
+ {letter:"C",title:"A tropical record",q:"At a lowland tropical station the monthly δ¹⁸O of rain swings from 0 to −9‰ through the year while the monthly mean temperature moves by only 2 °C. What is controlling the variation?",
+  opts:[
+   {t:"The amount effect: plot δ¹⁸O against monthly rainfall and expect roughly −1.5 to −2‰ per 100 mm, as at Wake and Binza.",best:true,fb:"This is Dansgaard's §2.4 and Figs. 21–22: rainy months light, sparse months heavy, with the temperature effect unable to contribute more than a per mil or so. Check the band width too — Binza's correlation with amount (0.82) and not intensity (0.07) is the kind of diagnostic that separates mechanisms."},
+   {t:"The temperature effect, as at high latitudes.",best:false,fb:"At 0.7‰ per °C, a 2 °C swing buys about 1.4‰ — a sixth of what is observed. Dansgaard's polar stations are the ones where temperature rules; \"at low latitudes the amount effect accounts for the variations.\""},
+   {t:"The altitude effect.",best:false,fb:"The station does not move. Altitude is a spatial effect between sites, not a seasonal one at a single site (though the altitude at which rain forms can vary)."}],
+  debrief:{choice:"Amount effect.",check:"Regress δ¹⁸O on monthly amount and look at d as well: falling-drop evaporation in the dry months should raise δ and lower d along a low slope (Kano, Fig. 17)."}},
+ {letter:"D",title:"One isotope only",q:"You have δ¹⁸O — but not δ²H — of soil water and plant xylem water from a field site. Can you test whether the soil water has evaporated?",
+  opts:[
+   {t:"Not yet: evaporation is diagnosed by a sample's offset from the local meteoric water line, which needs both isotopes. Measure δ²H as well (modern analysers give both from one run).",best:true,fb:"The kinetic signature is the change in the δ²H/δ¹⁸O relationship, not a value of either isotope alone. Evaristo et al. (2015) excluded every single-isotope paper for this reason. A high δ¹⁸O could be evaporation, a summer storm, or a low-altitude source."},
+   {t:"Yes: compare soil δ¹⁸O with the mean δ¹⁸O of local precipitation; a heavier value means evaporation.",best:false,fb:"Heavier than the mean also describes summer rain, a particular storm, or recharge from a different season — all of which keep d unchanged. One isotope cannot separate 'evaporated' from 'different source'."},
+   {t:"Yes, if the soil δ¹⁸O increases toward the surface.",best:false,fb:"A gradient toward the surface is consistent with evaporation but also with infiltration of recent, heavier rain. Suggestive, not diagnostic — and the diagnosis is what the second isotope provides."}],
+  debrief:{choice:"Add δ²H.",check:"Then compute the offset against a local line built from monthly precipitation, not the global line — and remember that the extraction method can shift soil-water δ¹⁸O (Week 13)."}}
+];
+const scenWrap=$("#scenarios");
+scenarios.forEach(sc=>{
+  const card=hel("div","scen",scenWrap);
+  const head=hel("div","scen-head",card);hel("span","letter",head,sc.letter);hel("h3",null,head,sc.title);
+  hel("p","scen-q",card,sc.q);
+  const list=hel("div","opt-list",card);
+  const fb=hel("div","feedback",card);const db=hel("div","debrief",card);
+  const btns=[];
+  sc.opts.forEach(o=>{
+    const b=hel("button","opt-btn",list,o.t);b.type="button";btns.push(b);
+    b.addEventListener("click",()=>{
+      if(fb.classList.contains("open"))return;
+      btns.forEach(x=>x.disabled=true);
+      b.classList.add(o.best?"sel-best":"sel-weak");
+      fb.textContent="";hel("b",null,fb,o.best?"A defensible first reading. ":"Less defensible as a first reading. ");fb.appendChild(document.createTextNode(o.fb));
+      fb.classList.add("open");
+      db.textContent="";
+      const p1=hel("p",null,db);hel("b",null,p1,"Debrief — first reading: ");p1.appendChild(document.createTextNode(sc.debrief.choice));
+      const p2=hel("p",null,db);hel("b",null,p2,"Non-negotiable check: ");p2.appendChild(document.createTextNode(sc.debrief.check));
+      p2.style.marginBottom="0";
+      db.classList.add("open");
+    });
+  });
+});
+
+/* ============ §13 quiz ============ */
+const quiz=[
+ {q:"A sample has δ¹⁸O = −20‰. Relative to the standard, it has…",sec:"#s-delta",secName:"§3 δ-notation",opts:[
+   {t:"20% fewer ¹⁸O atoms.",ok:false,fb:"Per mil, not per cent: −20‰ is −2%."},
+   {t:"2% fewer ¹⁸O atoms (about 40 fewer per million oxygen atoms).",ok:true,fb:"Yes — δ is a ratio of ratios in parts per thousand: 2,005 per million becomes about 1,965."},
+   {t:"20 fewer ¹⁸O atoms in total.",ok:false,fb:"δ is relative, not a count; the absolute number depends on the sample size."}]},
+ {q:"Vapour in equilibrium with the ocean at 20 °C is, relative to the ocean…",sec:"#s-fraction",secName:"§4 Fractionation",opts:[
+   {t:"depleted by roughly 73‰ in deuterium and 9‰ in ¹⁸O, and its first condensate is the ocean's composition again.",ok:true,fb:"Right: δ_v = 1/α − 1 with α = 1.079 and 1.0091 (Dansgaard, eq. 2), and condensing it back enriches by the same α (eq. 5)."},
+   {t:"enriched in heavy isotopes, because evaporation concentrates them.",ok:false,fb:"Evaporation concentrates heavy isotopes in the water left behind; the vapour is the depleted phase."},
+   {t:"identical to the ocean; only kinetic evaporation fractionates.",ok:false,fb:"Equilibrium fractionation is the baseline — the heavy molecules have the lower vapour pressure even when nothing is rushed."}]},
+ {q:"As an air mass cools and rains out under Rayleigh conditions, its successive precipitation becomes…",sec:"#s-rayleigh",secName:"§5 Rainout",opts:[
+   {t:"progressively heavier, as the light vapour escapes.",ok:false,fb:"The reverse: each condensate takes more than its share of heavy isotopes, leaving the vapour — and the next rain — lighter."},
+   {t:"progressively lighter in both isotopes, tracking a line of slope about 8.",ok:true,fb:"Yes — the same Rayleigh law for both isotopes with α's whose effects stand in a ratio near 8 (Dansgaard, Table 5)."},
+   {t:"constant, because condensation is an equilibrium process.",ok:false,fb:"Equilibrium fixes the ratio between phases at each step; removing the condensate makes the remaining reservoir drift."}]},
+ {q:"Dansgaard's temperature effect in annual mean precipitation is about…",sec:"#s-effects",secName:"§6 The effects",opts:[
+   {t:"0.7‰ in δ¹⁸O per °C of mean annual air temperature.",ok:true,fb:"δ¹⁸O = 0.695 t − 13.6‰ across 70 °C of stations (eq. 9); a Rayleigh process from 20 °C predicts 0.66–0.67‰/°C."},
+   {t:"7‰ in δ¹⁸O per °C.",ok:false,fb:"An order of magnitude too large; 7‰ per °C would put Greenland at −300‰."},
+   {t:"0.7‰ per 100 mm of monthly rainfall.",ok:false,fb:"That is the shape of the amount effect (about −1.6 to −2‰ per 100 mm), a different control."}]},
+ {q:"A lake sample has d = −8‰ while local precipitation has d = +10‰. The most likely reason is…",sec:"#s-mwl",secName:"§7 Water lines",opts:[
+   {t:"the lake water has evaporated under kinetic (non-equilibrium) conditions.",ok:true,fb:"Kinetic evaporation from a limited water body moves it up a shallow slope and drives d down — the closed-basin signature Craig saw and Dansgaard explained."},
+   {t:"the lake is fed by snowmelt.",ok:false,fb:"Snowmelt is light but keeps its d; equilibrium processes do not change d."},
+   {t:"the lake formed from vapour evaporated very fast from the ocean.",ok:false,fb:"Fast ocean evaporation raises the vapour's d; rain from it would have a high d, not a negative one."}]},
+ {q:"Which of these leaves the deuterium excess of a water unchanged?",sec:"#s-mwl",secName:"§7 Water lines",opts:[
+   {t:"Equilibrium condensation as an air mass cools.",ok:true,fb:"Yes — to first order the point slides along a slope-8 line and keeps its d (Dansgaard, §3.1), which is why continental rain inherits the ocean vapour's surplus."},
+   {t:"Evaporation from a pond into dry air.",ok:false,fb:"Kinetic; d falls."},
+   {t:"Evaporation from the sea surface into dry, windy air.",ok:false,fb:"Kinetic; the vapour gains d."}]},
+ {q:"In Evaristo et al. (2015), soil and plant xylem waters from the 47 sites…",sec:"#s-tww",secName:"§8 Two water worlds",opts:[
+   {t:"plotted on the local meteoric water lines, like groundwater and stream water.",ok:false,fb:"It was groundwater and stream water that sat on the lines (offsets −1.8 and 0.22); the soil and xylem waters did not."},
+   {t:"plotted below the local meteoric water lines, with negative precipitation offsets (medians −6.2 and −5.6), while groundwater and stream water sat near zero.",ok:true,fb:"Yes — the evaporated signature of the soil and plant compartment against the unevaporated groundwater and streams, at 40 of 47 sites."},
+   {t:"could not be compared with groundwater because only δ¹⁸O was available.",ok:false,fb:"The compilation used only dual-isotope studies precisely so that offsets from the line could be computed."}]},
+ {q:"Which tracer moves conservatively with the water but is lost at a fixed rate?",sec:"#s-conservative",secName:"§9 Conservative?",opts:[
+   {t:"Chloride.",ok:false,fb:"Conservative, and stable: it is neither consumed nor radioactive."},
+   {t:"Tritium.",ok:true,fb:"Part of the water molecule, transported with it, decaying with a 12.32-year half-life: conservative in transport, predictable in loss."},
+   {t:"Nitrate δ¹⁵N.",ok:false,fb:"Reactive: denitrification and assimilation transform it — a process tracer rather than a water tracer."}]},
+ {q:"After three half-lives, the fraction of a radionuclide remaining is…",sec:"#s-decay",secName:"§10 Decay",opts:[
+   {t:"one quarter.",ok:false,fb:"That is two half-lives."},
+   {t:"one eighth.",ok:true,fb:"(½)³ = 1/8: 12.5%. For tritium that is 37 years; for radiocarbon 17,190 years."},
+   {t:"zero — three half-lives is the limit of the method.",ok:false,fb:"Decay never reaches zero; the practical limit comes from measurement precision, roughly five half-lives for most methods."}]}
+];
+const quizWrap=$("#quiz");let answered=0,correct=0;
+quiz.forEach((qz,qi)=>{
+  const card=hel("div","quiz-q",quizWrap);
+  hel("h4",null,card,(qi+1)+". "+qz.q);
+  const list=hel("div","opt-list",card);
+  const fb=hel("div","feedback",card);
+  const btns=[];
+  qz.opts.forEach(o=>{
+    const b=hel("button","opt-btn",list,o.t);b.type="button";btns.push(b);
+    b.addEventListener("click",()=>{
+      if(fb.classList.contains("open"))return;
+      btns.forEach(x=>x.disabled=true);
+      b.classList.add(o.ok?"sel-best":"sel-weak");
+      answered++;if(o.ok)correct++;
+      fb.textContent="";
+      hel("span",o.ok?"tick":"cross",fb,o.ok?"✓ ":"✗ ");
+      fb.appendChild(document.createTextNode(o.fb+" "));
+      const a=hel("a",null,fb,"Review "+qz.secName);a.href=qz.sec;
+      fb.classList.add("open");
+      $("#quizScore").textContent="Score so far: "+correct+" of "+answered+" on first click"+(answered===quiz.length?" — done. Anything missed, the linked section covers.":"");
+    });
+  });
+});
+
+/* ============ §14 glossary ============ */
+const gloss=[
+ {t:"Isotope / isotopologue",d:"Isotopes are atoms of one element with different neutron numbers (¹H, ²H, ³H; ¹⁶O, ¹⁷O, ¹⁸O). Isotopologues are molecules that differ only in isotopic composition: ¹H₂¹⁶O, ¹HD¹⁶O, ¹H₂¹⁸O. The mass differences are what every effect in this primer rests on."},
+ {t:"δ (delta) notation",d:"δ = (R_sample/R_standard − 1) × 1000‰, where R is the heavy-to-light isotope ratio. Negative means depleted in the heavy isotope relative to the standard; positive, enriched. δ values combine non-additively for large values (Dansgaard, eq. 1)."},
+ {t:"Per mil (‰)",d:"Parts per thousand. 10‰ = 1%. Typical precision: 0.1–0.2‰ for δ¹⁸O, ~1‰ for δ²H."},
+ {t:"SMOW, VSMOW, SLAP",d:"Standard Mean Ocean Water, defined by Craig (1961b) from a U.S. National Bureau of Standards reference water and ocean measurements. VSMOW is its IAEA successor (²H/¹H = 155.76 × 10⁻⁶; ¹⁸O/¹⁶O = 2005.2 × 10⁻⁶); SLAP (Standard Light Antarctic Precipitation, −428‰ and −55.5‰) anchors the other end of the reporting scale."},
+ {t:"Fractionation factor α",d:"The ratio of isotope ratios between two phases or substances at equilibrium, α = R_A/R_B. For liquid–vapour water, α = p/p′ (vapour pressure of the light molecule over the heavy one): 1.079 (D) and 1.0091 (¹⁸O) at 20 °C, larger when colder (Dansgaard, Table 1)."},
+ {t:"Enrichment factor ε",d:"ε = (α − 1) × 1000‰ — the fractionation expressed in per mil, roughly the δ difference between the two phases. About 79‰ for deuterium and 9‰ for ¹⁸O at 20 °C."},
+ {t:"Equilibrium fractionation",d:"Fractionation in a slow, reversible exchange whose magnitude is set by temperature alone. Condensation in clouds and evaporation into saturated air are close to it. It moves both water isotopes in a ratio near 8 and leaves d unchanged."},
+ {t:"Kinetic fractionation",d:"Fractionation in a fast, one-way process (evaporation into dry air, diffusion) where the lighter molecule's higher speed matters: c(H₂¹⁶O) > c(HDO) > c(H₂¹⁸O). It affects ¹⁸O relatively more than deuterium, lowers the δ²H/δ¹⁸O slope, and changes d."},
+ {t:"Rayleigh distillation",d:"Fractionation in an open system where the product is removed as it forms, so the remaining reservoir — and each new increment of product — drifts progressively. For condensation: δ_c = (α/α₀) F^(α_m − 1) − 1 (Dansgaard, eq. 6). The cause of the large isotopic range of precipitation."},
+ {t:"Temperature effect",d:"The decrease of precipitation δ with condensation temperature; in annual means, δ¹⁸O ≈ 0.695 t_a − 13.6‰ across coastal North Atlantic and polar stations (Dansgaard, eq. 9). Also the cause of seasonal cycles at high-latitude stations."},
+ {t:"Amount effect",d:"The anticorrelation between monthly δ and monthly rainfall in the tropics and in mid-latitude summers: about −1.6 to −2.0‰ in δ¹⁸O per 100 mm (Dansgaard, §4.2.3). Deep cooling in big storms, plus less evaporation and exchange from falling drops in humid air."},
+ {t:"Latitude, altitude and continental effects",d:"Precipitation gets lighter toward the poles, with elevation (typically −0.1 to −0.5‰ per 100 m in δ¹⁸O; Jasechko, 2019), and with distance inland — all expressions of progressive rainout, with re-evaporated light water and convective rain adding to the continental effect."},
+ {t:"Global meteoric water line (GMWL)",d:"Craig's (1961) δ²H = 8 δ¹⁸O + 10 for worldwide precipitation not excessively evaporated. The slope reflects equilibrium Rayleigh condensation; the intercept, kinetic evaporation from the ocean. A modern regression of 68,382 precipitation samples gives 7.93 δ¹⁸O + 8.99 (Jasechko, 2019)."},
+ {t:"Local meteoric water line (LMWL)",d:"The regression of δ²H on δ¹⁸O for precipitation at one station or region. Slopes and intercepts vary (7.1–8.2 across the biomes of Evaristo et al., 2015) with climate, season, weighting and years sampled; it is the reference for a site's offsets."},
+ {t:"Deuterium excess (d-excess, d)",d:"d = δ²H − 8 δ¹⁸O (Dansgaard, 1964): the surplus of deuterium relative to a slope-8 line through SMOW. An index of kinetic processes — raised in vapour by fast ocean evaporation (source-region humidity), lowered in water by evaporation from a limited body. Unchanged by equilibrium processes."},
+ {t:"Evaporation line",d:"The trajectory of a water body's remaining water as it evaporates: slope ~2–6 on the δ²H–δ¹⁸O diagram (Craig's closed basins ≈ 5; lower in drier air and in soils). It starts on the meteoric line and runs below it."},
+ {t:"Precipitation offset (line-conditioned excess)",d:"[δ²H − a δ¹⁸O − b]/S: a sample's distance from the local meteoric water line, in units of the analytical uncertainty (Landwehr & Coplen, 2006; Evaristo et al., 2015, eq. 1). Zero for local precipitation; negative for evaporated water. A generalization of d-excess to lines whose slope is not 8."},
+ {t:"Ecohydrological separation (\"two water worlds\")",d:"The hypothesis that plant transpiration is supplied by soil water isotopically distinct from — and not contributing to — the water that recharges groundwater and feeds streams (Brooks et al., 2010; McDonnell, 2014). Evaristo et al. (2015) found the pattern at 40 of 47 sites."},
+ {t:"Xylem water",d:"Water moving within a plant, sampled from stems or roots and extracted (cryogenically, by distillation, or by vapour equilibration) for isotope analysis. Plants take up water largely without fractionation, so xylem water records the isotopic composition of its soil-water source."},
+ {t:"Conservative tracer",d:"A tracer changed only by mixing: it moves with the water and is neither produced nor consumed along the way. Water isotopes below ground at low temperature; chloride; the noble gases. Always a claim about tracer plus setting."},
+ {t:"Reactive tracer",d:"A tracer transformed en route — by reaction, exchange, sorption, biology. Nitrate isotopes, dissolved carbon, heat. A liability for source questions; the source of information for process questions."},
+ {t:"Decay constant λ and half-life",d:"dN/dt = −λN gives N = N₀e^(−λt); the half-life t½ = ln 2/λ is the time for half the atoms to decay. λ is independent of temperature, pressure and chemistry (White, 2015, eq. 1.12). Tritium 12.32 y; ¹⁴C 5,730 y; ³⁹Ar 269 y; ⁸¹Kr 229,000 y; ³⁶Cl 301,000 y; ³⁵S 87.4 d."},
+ {t:"Tritium unit (TU)",d:"One ³H atom per 10¹⁸ hydrogen atoms. Natural precipitation background below ~15 TU over non-polar lands; 1960s bomb-pulse rain 5–500 times higher (Week 1)."},
+ {t:"GNIP",d:"The Global Network of Isotopes in Precipitation, the IAEA–WMO survey Dansgaard analysed in its first two years (1961–62) and the backbone of modern precipitation-isotope compilations such as the 68,382-sample regression in Jasechko (2019)."},
+ {t:"Residence / transit time — preview",d:"How long water spends in a store or takes to traverse a system. Real samples carry distributions of these times; Week 3 separates apparent age, mean residence time and travel-time distributions, and the decay law of Section 10 is where the arithmetic starts."},
+ {t:"Apparent age — preview",d:"The age obtained by pretending a sample is a single parcel and inverting one decaying tracer with a known input. Week 3 shows when it is a useful shorthand and when it misleads."}
+];
+const glossGrid=$("#glossGrid");
+gloss.forEach(g=>{
+  const d=hel("details","gloss",glossGrid);
+  const s=hel("summary",null,d,g.t);
+  if(/preview/i.test(g.t))hel("span","pill",s,"Week 3");
+  hel("p",null,d,g.d);
+});
+$("#glossSearch").addEventListener("input",e=>{
+  const v=e.target.value.trim().toLowerCase();
+  $$("#glossGrid details").forEach((d,i)=>{
+    const hit=!v||gloss[i].t.toLowerCase().includes(v)||gloss[i].d.toLowerCase().includes(v);
+    d.style.display=hit?"":"none";
+  });
+});
+
+/* boot */
+applyTheme();
+})();
+</script>
+
+</body>
+</html>
