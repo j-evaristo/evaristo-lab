@@ -744,7 +744,7 @@ footer p{margin:.3em 0}
 
   <div class="card">
     <h3>Aquitards age aquifers simply by existing</h3>
-    <p class="small">Solve the steady transport equation across an aquitard sandwiched between two aquifers (Bethke &amp; Johnson eqs. 19–24, their Figure 4). With no cross-flow the excess-age profile is a parabola peaking at b²/2D* — drag the sliders and watch the middle of a thick aquitard hold water hundreds of thousands of years older than the aquifers around it. Then note the readout the sliders <i>cannot</i> change.</p>
+    <p class="small">Solve the steady transport equation across an aquitard sandwiched between two aquifers (Bethke &amp; Johnson eqs. 19–24, their Figure 4). With no cross-flow the excess-age profile is a parabola peaking at b²/2D*. Axes are absolute — depth in metres inside a fixed ±100 m frame, excess age in years — so both sliders reshape the curve: b widens the aquitard and grows the peak as b²; D* stretches or shrinks it horizontally. Then note the readout the sliders <i>cannot</i> change.</p>
     <div class="slider-row">
       <label for="aqB">half-thickness b</label>
       <input type="range" id="aqB" min="5" max="100" step="1" value="50">
@@ -1279,8 +1279,10 @@ function decayUpdate(){
   /* sweet band 0.1–5 half-lives */
   el("rect",{x:xOf(0.1),y:T,width:xOf(5)-xOf(0.1),height:B-T,fill:cssVar("--wash1")},svg);
   el("text",{x:(xOf(0.1)+xOf(5))/2,y:T+14,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent="the clock's comfortable range (~0.1–5 half-lives)";
+  const mut=cssVar("--muted");
   for(let h=0;h<=X1;h++){el("line",{x1:xOf(h),y1:T,x2:xOf(h),y2:B,stroke:grid,"stroke-width":1},svg);
-    el("text",{x:xOf(h),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=h+" t½";}
+    el("text",{x:xOf(h),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=h+" t½";
+    if(h>0)el("text",{x:xOf(h),y:B+36,fill:mut,"font-size":10.5,"text-anchor":"middle"},svg).textContent=fmtYr(h*nu.hl);}
   [1,0.5,0.25,0.125].forEach(c=>{el("line",{x1:L,y1:yOf(c),x2:R,y2:yOf(c),stroke:grid,"stroke-width":1,"stroke-dasharray":"2 5"},svg);
     el("text",{x:L-8,y:yOf(c)+4,fill:ink2,"font-size":12,"text-anchor":"end"},svg).textContent=fmt(c*100,c<0.25?1:0)+"%";});
   el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
@@ -1601,29 +1603,46 @@ function aqUpdate(){
   const peak=b*b/(2*D)/YRS;
   $("#aqPeak").textContent=fmtYr(peak);
   const svg=$("#aqSvg");svg.textContent="";
-  const s1=cssVar("--s1"),ink2=cssVar("--ink-2"),grid=cssVar("--grid"),base=cssVar("--baseline"),wash=cssVar("--wash1");
-  const L=80,R=430,T=30,B=290,mid=(T+B)/2;
-  /* aquifers */
-  el("rect",{x:L,y:T-14,width:R-L,height:16,fill:wash},svg);
-  el("rect",{x:L,y:B-2,width:R-L,height:16,fill:wash},svg);
-  el("text",{x:L+4,y:T-2,fill:ink2,"font-size":11},svg).textContent="aquifer (age τaqf) — flow →";
-  el("text",{x:L+4,y:B+11,fill:ink2,"font-size":11},svg).textContent="aquifer — flow →";
+  const s1=cssVar("--s1"),ink2=cssVar("--ink-2"),mut=cssVar("--muted"),grid=cssVar("--grid"),base=cssVar("--baseline"),wash=cssVar("--wash1");
+  const L=88,R=436,T=24,B=286,FR=100;
+  const yOf=z=>T+(B-T)*(FR-z)/(2*FR);
+  /* nice-ladder axis maximum in years */
+  const e10=Math.pow(10,Math.floor(Math.log10(peak*1.02)));
+  const m10=peak*1.02/e10;
+  const A=(m10<=1?1:m10<=2?2:m10<=5?5:10)*e10;
+  const xOf=tp=>L+(R-L)*tp/A;
+  /* frame */
+  el("line",{x1:L,y1:T,x2:R,y2:T,stroke:grid,"stroke-width":1},svg);
+  el("line",{x1:L,y1:B,x2:R,y2:B,stroke:grid,"stroke-width":1},svg);
   el("line",{x1:L,y1:T,x2:L,y2:B,stroke:base,"stroke-width":1.2},svg);
-  el("line",{x1:L,y1:mid,x2:R,y2:mid,stroke:grid,"stroke-width":1,"stroke-dasharray":"3 5"},svg);
-  el("text",{x:R-4,y:mid-5,fill:ink2,"font-size":11,"text-anchor":"end"},svg).textContent="aquitard centreline (z = 0)";
-  /* parabola: excess age tau'(z)= (b^2 - z^2)/2D  ; x = tau', y = z from -b..b */
-  const xOf=tp=>L+(R-L-16)*tp/peak;
+  /* age gridlines + ticks (absolute years) */
+  [A/2,A].forEach(t=>{el("line",{x1:xOf(t),y1:T,x2:xOf(t),y2:B,stroke:grid,"stroke-width":1},svg);
+    el("text",{x:xOf(t),y:B+18,fill:ink2,"font-size":11,"text-anchor":"middle"},svg).textContent=fmtYr(t);});
+  el("text",{x:L,y:B+18,fill:ink2,"font-size":11,"text-anchor":"middle"},svg).textContent="0";
+  /* aquitard band and boundaries at ±b */
+  el("rect",{x:L,y:yOf(b),width:R-L,height:yOf(-b)-yOf(b),fill:wash},svg);
+  [b,-b].forEach(z=>el("line",{x1:L,y1:yOf(z),x2:R,y2:yOf(z),stroke:base,"stroke-width":1.2},svg));
+  el("text",{x:L-8,y:yOf(b)+4,fill:ink2,"font-size":11,"text-anchor":"end"},svg).textContent="+"+fmtInt(b)+" m";
+  el("text",{x:L-8,y:yOf(-b)+4,fill:ink2,"font-size":11,"text-anchor":"end"},svg).textContent="−"+fmtInt(b)+" m";
+  /* aquifer labels (outside the aquitard) */
+  if(yOf(b)-T>=15)el("text",{x:L+5,y:(T+yOf(b))/2+4,fill:ink2,"font-size":11},svg).textContent="aquifer (age τaqf) — flow →";
+  else el("text",{x:L+5,y:T-7,fill:ink2,"font-size":11},svg).textContent="aquifer (age τaqf) — flow →";
+  if(B-yOf(-b)>=15)el("text",{x:L+5,y:(yOf(-b)+B)/2+4,fill:ink2,"font-size":11},svg).textContent="aquifer — flow →";
+  /* centreline */
+  el("line",{x1:L,y1:yOf(0),x2:R,y2:yOf(0),stroke:grid,"stroke-width":1,"stroke-dasharray":"3 5"},svg);
+  el("text",{x:R-4,y:yOf(0)-6,fill:mut,"font-size":10.5,"text-anchor":"end"},svg).textContent="aquitard centreline (z = 0)";
+  /* parabola in absolute units */
   let d="";
   for(let i=0;i<=120;i++){
     const z=-b+2*b*i/120;
     const tp=(b*b-z*z)/(2*D)/YRS;
-    d+=(i?"L":"M")+fmt(xOf(tp),1)+","+fmt(T+(B-T)*(z+b)/(2*b),1);
+    d+=(i?"L":"M")+fmt(xOf(tp),1)+","+fmt(yOf(z),1);
   }
   el("path",{d,fill:"none",stroke:s1,"stroke-width":2.6},svg);
-  el("text",{x:xOf(peak)-6,y:mid+4,fill:s1,"font-size":12,"text-anchor":"end","font-weight":600},svg).textContent="b²/2D* = "+fmtYr(peak);
-  el("text",{x:(L+R)/2,y:B+34,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent="excess age τ′ beyond the aquifers →";
-  el("text",{x:L-10,y:T+8,fill:ink2,"font-size":11,"text-anchor":"end"},svg).textContent="+b";
-  el("text",{x:L-10,y:B,fill:ink2,"font-size":11,"text-anchor":"end"},svg).textContent="−b";
+  const px=xOf(peak);
+  if(px>L+180)el("text",{x:px-8,y:yOf(0)+18,fill:s1,"font-size":12,"text-anchor":"end","font-weight":600},svg).textContent="b²/2D* = "+fmtYr(peak);
+  else el("text",{x:px+8,y:yOf(0)+18,fill:s1,"font-size":12,"font-weight":600},svg).textContent="b²/2D* = "+fmtYr(peak);
+  el("text",{x:(L+R)/2,y:B+34,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent="excess age τ′ beyond the aquifers (years) →";
   $("#aqMsg").innerHTML="Bethke &amp; Johnson's own example (their Fig. 4): b = 50 m and D* = 10⁻¹⁰ m² s⁻¹ put ~<b>400,000 years</b> of excess age at the centreline of a stagnant aquitard. Slide D* up and the parabola flattens — molecules escape before growing ancient — but the readout beside it holds: the aquitard's aging <i>shipment</i> to its neighbours never changes. Cross-formational flow skews the profile without changing the average shipment either (their eq. 22).";
 }
 $("#aqB").addEventListener("input",aqUpdate);
@@ -1663,10 +1682,9 @@ function gamUpdate(msg){
   const svg=$("#gamSvg");svg.textContent="";
   const s4=cssVar("--s4"),s3=cssVar("--s3"),ink2=cssVar("--ink-2"),grid=cssVar("--grid"),base=cssVar("--baseline");
   const L=70,R=920,T=26,B=290;
-  const tmax=Math.max(3*m,40);
+  const tmax=150; /* fixed absolute axis: sliding the mean visibly stretches the family */
   const xOf=t=>L+(R-L)*t/tmax;
-  const ticks=tmax>200?[0,60,120,180,240]:tmax>100?[0,30,60,90,120,150]:[0,10,20,30,40,50,60,70,80,90,100];
-  ticks.filter(t=>t<=tmax).forEach(t=>{el("line",{x1:xOf(t),y1:T,x2:xOf(t),y2:B,stroke:grid,"stroke-width":1},svg);
+  [0,30,60,90,120,150].forEach(t=>{el("line",{x1:xOf(t),y1:T,x2:xOf(t),y2:B,stroke:grid,"stroke-width":1},svg);
     el("text",{x:xOf(t),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=t+" d";});
   el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
   const n=560,ys=[];
