@@ -643,8 +643,9 @@ footer p{margin:.3em 0}
 
   <div class="card">
     <h3>The distribution explorer</h3>
-    <p class="small">Pick a model and a mean transit time τ. The main panel is g(t) — the fraction of discharge in each age band; the inset is the cumulative version. The readouts answer the question a distribution is <i>for</i>: how much of this water is young?</p>
+    <p class="small">Pick a model and a mean transit time τ. The main panel is g(t) — the fraction of discharge in each age band; the dashed curve is the cumulative version. The readouts answer the question a distribution is <i>for</i>: how much of this water is young? Two axis views: <b>in years</b>, dragging τ stretches the whole family; <b>in multiples of τ</b> — the convention of Cook &amp; Böhlke's Fig. 1.4 — every τ collapses onto one universal shape, so that view deliberately sits still as τ moves (and "older than 2τ", a property of shape alone, never moves in either view).</p>
     <div class="seg" role="group" aria-label="Model" id="lpmSeg"></div>
+    <div class="seg" role="group" aria-label="Axis" id="lpmAxisSeg" style="margin-left:8px"></div>
     <div class="slider-row" style="margin-top:10px">
       <label for="lpmTau">mean transit time τ</label>
       <input type="range" id="lpmTau" min="2" max="100" step="1" value="10">
@@ -1429,11 +1430,16 @@ const lpmModels=[
  {k:"LIN",n:"Linear",geo:"A wedge-shaped unconfined aquifer thickening downgradient (Cook & Böhlke's geometry B): all ages up to 2τ equally represented, none beyond. Rare in pure form; instructive as the \"flat\" end-member."},
  {k:"GAM",n:"Gamma (α = 0.5)",geo:"Not one of Table 1.1's geometries — the flexible two-parameter family that Block 3 fits to real breakthrough data, here with α = 0.5: even more young-dominated than exponential, with a heavier tail. Preview of Section 9."}
 ];
-let lpmSel=0;
+let lpmSel=0, lpmAxisYears=true;
 const lpmSeg=$("#lpmSeg");
 lpmModels.forEach((m,i)=>{
   const b=hel("button",null,lpmSeg,m.n);b.type="button";
   b.addEventListener("click",()=>{lpmSel=i;$("#lpmEtaRow").hidden=(m.k!=="EPM");lpmUpdate();});
+});
+const lpmAxisSeg=$("#lpmAxisSeg");
+[["axis: years (0–120)",true],["axis: multiples of τ (Fig. 1.4)",false]].forEach(a=>{
+  const b=hel("button",null,lpmAxisSeg,a[0]);b.type="button";
+  b.addEventListener("click",()=>{lpmAxisYears=a[1];lpmUpdate();});
 });
 function lpmPdf(t,tau,k,p){
   if(k==="EM")return Math.exp(-t/tau)/tau;
@@ -1455,13 +1461,21 @@ function lpmUpdate(){
   const m=lpmModels[lpmSel],tau=+$("#lpmTau").value,p=+$("#lpmEta").value;
   $("#lpmTauOut").textContent=tau+" yr";
   $("#lpmEtaOut").textContent=fmtInt(p*100)+"%";
+  $$("#lpmAxisSeg button").forEach((b,i)=>b.setAttribute("aria-pressed",(i===0)===lpmAxisYears?"true":"false"));
   const svg=$("#lpmSvg");svg.textContent="";
   const s1=cssVar("--s1"),s3=cssVar("--s3"),s2=cssVar("--s2"),ink2=cssVar("--ink-2"),grid=cssVar("--grid"),base=cssVar("--baseline");
   const L=70,R=920,T=26,B=290;
-  const tmax=3.2*tau;
+  const tmax=lpmAxisYears?120:3.2*tau;
   const xOf=t=>L+(R-L)*t/tmax;
-  for(let k=0;k<=3;k++){el("line",{x1:xOf(k*tau),y1:T,x2:xOf(k*tau),y2:B,stroke:grid,"stroke-width":1},svg);
-    el("text",{x:xOf(k*tau),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=k===0?"0":(k+"τ = "+fmtInt(k*tau)+" yr");}
+  if(lpmAxisYears){
+    for(let t=0;t<=120;t+=30){el("line",{x1:xOf(t),y1:T,x2:xOf(t),y2:B,stroke:grid,"stroke-width":1},svg);
+      el("text",{x:xOf(t),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=t===0?"0":(t+" yr");}
+    el("line",{x1:xOf(tau),y1:T+8,x2:xOf(tau),y2:B,stroke:s2,"stroke-width":1.8,"stroke-dasharray":"5 4"},svg);
+    el("text",{x:xOf(tau),y:T+4,fill:s2,"font-size":12.5,"text-anchor":"middle","font-weight":600},svg).textContent="mean τ = "+fmtInt(tau)+" yr";
+  }else{
+    for(let k=0;k<=3;k++){el("line",{x1:xOf(k*tau),y1:T,x2:xOf(k*tau),y2:B,stroke:grid,"stroke-width":1},svg);
+      el("text",{x:xOf(k*tau),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=k===0?"0":(k+"τ = "+fmtInt(k*tau)+" yr");}
+  }
   el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
   /* pdf */
   if(m.k==="PFM"){
@@ -1473,6 +1487,7 @@ function lpmUpdate(){
     for(let i=1;i<=n;i++){const t=tmax*i/n;ts.push(t);ys.push(lpmPdf(t,tau,m.k,p));}
     let ymax=0;ys.forEach(y=>{if(isFinite(y)&&y>ymax)ymax=y;});
     ymax=Math.min(ymax,(m.k==="GAM"?3.2/tau:4/tau));
+    if(!isFinite(ymax)||ymax<=0)ymax=1/tau;
     const yOf=y=>B-(B-T-16)*clamp(y/ymax,0,1.04);
     let d="";for(let i=0;i<ts.length;i++){d+=(i?"L":"M")+fmt(xOf(ts[i]),1)+","+fmt(yOf(ys[i]),1);}
     el("path",{d:d+"L"+fmt(xOf(tmax),1)+","+B+"L"+xOf(ts[0])+","+B+"Z",fill:cssVar("--wash1")},svg);
