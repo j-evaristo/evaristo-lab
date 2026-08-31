@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Jaivime Evaristo">
+<meta name="description" content="How Old Is This Water? — an interactive primer on groundwater age concepts, residence-time distributions, and the radiometric clocks (¹⁴C, ³⁹Ar, ⁸¹Kr), for WASR 8000 (Week 3, Fall 2026).">
+<title>How Old Is This Water? · WASR 8000 Week 3</title>
+<style>
+
+/* ================= Design tokens (shared with the Week 1 primer) ================= */
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb; --surface-2:#f3f2ee;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --baseline:#c3c2b7; --hairline:rgba(11,11,11,0.10);
+  --s1:#2a78d6; /* blue — meteoric / equilibrium / primary accent */
+  --s2:#eb6834; /* orange — evaporation / kinetic / "off the line" */
+  --s3:#1baf7a; /* aqua — derived curves, vapour */
+  --s4:#8a63d2; /* violet — plant / soil compartment */
+  --age-young:#86b6ef; --age-mid:#2a78d6; --age-old:#104281;
+  --wash1:rgba(42,120,214,0.10); --wash2:rgba(235,104,52,0.10); --wash4:rgba(138,99,210,0.10);
+  --good-text:#006300;
+  --chip:#eef3fb;
+  --shadow:0 1px 2px rgba(11,11,11,0.05), 0 8px 24px rgba(11,11,11,0.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232322;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --baseline:#383835; --hairline:rgba(255,255,255,0.10);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#a184e0;
+    --age-young:#184f95; --age-mid:#2a78d6; --age-old:#86b6ef;
+    --wash1:rgba(57,135,229,0.14); --wash2:rgba(217,89,38,0.14); --wash4:rgba(161,132,224,0.14);
+    --good-text:#0ca30c;
+    --chip:#20293a;
+    --shadow:0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+  }
+}
+html[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232322;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --baseline:#383835; --hairline:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#a184e0;
+  --age-young:#184f95; --age-mid:#2a78d6; --age-old:#86b6ef;
+  --wash1:rgba(57,135,229,0.14); --wash2:rgba(217,89,38,0.14); --wash4:rgba(161,132,224,0.14);
+  --good-text:#0ca30c;
+  --chip:#20293a;
+  --shadow:0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+}
+/* ================= Base ================= */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+main{max-width:1000px; margin:0 auto; padding:0 20px 80px}
+h1,h2,h3,h4{line-height:1.25; margin:0 0 .5em; text-wrap:balance}
+h1{font-size:clamp(1.9rem,4.5vw,3rem); letter-spacing:-0.02em}
+h2{font-size:clamp(1.35rem,2.6vw,1.8rem); letter-spacing:-0.01em}
+h3{font-size:1.08rem}
+p{margin:.4em 0 1em}
+a{color:var(--s1)}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:2px solid var(--s1); outline-offset:2px; border-radius:4px}
+.small{font-size:.85rem; color:var(--ink-2)}
+.mono{font-variant-numeric:tabular-nums}
+.nowrap{white-space:nowrap}
+code{background:var(--surface-2); border:1px solid var(--hairline); border-radius:4px; padding:0 .3em; font-size:.9em}
+.eq{
+  font-family:"Cambria Math","STIX Two Math",Cambria,Georgia,"Times New Roman",serif; font-size:1.12rem; text-align:center;
+  padding:10px 14px; margin:10px 0; background:var(--surface-2); border:1px solid var(--hairline); border-radius:10px; overflow-x:auto;
+}
+.eq .eqnum{float:right; font-size:.8rem; color:var(--muted); font-family:system-ui,sans-serif}
+sup,sub{line-height:0}
+.kbd{font-size:.8rem; border:1px solid var(--hairline); border-bottom-width:2px; border-radius:5px; padding:0 5px; background:var(--surface)}
+
+/* ================= Top bar & nav ================= */
+.topbar{
+  position:sticky; top:0; z-index:50; background:color-mix(in srgb, var(--page) 88%, transparent);
+  backdrop-filter:blur(8px); border-bottom:1px solid var(--hairline);
+}
+.topbar-inner{max-width:1000px; margin:0 auto; padding:8px 20px; display:flex; align-items:center; gap:12px}
+.topbar .course{font-size:.8rem; font-weight:600; color:var(--ink-2); white-space:nowrap}
+.navchips{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; flex:1}
+.navchips::-webkit-scrollbar{display:none}
+.navchips a{
+  font-size:.78rem; padding:4px 10px; border-radius:999px; white-space:nowrap;
+  color:var(--ink-2); text-decoration:none; border:1px solid transparent;
+}
+.navchips a:hover{background:var(--surface-2)}
+.navchips a.active{background:var(--chip); color:var(--s1); font-weight:600}
+.theme-btn{
+  border:1px solid var(--hairline); background:var(--surface); border-radius:999px;
+  padding:4px 10px; font-size:.78rem; color:var(--ink-2); flex-shrink:0;
+}
+.theme-btn:hover{background:var(--surface-2)}
+
+/* ================= Hero ================= */
+.hero{padding:64px 0 28px}
+.hero .kicker{font-size:.8rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--s1); margin-bottom:10px}
+.hero .sub{font-size:1.12rem; color:var(--ink-2); max-width:46em}
+.hero .meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px}
+.hero .meta span{font-size:.78rem; color:var(--ink-2); background:var(--surface); border:1px solid var(--hairline); border-radius:999px; padding:4px 12px}
+
+/* ================= Sections & cards ================= */
+section{padding:34px 0 6px; scroll-margin-top:64px}
+.sec-label{font-size:.75rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin-bottom:6px}
+.lede{font-size:1.05rem; color:var(--ink-2); max-width:50em}
+.card{
+  background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+  padding:20px 22px; margin:16px 0; box-shadow:var(--shadow);
+}
+.callout{
+  border-left:3px solid var(--s1); background:var(--wash1);
+  border-radius:0 10px 10px 0; padding:12px 16px; margin:14px 0; font-size:.95rem;
+}
+.callout.warn{border-left-color:var(--s2); background:var(--wash2)}
+.callout.plant{border-left-color:var(--s4); background:var(--wash4)}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+@media (max-width:760px){ .grid2,.grid3,.grid4{grid-template-columns:1fr} }
+.duo{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+@media (max-width:760px){ .duo{grid-template-columns:1fr} }
+.duo .col h3{display:flex; align-items:center; gap:8px}
+.dot{width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0}
+.duo ul{margin:.3em 0; padding-left:1.2em}
+.duo li{margin:.35em 0}
+.duo li b{font-weight:600}
+ul.tight{margin:.3em 0 .6em; padding-left:1.2em}
+ul.tight li{margin:.3em 0; font-size:.92rem}
+
+/* ================= Poll ================= */
+.poll-opts{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0}
+@media (max-width:760px){ .poll-opts{grid-template-columns:1fr} }
+.poll-btn{
+  text-align:left; background:var(--surface); border:1px solid var(--hairline); border-radius:12px;
+  padding:14px 16px; transition:border-color .15s, transform .15s;
+}
+.poll-btn:hover{border-color:var(--s1); transform:translateY(-1px)}
+.poll-btn .letter{
+  display:inline-flex; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center;
+  background:var(--chip); color:var(--s1); font-weight:700; font-size:.85rem; margin-bottom:8px;
+}
+.poll-btn.picked{border-color:var(--s1); box-shadow:0 0 0 1px var(--s1) inset}
+.reveal{display:none; margin-top:6px}
+.reveal.open{display:block; animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+@media (prefers-reduced-motion: reduce){ .reveal.open{animation:none} .poll-btn:hover{transform:none} }
+
+/* ================= Chips ================= */
+.chiprow{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0}
+.chip-btn{
+  border:1px solid var(--hairline); background:var(--surface); border-radius:999px;
+  padding:6px 14px; font-size:.88rem;
+}
+.chip-btn:hover{border-color:var(--s1)}
+.chip-btn[aria-pressed="true"]{background:var(--chip); border-color:var(--s1); color:var(--s1); font-weight:600}
+.explain-panel{min-height:70px}
+
+/* ================= Accordion ================= */
+.acc{border:1px solid var(--hairline); border-radius:12px; overflow:hidden; margin:14px 0; background:var(--surface)}
+.acc-item + .acc-item{border-top:1px solid var(--hairline)}
+.acc-head{
+  width:100%; display:flex; align-items:center; gap:12px; text-align:left;
+  padding:13px 16px; background:none; border:none;
+}
+.acc-head:hover{background:var(--surface-2)}
+.acc-head .tag{
+  font-size:.7rem; font-weight:700; letter-spacing:.08em; color:var(--s1);
+  background:var(--chip); padding:3px 9px; border-radius:999px; flex-shrink:0; min-width:74px; text-align:center;
+}
+.acc-head .q{flex:1; font-weight:600; font-size:.95rem}
+.acc-head .caret{transition:transform .2s; color:var(--muted); flex-shrink:0}
+.acc-head[aria-expanded="true"] .caret{transform:rotate(90deg)}
+.acc-body{display:none; padding:2px 16px 16px 16px; font-size:.93rem}
+.acc-body.open{display:block}
+.acc-body p{margin:.4em 0 .7em}
+.acc-body ul{margin:.2em 0 .7em; padding-left:1.2em}
+.acc-body li{margin:.3em 0}
+
+/* ================= Controls, tiles, charts ================= */
+.sim-controls{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 14px; align-items:center}
+.btn{
+  border:1px solid var(--hairline); border-radius:10px; padding:8px 16px;
+  background:var(--surface); font-weight:600; font-size:.9rem;
+}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--s1); border-color:var(--s1); color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.seg{display:inline-flex; border:1px solid var(--hairline); border-radius:10px; overflow:hidden}
+.seg button{border:none; background:var(--surface); padding:8px 14px; font-size:.85rem}
+.seg button + button{border-left:1px solid var(--hairline)}
+.seg button[aria-pressed="true"]{background:var(--chip); color:var(--s1); font-weight:700}
+.readouts{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:12px 0}
+.readouts.four{grid-template-columns:repeat(4,1fr)}
+.readouts.two{grid-template-columns:repeat(2,1fr)}
+@media (max-width:760px){ .readouts,.readouts.four,.readouts.two{grid-template-columns:1fr 1fr} }
+@media (max-width:480px){ .readouts,.readouts.four,.readouts.two{grid-template-columns:1fr} }
+.tile{background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:12px 14px}
+.tile .lab{font-size:.75rem; color:var(--ink-2); margin-bottom:2px}
+.tile .val{font-size:1.35rem; font-weight:650; letter-spacing:-0.01em}
+.tile .sub{font-size:.75rem; color:var(--muted)}
+.legend{display:flex; flex-wrap:wrap; gap:16px; font-size:.8rem; color:var(--ink-2); margin:8px 0}
+.legend .key{display:inline-flex; align-items:center; gap:6px}
+.legend .swatch{width:12px; height:12px; border-radius:3px; display:inline-block}
+.legend .linekey{width:16px; height:0; border-top:2px solid; display:inline-block; border-radius:2px}
+.chart-card{background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px; margin:12px 0}
+.chart-card h4{margin:0 0 2px; font-size:.9rem}
+.chart-card .small{margin:0 0 8px}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.chart-card svg{width:100%;height:auto}
+.sim-wrap svg, .card > div > svg{max-width:100%; height:auto}
+.tile .val.wrap{font-size:1rem; font-weight:600; line-height:1.35}
+details.tableview{margin-top:8px; font-size:.85rem}
+details.tableview summary{cursor:pointer; color:var(--ink-2)}
+details.tableview table{border-collapse:collapse; margin-top:8px; width:100%; max-width:560px}
+details.tableview th, details.tableview td{border-bottom:1px solid var(--grid); padding:4px 8px; text-align:right; font-variant-numeric:tabular-nums}
+details.tableview th:first-child, details.tableview td:first-child{text-align:left}
+details.tableview th{color:var(--ink-2); font-weight:600}
+.slider-row{display:grid; grid-template-columns:170px 1fr 90px; gap:12px; align-items:center; margin:8px 0}
+@media (max-width:560px){ .slider-row{grid-template-columns:120px 1fr 70px} }
+.slider-row label{font-size:.85rem; font-weight:600; display:flex; align-items:center; gap:7px}
+.slider-row output{font-size:.85rem; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-2)}
+input[type=range]{width:100%; accent-color:var(--s1); height:22px}
+.preset-row{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px}
+.sim-wrap{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
+@media (max-width:760px){ .sim-wrap{grid-template-columns:1fr} }
+
+/* ================= Tables ================= */
+.tablewrap{overflow-x:auto; margin:10px 0}
+table.data{border-collapse:collapse; width:100%; font-size:.86rem}
+table.data th, table.data td{border-bottom:1px solid var(--grid); padding:7px 9px; text-align:left; vertical-align:top}
+table.data th{color:var(--ink-2); font-weight:600; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase}
+table.data td.num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+
+/* ================= Isotopologue cards ================= */
+.mol-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:12px 0}
+@media (max-width:760px){ .mol-grid{grid-template-columns:repeat(2,1fr)} }
+.mol{
+  text-align:left; background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:14px 14px 12px;
+}
+.mol:hover{border-color:var(--s1)}
+.mol[aria-pressed="true"]{border-color:var(--s1); box-shadow:0 0 0 1px var(--s1) inset}
+.mol .formula{font-size:1.3rem; font-weight:700; letter-spacing:-0.01em}
+.mol .mass{font-size:.78rem; color:var(--ink-2); margin-top:2px}
+.mol .abund{margin-top:8px; height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden}
+.mol .abund i{display:block; height:100%; background:var(--s1); border-radius:4px}
+.mol .abund-lab{font-size:.74rem; color:var(--muted); margin-top:4px; font-variant-numeric:tabular-nums}
+
+/* ================= Process walk ================= */
+.steps{display:flex; flex-wrap:wrap; gap:6px; margin:10px 0}
+.step-btn{
+  border:1px solid var(--hairline); background:var(--surface); border-radius:10px; padding:7px 12px; font-size:.85rem;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.step-btn .n{width:20px; height:20px; border-radius:50%; background:var(--chip); color:var(--s1); font-weight:700; font-size:.75rem; display:inline-flex; align-items:center; justify-content:center}
+.step-btn[aria-pressed="true"]{background:var(--chip); border-color:var(--s1); color:var(--s1); font-weight:600}
+.step-btn:hover{border-color:var(--s1)}
+
+/* ================= Sorter / scenarios / quiz ================= */
+.scen{border:1px solid var(--hairline); border-radius:14px; background:var(--surface); padding:18px 20px; margin:14px 0}
+.scen .scen-head{display:flex; gap:10px; align-items:baseline}
+.scen .letter{
+  width:28px;height:28px;border-radius:8px;background:var(--chip);color:var(--s1);
+  font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.scen h3{margin:0}
+.scen .scen-q{color:var(--ink-2); margin:.3em 0 .8em; font-size:.95rem}
+.opt-list{display:grid; gap:8px}
+.opt-list.row3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:760px){ .opt-list.row3{grid-template-columns:1fr} }
+.opt-btn{
+  text-align:left; border:1px solid var(--hairline); background:var(--surface); border-radius:10px;
+  padding:10px 14px; font-size:.9rem;
+}
+.opt-btn:hover{border-color:var(--s1)}
+.opt-btn.sel-best{border-color:var(--s3); background:color-mix(in srgb, var(--s3) 9%, var(--surface))}
+.opt-btn.sel-weak{border-color:var(--s2); background:var(--wash2)}
+.opt-btn:disabled{cursor:default; opacity:1}
+.feedback{font-size:.88rem; margin-top:10px; display:none}
+.feedback.open{display:block; animation:fadeUp .3s ease}
+.debrief{margin-top:12px; border-top:1px solid var(--grid); padding-top:12px; font-size:.88rem; display:none}
+.debrief.open{display:block}
+.debrief b{font-weight:650}
+.sorter-item{border:1px solid var(--hairline); border-radius:12px; background:var(--surface); padding:14px 16px; margin:10px 0}
+.sorter-item h4{margin:0 0 8px; font-size:.95rem}
+.sorter-score{font-size:1rem; font-weight:650; margin:12px 0}
+.quiz-q{border:1px solid var(--hairline); border-radius:12px; background:var(--surface); padding:16px 18px; margin:12px 0}
+.quiz-q h4{font-size:.95rem; margin-bottom:10px}
+.quiz-q .opt-btn{width:100%}
+.quiz-score{font-size:1.05rem; font-weight:650; margin:14px 0}
+.tick{color:var(--good-text); font-weight:700}
+.cross{color:var(--s2); font-weight:700}
+
+/* ================= Paper guides ================= */
+.paper{border:1px solid var(--hairline); border-radius:14px; background:var(--surface); padding:18px 20px; margin:16px 0; box-shadow:var(--shadow)}
+.paper .ptag{font-size:.7rem; font-weight:700; letter-spacing:.1em; color:var(--s1); text-transform:uppercase}
+.paper h3{margin:.2em 0 .2em; font-size:1.05rem}
+.paper .cite{font-size:.86rem; color:var(--ink-2); margin:0 0 .6em}
+.paper .acc{margin:10px 0 4px}
+
+/* ================= Glossary & readings ================= */
+.gloss-search{
+  width:100%; max-width:380px; font:inherit; padding:8px 14px; border-radius:10px;
+  border:1px solid var(--hairline); background:var(--surface); color:var(--ink); margin-bottom:12px;
+}
+.gloss-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+@media (max-width:760px){ .gloss-grid{grid-template-columns:1fr} }
+details.gloss{border:1px solid var(--hairline); border-radius:10px; background:var(--surface); padding:10px 14px}
+details.gloss summary{cursor:pointer; font-weight:600; font-size:.92rem}
+details.gloss p{font-size:.86rem; color:var(--ink-2); margin:.5em 0 0}
+details.gloss .pill{font-size:.68rem; font-weight:700; letter-spacing:.06em; color:var(--muted); text-transform:uppercase; margin-left:6px}
+.reading{display:grid; grid-template-columns:86px 1fr; gap:14px; padding:13px 0; border-bottom:1px solid var(--grid)}
+.reading:last-child{border-bottom:none}
+.reading .rtag{font-size:.7rem; font-weight:700; letter-spacing:.08em; color:var(--s1); background:var(--chip); border-radius:999px; padding:3px 0; text-align:center; height:fit-content}
+.reading .rtag.supp{color:var(--ink-2); background:var(--surface-2)}
+.reading h4{margin:0 0 2px; font-size:.93rem}
+.reading p{margin:0; font-size:.84rem; color:var(--ink-2)}
+
+/* ================= Footer, tooltip, print ================= */
+footer{border-top:1px solid var(--hairline); margin-top:50px; padding:26px 0 10px; font-size:.8rem; color:var(--ink-2)}
+footer p{margin:.3em 0}
+.viz-tip{
+  position:fixed; z-index:99; pointer-events:none; background:var(--surface); border:1px solid var(--hairline);
+  border-radius:8px; box-shadow:var(--shadow); padding:7px 11px; font-size:.8rem; display:none; max-width:260px;
+}
+.viz-tip .tv{font-weight:700; font-variant-numeric:tabular-nums}
+.viz-tip .tk{display:inline-block; width:14px; border-top:2px solid; border-radius:2px; margin-right:5px; vertical-align:middle}
+@media print{
+  .topbar,.theme-btn{display:none}
+  body{background:#fff}
+  .card,.chart-card,.tile,.paper{box-shadow:none}
+}
+/* ================= Week 3 additions ================= */
+.clock-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:12px 0}
+@media (max-width:760px){ .clock-grid{grid-template-columns:1fr} }
+.clock{
+  text-align:left; background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:14px 14px 12px;
+}
+.clock:hover{border-color:var(--s1)}
+.clock[aria-pressed="true"]{border-color:var(--s1); box-shadow:0 0 0 1px var(--s1) inset}
+.clock .cname{font-size:1.02rem; font-weight:700; letter-spacing:-0.01em}
+.clock .cmini{margin-top:8px}
+.clock .cwho{font-size:.74rem; color:var(--muted); margin-top:6px}
+.ruler-wrap{margin:10px 0}
+.case-note{font-size:.85rem; color:var(--ink-2)}
+.est-pill{display:inline-block; font-size:.78rem; border:1px solid var(--hairline); background:var(--surface-2); border-radius:999px; padding:2px 10px; margin:2px 4px 2px 0; font-variant-numeric:tabular-nums}
+.reading h4,.reading p,.paper .cite{overflow-wrap:anywhere}
+@media (max-width:600px){
+  .seg{display:flex; flex-wrap:wrap}
+  .seg button{flex:1 1 auto; border-left:none; border-top:1px solid var(--hairline)}
+  .seg button:first-child{border-top:none}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="course">WASR 8000 · Week 3</span>
+    <nav class="navchips" aria-label="Sections">
+      <a href="#s-hook">One well</a>
+      <a href="#s-age">"Age"</a>
+      <a href="#s-clocks">The clocks</a>
+      <a href="#s-radiocarbon">Radiocarbon</a>
+      <a href="#s-aquifer">One aquifer</a>
+      <a href="#s-distributions">Distributions</a>
+      <a href="#s-mixtures">Mixtures</a>
+      <a href="#s-agemass">Age mass</a>
+      <a href="#s-soilplant">Soil &amp; plants</a>
+      <a href="#s-btc">Breakthrough</a>
+      <a href="#s-papers">The papers</a>
+      <a href="#s-practice">Practice</a>
+      <a href="#s-quiz">Self-check</a>
+      <a href="#s-glossary">Glossary</a>
+      <a href="#s-next">Next</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle dark mode">◐ Theme</button>
+  </div>
+</div>
+
+<main>
+<header class="hero">
+  <div class="kicker">WASR 8000 · Environmental Tracers in Hydrology · Fall 2026</div>
+  <h1>How Old Is This Water?</h1>
+  <p class="sub">An interactive primer on groundwater age — what the word can and cannot mean, how the radiometric clocks (¹⁴C, ³⁹Ar, ⁸¹Kr) work and where they fail, and why a residence time is a distribution rather than a number, from confined aquifers down to the water inside a tree. Builds on the decay law of Week 2; no dating background needed.</p>
+  <div class="meta">
+    <span>Week 3 companion · read alongside the four papers</span>
+    <span>≈ 40–50 minutes</span>
+    <span>11 interactive demos · self-check quiz</span>
+  </div>
+</header>
+
+<!-- ================= 1. HOOK ================= -->
+<section id="s-hook">
+  <div class="sec-label">1 · The opening question</div>
+  <h2>One water sample. Three careful methods. Three wildly different ages.</h2>
+  <p class="lede">A well taps a shallow confined aquifer. Darcy's law, applied to the measured head gradient and a reasonable hydraulic conductivity, says the water took <b>hundreds of thousands of years</b> to arrive from the recharge area. Its radiocarbon activity is about a tenth of the pre-bomb recharge value — by the decay law you met in Week 2, <b>less than 20,000 years</b>. Its helium-4 content implies <b>millions of years</b>. (The situation is real; it is the worked example in Bethke &amp; Johnson, 2008.)</p>
+
+  <div class="poll-opts" role="group" aria-label="Pick a claim">
+    <button class="poll-btn" type="button" data-pick="A">
+      <span class="letter">A</span>
+      <div><b>At least two of the methods are broken</b></div>
+      <div class="small">They cannot all be right. Find the errors, fix the calibrations, and the three numbers will converge.</div>
+    </button>
+    <button class="poll-btn" type="button" data-pick="B">
+      <span class="letter">B</span>
+      <div><b>Average them and move on</b></div>
+      <div class="small">Every measurement disagrees a little. Some suitable mean of the three is the best estimate of the age.</div>
+    </button>
+    <button class="poll-btn" type="button" data-pick="C">
+      <span class="letter">C</span>
+      <div><b>The sample has no single age to find</b></div>
+      <div class="small">The water is a mixture of old and young. Each method reads a different part of the mixture — and each may be reading it correctly.</div>
+    </button>
+  </div>
+
+  <div class="reveal card" id="pollReveal">
+    <h3 id="pollHeadline"></h3>
+    <p id="pollBody"></p>
+    <p>Seen the new way, the sample is water that flowed along the aquifer <i>and</i> mixed with modern water recharging from the surface <i>and</i> with ancient water discharging from below. The Darcy estimate describes the flow path; the radiocarbon clock is dominated by the young fraction (a decaying tracer barely notices dead water, as Section 7 shows); the helium clock is dominated by the old fraction. Three honest instruments, three different questions answered. The disagreement is not an error to be explained away — <b>it is information about the flow regime</b>, and reactive transport modeling (Section 8) is how the field has learned to read it.</p>
+    <div class="callout">That is the whole of Week 3 in one example. "How old is this water?" is the first question a hydrogeologist asks — of sustainability, of contamination risk, of a proposed waste repository. The week's work is to replace the question's naive form (one number) with its usable form: <b>what is the distribution of ages in this water, and what can each tracer tell me about it?</b></div>
+    <p class="small">Cook &amp; Böhlke call the enterprise "hydrochronology," by analogy with geochronology. The analogy is honest about the ambition — dating water as geologists date rock — and, as this week's papers show, honest ambition runs into an interesting problem: rocks mostly stay put, and water mixes.</p>
+  </div>
+</section>
+
+<!-- ================= 2. WHAT "AGE" MEANS ================= -->
+<section id="s-age">
+  <div class="sec-label">2 · The word itself</div>
+  <h2>"Age" is easy to define and easy to break</h2>
+  <p class="lede">The definition sounds innocent: the age of groundwater at a point is the time that has elapsed since it entered the subsurface. Bethke &amp; Johnson note, a little mischievously, that almost no textbook states even this — the texts jump straight to isotope formulas. Start slower, because the definition is where the trouble lives.</p>
+
+  <div class="duo card">
+    <div class="col">
+      <h3><span class="dot" style="background:var(--s1)"></span>The packet picture (piston flow)</h3>
+      <ul>
+        <li>A parcel of rain infiltrates, becomes a <b>closed packet</b>, and rides a flow line from recharge to well. Nothing enters or leaves it.</li>
+        <li>Age then grows along the path at the pace of the flow: <b>the age gradient is the reciprocal of velocity</b>. Water moving 10 m yr⁻¹ is 100 years older every kilometre.</li>
+        <li>Every classical dating formula in Section 3 quietly assumes this picture. One sample, one age, one equation.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3><span class="dot" style="background:var(--s2)"></span>The molecule picture (the "new thinking")</h3>
+      <ul>
+        <li>Water molecules diffuse into and out of neighbouring aquitards, disperse along and across the flow, and leak between formations. <b>There are no closed packets.</b></li>
+        <li>So a sample is a crowd: each molecule has its own residence time. The sample's age is defined as the <b>average over the crowd</b> — and the crowd has a shape.</li>
+        <li>Two samples with the same average can be utterly different waters. The shape, not the mean, decides what a well is telling you.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="eq">dτ/dℓ = 1/v<sub>ℓ</sub> <span class="eqnum">piston flow: age gradient = 1 / velocity (Bethke &amp; Johnson, eq. 1)</span></div>
+
+  <div class="card">
+    <h3>Same mean age, four different waters</h3>
+    <p class="small">Each panel below is a possible age distribution for a sample whose <i>mean</i> age is identical — the four sketches of Bethke &amp; Johnson's Figure 2. Click through them. The x-axis is the age of individual water molecules; the curve is how much of the sample is that old.</p>
+    <div class="steps" id="compSteps" role="group" aria-label="Choose a composition"></div>
+    <div class="chart-card">
+      <svg id="compSvg" viewBox="0 0 960 300" role="img" aria-label="Age distribution of water molecules in a sample"></svg>
+    </div>
+    <div class="explain-panel" id="compExplain" aria-live="polite"></div>
+  </div>
+
+  <div class="callout">Keep the course's frame in view: <b>rates and dates are the same question in different clothes.</b> A date across a known distance is a rate (¹⁴C ages down the Carrizo aquifer gave 2.4 m yr⁻¹ at 15 km from the outcrop — Pearson &amp; White, 1967, the early study Bethke &amp; Johnson cite as promising). A known rate predicts the dates. When the two disagree — as at the Great Artesian Basin, or the Milk River aquifer, famously — one of the assumptions connecting them has failed, and finding which one is where the science is.</div>
+</section>
+
+<!-- ================= 3. THE CLOCK SHOP ================= -->
+<section id="s-clocks">
+  <div class="sec-label">3 · The clock shop</div>
+  <h2>Three ways a tracer can tell time</h2>
+  <p class="lede">Water molecules carry no age information of their own. Every dating method therefore rides on a marker dissolved in, or part of, the water — and every marker keeps time in one of three ways (Cook &amp; Böhlke §1.2; Bethke &amp; Johnson's three classes). Click each clock.</p>
+
+  <div class="clock-grid" role="group" aria-label="Clock types">
+    <button class="clock" type="button" data-clock="decay">
+      <div class="cname">The draining clock</div>
+      <div class="small">Radioactive decay — concentration falls on a known curve.</div>
+      <svg class="cmini" viewBox="0 0 240 90" aria-hidden="true"></svg>
+      <div class="cwho">¹⁴C · ³⁹Ar · ⁸¹Kr · ³⁶Cl · ³H (with ³He) · ³⁵S · ³²Si</div>
+    </button>
+    <button class="clock" type="button" data-clock="accum">
+      <div class="cname">The filling clock</div>
+      <div class="small">Accumulation — a decay product builds up at a steady rate.</div>
+      <svg class="cmini" viewBox="0 0 240 90" aria-hidden="true"></svg>
+      <div class="cwho">⁴He (from U &amp; Th) · ⁴⁰Ar (from ⁴⁰K)</div>
+    </button>
+    <button class="clock" type="button" data-clock="event">
+      <div class="cname">The calendar clock</div>
+      <div class="small">Event markers — match a concentration to a dated input history.</div>
+      <svg class="cmini" viewBox="0 0 240 90" aria-hidden="true"></svg>
+      <div class="cwho">³H bomb pulse · ³⁶Cl pulse · ⁸⁵Kr · CFCs · SF₆</div>
+    </button>
+  </div>
+  <div class="explain-panel card" id="clockExplain" aria-live="polite"><p class="small">Click a clock to see how it keeps time, what it needs to be trusted, and how it fails.</p></div>
+
+  <div class="eq">t = −(1/λ) · ln(C / C₀) <span class="eqnum">the draining clock (Cook &amp; Böhlke eq. 1.1; λ = ln 2 / t<sub>½</sub>)</span></div>
+
+  <div class="card">
+    <h3>The ruler of time — and the holes in it</h3>
+    <p class="small">Each bar is the range of ages a tracer can usefully date; the axis is logarithmic, from one year to ten million. Hover or tap a bar for the tracer's story. Notice what Cook &amp; Böhlke noticed: the widely available methods cluster in two windows — <b>younger than ~50 years</b> and <b>roughly 2,000 to 40,000 years</b> — leaving a gap between decades and millennia that only the hard-to-measure ³⁹Ar spans, and another beyond radiocarbon where ⁸¹Kr, ³⁶Cl and ⁴He take over.</p>
+    <div class="ruler-wrap chart-card">
+      <svg id="rulerSvg" viewBox="0 0 960 380" role="img" aria-label="Datable age ranges of groundwater tracers on a logarithmic time axis"></svg>
+    </div>
+    <div class="explain-panel" id="rulerExplain" aria-live="polite"></div>
+    <details class="tableview"><summary>The numbers behind the bars</summary>
+      <table><thead><tr><th>Tracer</th><th>Half-life</th><th>Clock type</th><th>Usable window (approx.)</th></tr></thead><tbody>
+      <tr><td>³H (with ³He)</td><td class="num">12.3 yr</td><td>draining / calendar</td><td class="num">&lt; ~50 yr</td></tr>
+      <tr><td>⁸⁵Kr</td><td class="num">10.76 yr</td><td>calendar (rising)</td><td class="num">&lt; ~50 yr</td></tr>
+      <tr><td>CFCs, SF₆</td><td class="num">—</td><td>calendar (rising)</td><td class="num">&lt; ~50–70 yr</td></tr>
+      <tr><td>³²Si</td><td class="num">152 yr</td><td>draining</td><td class="num">~30–1,000 yr; sorbs, unreliable to date</td></tr>
+      <tr><td>³⁹Ar</td><td class="num">269 yr</td><td>draining</td><td class="num">~50–1,000 yr</td></tr>
+      <tr><td>¹⁴C</td><td class="num">5,730 yr</td><td>draining</td><td class="num">~2,000–40,000 (to ~50,000) yr</td></tr>
+      <tr><td>⁸¹Kr</td><td class="num">229,000 yr</td><td>draining</td><td class="num">~5×10⁴–1×10⁶ yr</td></tr>
+      <tr><td>³⁶Cl</td><td class="num">~301,000 yr</td><td>draining / pulse</td><td class="num">~10⁵–10⁶⁺ yr</td></tr>
+      <tr><td>⁴He</td><td class="num">stable</td><td>filling</td><td class="num">~10⁴–10⁸ yr, semi-quantitative</td></tr>
+      </tbody></table>
+      <p class="small">Half-lives as quoted in Bethke &amp; Johnson (2008); windows as characterized in Cook &amp; Böhlke (2000), Bethke &amp; Johnson (2008), and Lehmann et al. (1993) — the ⁸¹Kr window is Lehmann et al.'s; the ³⁹Ar and ³²Si spans are the ranges conventional in the dating literature, implied by their half-lives. "Usable" assumes the initial condition and subsurface sources are under control, which is precisely what Sections 4 and 7 complicate.</p>
+    </details>
+  </div>
+
+  <div class="callout warn">Two cautions before you trust any bar. <b>First, the input must be known:</b> the draining clock needs C₀ at recharge, the filling clock needs the accumulation rate, the calendar clock needs the atmospheric history — and CFCs, whose atmospheric concentrations have stopped rising and begun to fall since international restrictions, now return two possible dates for one measurement (Cook &amp; Böhlke §1.2.3). <b>Second, the subsurface makes tracers too:</b> given uranium- and thorium-bearing rock and enough isolation time, in-situ production of ³H, ⁴He, ³⁶Cl, ³⁷Ar, ³⁹Ar, ⁴⁰Ar, ⁸⁵Kr and others can overshadow the atmospheric signal entirely (Lehmann et al., 1993). A concentration is only a clock after the sources are audited.</div>
+</section>
+
+<!-- ================= 4. RADIOCARBON & THE OLD-WATER CLOCKS ================= -->
+<section id="s-radiocarbon">
+  <div class="sec-label">4 · The workhorse and its rivals</div>
+  <h2>¹⁴C, ³⁹Ar, ⁸¹Kr: dating old water</h2>
+  <p class="lede">The week's title methods are the draining clocks for water older than living memory. Radiocarbon is the workhorse — cosmic rays make ¹⁴C in the atmosphere, it dissolves into recharge as CO₂, and its 5,730-year half-life spans the last ice age. The demo turns the crank on the decay law, then shows the two ways the answer lies to you.</p>
+
+  <div class="card">
+    <h3>The decay-clock calculator</h3>
+    <p class="small">Choose a nuclide, then set the measured concentration as a fraction of the initial (for ¹⁴C, think "percent modern carbon"). The curve is the decay law; the shaded band is the clock's comfortable range — roughly a tenth of a half-life to five half-lives. Outside it, the measurement drowns in precision limits (too young) or in background (too old).</p>
+    <div class="seg" role="group" aria-label="Nuclide" id="nucSeg"></div>
+    <div class="slider-row" style="margin-top:10px">
+      <label for="pmcSlider">measured C / C₀</label>
+      <input type="range" id="pmcSlider" min="0.2" max="100" step="0.2" value="25">
+      <output id="pmcOut">25%</output>
+    </div>
+    <div class="chart-card"><svg id="decaySvg" viewBox="0 0 960 330" role="img" aria-label="Decay curve with sample position"></svg></div>
+    <div class="readouts">
+      <div class="tile"><div class="lab">piston-flow age</div><div class="val" id="ageOut">—</div><div class="sub" id="ageSub"></div></div>
+      <div class="tile"><div class="lab">half-lives elapsed</div><div class="val" id="hlOut">—</div><div class="sub">t / t<sub>½</sub></div></div>
+      <div class="tile"><div class="lab">if C measured ±2% (abs.)</div><div class="val" id="sigOut">—</div><div class="sub">age uncertainty from precision alone</div></div>
+    </div>
+    <div class="explain-panel small" id="decayMsg" aria-live="polite"></div>
+  </div>
+
+  <div class="card">
+    <h3>Thief 1: dead carbon</h3>
+    <p class="small">The decay law needs C₀ — the ¹⁴C content the water started with. But groundwater dissolves calcite and oxidizes ancient organic matter along the way, and both add carbon with <i>no</i> ¹⁴C at all. The activity per gram of carbon drops, and the clock reads old without a single year passing. Drag the slider: <b>q</b> is the fraction of the dissolved carbon that actually came from recharge.</p>
+    <div class="slider-row">
+      <label for="qSlider">recharge-carbon fraction q</label>
+      <input type="range" id="qSlider" min="0.50" max="1" step="0.01" value="0.85">
+      <output id="qOut">0.85</output>
+    </div>
+    <div class="readouts two">
+      <div class="tile"><div class="lab">apparent extra age</div><div class="val" id="deadOut">—</div><div class="sub">added to every sample, young or old</div></div>
+      <div class="tile"><div class="lab">the correction industry</div><div class="val wrap">δ¹³C &amp; mass-balance models</div><div class="sub">Wigley et al. (1978); Fontes &amp; Garnier (1979) — cited in Bethke &amp; Johnson</div></div>
+    </div>
+    <p class="small" id="deadMsg" aria-live="polite"></p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>³⁹Ar — the gap-bridger</h3>
+      <p class="small">A noble-gas radionuclide (t<sub>½</sub> = 269 yr) made by cosmic rays; chemically inert, so nothing sorbs it or dissolves extra into the water — <b>theoretically the cleanest clock for the 50–1,000 year gap</b> that ³H and ¹⁴C both miss. Two catches: measuring it has historically demanded heroic low-level counting on large samples (Loosli et al., 2000, in the Cook &amp; Herczeg volume), and it has a subsurface source — neutrons from U and Th decay make ³⁹Ar from potassium via ³⁹K(n,p)³⁹Ar, so in U-rich rock the "atmospheric" signal needs auditing (Lehmann et al., 1993).</p>
+    </div>
+    <div class="card">
+      <h3>⁸¹Kr — the deep-time noble gas</h3>
+      <p class="small">Also inert, with t<sub>½</sub> = 229,000 yr: the right decay constant for water tens of thousands to a million years old, where ¹⁴C is dead and ³⁶Cl is haunted by subsurface production and dead-chloride dilution. Lehmann et al. (1993) single out ⁸¹Kr (with ³H/³He at the young end) as the dating method with the <i>least</i> interpretive complication — its subsurface production is negligible — and its historical obstacle as purely analytical: counting a handful of atoms. Their conclusion aged well; atom-counting techniques have since turned both ⁸¹Kr and ³⁹Ar from theoretical into practical tools, which is why your reading list keeps them in the title of Week 3.</p>
+    </div>
+  </div>
+
+  <div class="callout plant">Where is ³⁶Cl? It works like radiocarbon with a 301,000-year half-life — Bentley et al. (1986) used it to date Great Artesian Basin water to around a million years — but it carries every complication at once: an initial ratio that varies with climate and distance from the coast, dilution by dead chloride from halite and upward-diffusing brines, and its own subsurface production by neutron capture on ³⁵Cl. Bethke &amp; Johnson use it as their running example precisely <i>because</i> it is complicated; Section 8 shows what they do with it.</div>
+</section>
+
+<!-- ================= 5. ONE AQUIFER ================= -->
+<section id="s-aquifer">
+  <div class="sec-label">5 · One aquifer, ideal case</div>
+  <h2>Where the ages live: groundwater stratigraphy</h2>
+  <p class="lede">Before distributions, get the ideal geometry into your hands. In an unconfined aquifer of constant thickness receiving uniform recharge — Vogel's classic 1967 model, the backbone of Cook &amp; Böhlke's §1.3 — age is stratified like sediment: youngest at the water table, oldest at the base, with the isochrons crowding together logarithmically at depth. Cook &amp; Böhlke call reading this record "groundwater stratigraphy," and it is how single wells become recharge gauges.</p>
+
+  <div class="card">
+    <h3>The Vogel aquifer</h3>
+    <p class="small">Drag the sliders; the cross-section recolours by age and the profile replots. Hover either panel to probe a depth. The age at depth z is independent of where you drill horizontally — one of the model's quiet surprises.</p>
+    <div class="slider-row">
+      <label for="vH">thickness H</label>
+      <input type="range" id="vH" min="10" max="100" step="1" value="33">
+      <output id="vHOut">33 m</output>
+    </div>
+    <div class="slider-row">
+      <label for="vEps">porosity ε</label>
+      <input type="range" id="vEps" min="0.05" max="0.50" step="0.01" value="0.35">
+      <output id="vEpsOut">0.35</output>
+    </div>
+    <div class="slider-row">
+      <label for="vR">recharge R</label>
+      <input type="range" id="vR" min="0" max="100" step="0.1" value="88">
+      <output id="vROut">— mm yr⁻¹</output>
+    </div>
+    <div class="preset-row">
+      <button class="chip-btn" type="button" id="vPresetCape">Cape Cod sand (³H/³He)</button>
+      <button class="chip-btn" type="button" id="vPresetPolda">Semi-arid basin (³H, ~30 mm yr⁻¹)</button>
+      <button class="chip-btn" type="button" id="vPresetMurray">Murray Group (¹⁴C, ~0.2 mm yr⁻¹)</button>
+    </div>
+    <div class="sim-wrap">
+      <div class="chart-card"><h4>Cross-section, coloured by age</h4><svg id="vogelXsec" viewBox="0 0 460 300" role="img" aria-label="Aquifer cross-section with isochrons"></svg></div>
+      <div class="chart-card"><h4>Age–depth profile at a well</h4><svg id="vogelProf" viewBox="0 0 460 300" role="img" aria-label="Groundwater age versus depth"></svg></div>
+    </div>
+    <div class="readouts">
+      <div class="tile"><div class="lab">vertical velocity at the water table (R/ε)</div><div class="val" id="vVel">—</div><div class="sub">what a shallow tracer profile measures</div></div>
+      <div class="tile"><div class="lab">mean age of full-depth discharge (Hε/R)</div><div class="val" id="vTau">—</div><div class="sub">the exponential model's τ — Section 6</div></div>
+      <div class="tile"><div class="lab">age at probed depth</div><div class="val" id="vProbe">—</div><div class="sub" id="vProbeSub">hover a panel</div></div>
+    </div>
+    <div class="explain-panel small" id="vogelMsg" aria-live="polite"></div>
+  </div>
+
+  <div class="eq">t(z) = (Hε / R) · ln[ H / (H − z) ] <span class="eqnum">age below the water table (Cook &amp; Böhlke eq. 1.3, after Vogel 1967)</span></div>
+
+  <div class="card">
+    <h3>What people actually do with this</h3>
+    <ul class="tight">
+      <li><b>Recharge from a dated profile.</b> Fit the age–depth curve from multi-level samplers and R falls out. At Cape Cod, ³H and ³He peaks ~27 m below the water table gave a water-table velocity R/ε of 3.3 m yr⁻¹ (Solomon et al., 1995, in Cook &amp; Böhlke §1.4.1); with ¹⁴C, recharge rates as small as 0.1–0.2 mm yr⁻¹ have been extracted (Murray Group, Leaney &amp; Allison, 1986). Across methods, ³H/³He and CFCs have mapped recharge of 100–1,200 mm yr⁻¹; ¹⁴C covers 2–100 mm yr⁻¹.</li>
+      <li><b>Velocity from ages along a confined aquifer.</b> Carrizo Sand: ¹⁴C ages rise downgradient from &lt;4,000 to &gt;28,000 yr, giving 2.4 m yr⁻¹ at 15 km and 1.6 m yr⁻¹ at 50 km — agreeing with the hydraulics (Pearson &amp; White, 1967). Age <i>differences</i> between wells dodge the initial-condition problem entirely (Phillips et al., 1989).</li>
+      <li><b>The unsaturated zone is part of the story.</b> The tracer's total residence time is root zone + unsaturated zone + groundwater (Cook &amp; Böhlke Fig. 1.3). A ³H peak parked 4 m deep in the English Chalk in 1968 — rainfall's 1963–64 bomb peak, four to five years on — gave 0.9 m yr⁻¹ of downward crawl (Smith et al., 1970); at Cape Cod the unsaturated lag was 14 years. Forgetting this lag shifts every "recharge date" you infer.</li>
+      <li><b>Groundwater as archive.</b> Date the water, then read its passengers against the calendar: nitrate loading beneath Maryland farmland rising three- to six-fold from 1950 to 1990, tracking fertilizer use, with ~30% of applied N reaching the water table (Böhlke &amp; Denver, 1995); sulphate recharge peaking with 1960s–70s acid deposition; a halocarbon history of the Danube reconstructed from a riverside aquifer (Böhlke et al., 1997). And with age in hand, slow chemistry gets rate constants no laboratory could measure: denitrification with a ~5,000-year half-life in the Kalahari (Vogel et al., 1981), dedolomitization at tenths of a µmol L⁻¹ yr⁻¹ over 30,000 years in the Madison aquifer (Plummer et al., 1990).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= 6. DISTRIBUTIONS ================= -->
+<section id="s-distributions">
+  <div class="sec-label">6 · From a number to a distribution</div>
+  <h2>What a well actually samples</h2>
+  <p class="lede">Wells are rarely points. A screen spanning the aquifer, a spring, a stream — each collects flow lines of every age at once, and the sample's tracer content is set by the whole <b>age frequency distribution</b> g(t), not by any single age. The classical "lumped-parameter models" are a small zoo of g(t) shapes, each the exact consequence of an idealized geometry you have already seen (Cook &amp; Böhlke Table 1.1, Fig. 1.4; Maloszewski &amp; Zuber's framework).</p>
+
+  <div class="card">
+    <h3>The distribution explorer</h3>
+    <p class="small">Pick a model and a mean transit time τ. The main panel is g(t) — the fraction of discharge in each age band; the inset is the cumulative version. The readouts answer the question a distribution is <i>for</i>: how much of this water is young?</p>
+    <div class="seg" role="group" aria-label="Model" id="lpmSeg"></div>
+    <div class="slider-row" style="margin-top:10px">
+      <label for="lpmTau">mean transit time τ</label>
+      <input type="range" id="lpmTau" min="2" max="100" step="1" value="10">
+      <output id="lpmTauOut">10 yr</output>
+    </div>
+    <div class="slider-row" id="lpmEtaRow" hidden>
+      <label for="lpmEta">piston fraction</label>
+      <input type="range" id="lpmEta" min="0" max="0.75" step="0.05" value="0.5">
+      <output id="lpmEtaOut">50%</output>
+    </div>
+    <div class="chart-card"><svg id="lpmSvg" viewBox="0 0 960 340" role="img" aria-label="Age frequency distribution"></svg></div>
+    <div class="readouts four">
+      <div class="tile"><div class="lab">mean age</div><div class="val" id="lpmMean">—</div><div class="sub">first moment of g(t)</div></div>
+      <div class="tile"><div class="lab">median age</div><div class="val" id="lpmMed">—</div><div class="sub">half the water is younger</div></div>
+      <div class="tile"><div class="lab">younger than 1 yr</div><div class="val" id="lpmY1">—</div><div class="sub">the contamination-relevant fraction</div></div>
+      <div class="tile"><div class="lab">older than 2τ</div><div class="val" id="lpmOld">—</div><div class="sub">the tail the mean hides</div></div>
+    </div>
+    <div class="explain-panel small" id="lpmMsg" aria-live="polite"></div>
+  </div>
+
+  <div class="eq">C<sub>out</sub>(t<sub>i</sub>) = ∫₀<sup>∞</sup> C<sub>in</sub>(t<sub>i</sub> − t) · g(t) · e<sup>−λt</sup> dt <span class="eqnum">the convolution integral (Cook &amp; Böhlke eq. 1.6)</span></div>
+  <p class="small">This is the machine that connects a distribution to a measurement: feed the tracer's input history through g(t), decay it, and out comes what the well should read today. Fitting measured concentrations of tracers with <i>different</i> input histories — ³H and CFC-12 and SF₆ together — can pin down both τ and the shape of g(t), because each tracer averages the distribution differently (Cook &amp; Böhlke Fig. 1.5, computed for 1998 sampling; the same logic runs TracerLPM in Week 5).</p>
+
+  <div class="callout">Check yourself against the chapter: for the exponential model with τ = 10 yr, Cook &amp; Böhlke read off that a bit under 10% of the discharge is less than a year old, and about 4% is between 9 and 10 years old (Fig. 1.4). Set the explorer to those settings and confirm both numbers — then set τ = 100 yr and notice that <i>even century-old water</i> delivers ~1% of modern recharge to the well every year. A mean age of a century does not mean safety from last year's spill; that single sentence is most of groundwater-vulnerability science.</div>
+</section>
+
+<!-- ================= 7. MIXTURES ================= -->
+<section id="s-mixtures">
+  <div class="sec-label">7 · Why the clocks disagree</div>
+  <h2>The apparent age of a mixture</h2>
+  <p class="lede">Now run the dating formulas of Section 3 on water that is honestly a mixture — and watch each class of clock fail in its own characteristic direction. This is Bethke &amp; Johnson's Figure 3 made adjustable, and it is the single most useful diagram in the week.</p>
+
+  <div class="card">
+    <h3>Two waters, one sample</h3>
+    <p class="small">Blend a younger water A with an older water B and read the sample three ways. The <b>true mean age</b> is the flow-weighted average (the "age mass" rule of Section 8). Each method's <b>apparent age</b> is what its formula returns for the blended concentration.</p>
+    <div class="slider-row">
+      <label for="mixA">age of water A</label>
+      <input type="range" id="mixA" min="0" max="100" step="0.1" value="20">
+      <output id="mixAOut">—</output>
+    </div>
+    <div class="slider-row">
+      <label for="mixB">age of water B</label>
+      <input type="range" id="mixB" min="0" max="100" step="0.1" value="55">
+      <output id="mixBOut">—</output>
+    </div>
+    <div class="slider-row">
+      <label for="mixF">fraction of A in the blend</label>
+      <input type="range" id="mixF" min="0" max="1" step="0.01" value="0.5">
+      <output id="mixFOut">50%</output>
+    </div>
+    <div class="preset-row">
+      <button class="chip-btn" type="button" data-mixpre="equal">20 yr + 40 yr, equal parts</button>
+      <button class="chip-btn" type="button" data-mixpre="dead">Half modern + half ¹⁴C-dead</button>
+      <button class="chip-btn" type="button" data-mixpre="trickle">Old aquifer + 10% modern trickle</button>
+    </div>
+    <div class="chart-card"><svg id="mixSvg" viewBox="0 0 960 330" role="img" aria-label="Apparent versus true mean age for three method classes"></svg></div>
+    <div class="readouts four">
+      <div class="tile"><div class="lab">true mean age</div><div class="val" id="mixTrue">—</div><div class="sub">age-mass weighted</div></div>
+      <div class="tile"><div class="lab">draining clock (¹⁴C-style)</div><div class="val" id="mixDecay">—</div><div class="sub" id="mixDecaySub">biased young</div></div>
+      <div class="tile"><div class="lab">filling clock (⁴He-style)</div><div class="val" id="mixHe">—</div><div class="sub">exact for a uniform source</div></div>
+      <div class="tile"><div class="lab">calendar clock (SF₆-style)</div><div class="val" id="mixCal">—</div><div class="sub" id="mixCalSub"></div></div>
+    </div>
+    <div class="explain-panel small" id="mixMsg" aria-live="polite"></div>
+  </div>
+
+  <div class="duo card">
+    <div class="col">
+      <h3><span class="dot" style="background:var(--s2)"></span>Why decay clocks read young</h3>
+      <ul>
+        <li>Concentration decays along a <b>curve</b>; mixtures sit on the straight <b>chord</b> between the end-members — and the chord lies on the young side of the curve, always.</li>
+        <li>The bias is mild for similar ages (longitudinal dispersion) and <b>extreme for young + very old</b>: half modern water, half radiocarbon-dead water reads as one ¹⁴C half-life — 5,730 years — however ancient the old half is.</li>
+        <li>The same geometry afflicts calendar clocks whenever part of the blend pre-dates the marker's history.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3><span class="dot" style="background:var(--s1)"></span>Why the filling clock doesn't</h3>
+      <ul>
+        <li>⁴He grows <b>linearly</b> with time, and a straight line is its own chord: mixing preserves the mean exactly (when the source rate is uniform).</li>
+        <li>The catch is the premise. Aquitards often out-produce aquifers, the deep crust leaks ⁴He upward, and an unnoticed uranium deposit reads as stagnant water (Bethke &amp; Johnson's error analysis).</li>
+        <li>So the honest clock has the dirty source, and the clean-sourced clocks lie about mixtures. Every dating study lives somewhere on that trade.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">Re-read the hook with new eyes: Darcy hundreds of thousands of years, ¹⁴C under twenty thousand, ⁴He millions. A mostly-old blend with a thread of modern recharge does exactly this — the ¹⁴C rides the young thread, the ⁴He weights the ancient fraction (and its crustal source), and the flow calculation describes the aquifer rather than the blend. <b>Three answers, one consistent water.</b> The reconciliation is quantitative, not rhetorical, and it is the subject of the next section.</div>
+</section>
+
+<!-- ================= 8. AGE MASS & THE NEW THINKING ================= -->
+<section id="s-agemass">
+  <div class="sec-label">8 · The new thinking</div>
+  <h2>Age mass: making "age" something that can be transported</h2>
+  <p class="lede">If a sample's age is an average over molecules, age must be carried, mixed and diluted like a solute. Ages themselves don't add — mixing 20-year and 40-year water does not make 60-year water — so Goode (1996) found the quantity that does: <b>age mass</b>, the product of water mass and age. One kilogram of ten-year-old water holds ten kilogram-years. Age mass mixes linearly (the equal blend above is 30 years old), obeys a transport equation, and turns age from an isotope formula into a field you can model.</p>
+
+  <div class="eq">∂τ/∂t = ∇·D·∇τ − ∇·(vτ) + 1 <span class="eqnum">age transport (Bethke &amp; Johnson eq. 15)</span></div>
+  <p class="small">Read the terms: age disperses, age advects, and the "+1" says every kilogram of water everywhere grows one year older per year — a uniform, zero-order source that no real tracer quite matches. Age behaves like a reacting solute with the simplest source law in the world, which is exactly why real tracers (each with its own source law) are imperfect proxies for it.</p>
+
+  <div class="card">
+    <h3>Aquitards age aquifers simply by existing</h3>
+    <p class="small">Solve the steady transport equation across an aquitard sandwiched between two aquifers (Bethke &amp; Johnson eqs. 19–24, their Figure 4). With no cross-flow the excess-age profile is a parabola peaking at b²/2D* — drag the sliders and watch the middle of a thick aquitard hold water hundreds of thousands of years older than the aquifers around it. Then note the readout the sliders <i>cannot</i> change.</p>
+    <div class="slider-row">
+      <label for="aqB">half-thickness b</label>
+      <input type="range" id="aqB" min="5" max="100" step="1" value="50">
+      <output id="aqBOut">50 m</output>
+    </div>
+    <div class="slider-row">
+      <label for="aqD">diffusion coeff. D*</label>
+      <input type="range" id="aqD" min="0" max="100" step="1" value="50">
+      <output id="aqDOut">10⁻¹⁰ m² s⁻¹</output>
+    </div>
+    <div class="sim-wrap">
+      <div class="chart-card"><h4>Excess age across the aquitard</h4><svg id="aqSvg" viewBox="0 0 460 340" role="img" aria-label="Parabolic excess age profile in an aquitard"></svg></div>
+      <div>
+        <div class="readouts two" style="grid-template-columns:1fr">
+          <div class="tile"><div class="lab">peak excess age b²/2D*</div><div class="val" id="aqPeak">—</div><div class="sub">at the aquitard centreline</div></div>
+          <div class="tile"><div class="lab">age-mass flux to the aquifers</div><div class="val wrap" id="aqFlux">ρφb — fixed</div><div class="sub">one kilogram-year per year, per kilogram of aquitard water: independent of D* and of cross-flow</div></div>
+        </div>
+        <p class="small" id="aqMsg"></p>
+      </div>
+    </div>
+    <div class="callout warn">The efflux result is the section's punchline: <b>every kilogram of water stored in an aquitard exports one kilogram-year of age per year</b>, whatever the diffusion coefficient and whatever the leakage rate. Slow exchange sends a few very old molecules; fast exchange sends many slightly-old ones; the aging shipment is the same. Piston-flow dating along an aquifer is therefore correct only when b = 0 — no aquitards at all — and the velocity implied by two well ages must be corrected by the stored-water ratio: v = (1 + φ<sub>aqt</sub>b / φ<sub>aqf</sub>B) · Δx/Δτ (their eqs. 25–26). Wells 10 km and 10,000 ¹⁴C-years apart under an equal-water aquitard flow at 2 m yr⁻¹, not 1.</div>
+  </div>
+
+  <div class="card">
+    <h3>Reactive transport modeling: inverting the tracers together</h3>
+    <p class="small">The alternative to dating samples one formula at a time: build a 2-D flow model of the whole regime, transport each marker with its true source law (decay, in-situ production, basal flux), and adjust permeabilities until the simulated concentrations match every observation at once — heads, salinity and temperature included. The age field then falls out of the same model via the +1 equation. Three worked cases from Bethke &amp; Johnson:</p>
+    <div class="acc" id="accCases"></div>
+  </div>
+</section>
+
+<!-- ================= 9. SOIL & PLANTS ================= -->
+<section id="s-soilplant">
+  <div class="sec-label">9 · The same idea in days</div>
+  <h2>Age distributions in the soil–plant system</h2>
+  <p class="lede">Everything so far scales down. Replace "aquifer" with a three-metre soil profile, "recharge" with sprinkler rainfall, "well" with a tree — and the age of water becomes a days-to-months question with the same mathematics. Block 3's paired papers do exactly this at Biosphere 2's enclosed rainforest, where the boundary conditions of a real catchment's problem are, for once, actually known.</p>
+
+  <div class="card">
+    <h3>The experiment (Evaristo et al., 2019)</h3>
+    <p class="small">The Biosphere 2 Tropical Rainforest: a 1,936 m² glass-enclosed mesocosm near Tucson, ~27 m tall, soils 1–3.5 m deep over a drained basement — so <i>everything</i> that leaves the bottom ("deep percolation," the stand-in for groundwater recharge) is collected and measured. The team switched the rain off for 68 days, then rewet the system with <b>66 mm of deuterium-labelled rainfall at +152‰ δ²H</b> over four events — screamingly distinct from the −60‰ background — followed by 87 mm of ordinary rain over 13 events. For months afterward they tracked the label through bulk soil water at seven depths, the basement seepage, and weekly xylem water from five canopy species, sampled by clipping from a bosun's chair.</p>
+    <div class="readouts">
+      <div class="tile"><div class="lab">seepage ("recharge") MTT</div><div class="val">≈ 9 days</div><div class="sub">215 hr [205, 250]</div></div>
+      <div class="tile"><div class="lab">soil water at 0.25 m</div><div class="val">≈ 14 days</div><div class="sub">330 hr — older than the seepage below it</div></div>
+      <div class="tile"><div class="lab">transpired water MTT</div><div class="val">17–62 days</div><div class="sub">by species: ~17, ~21, ~62 d</div></div>
+    </div>
+    <p class="small">Read those three tiles together and the paper's two findings appear. <b>Separation in time:</b> water leaving as recharge moved 2–7× faster than water leaving through trees. <b>Separation in space:</b> the Bayesian mixing model says trees drew 89 ± 6% of their water from bulk soil-matrix storage rather than the freely draining "mobile" water — even though soil at 25 cm is <i>older on average than the seepage collected at 3 m</i>, which only makes sense if much of the seepage bypassed the soil matrix through preferential flowpaths. The old phrase "tightly bound water" earns a correction here: the matrix water trees used was not bound at all, merely slow to drain — the authors adopt Brantley et al.'s term "matrix water," and the two-water-worlds offset of Week 2 acquires a transport mechanism.</p>
+  </div>
+
+  <div class="card">
+    <h3>Gamma-shaped ages: the explorer</h3>
+    <p class="small">The 2019 analysis fits each breakthrough with a gamma transit-time distribution — the two-knob family (shape α, scale β; mean = αβ) that catchment hydrology reaches for first. α is the shape's whole personality: α &lt; 1 gives an L-shaped, young-dominated distribution with a long tail; α ≈ 1 is exponential (the well-mixed reservoir of Section 6); α &gt; 1 rises to a delayed hump. Load each fitted preset and read its story.</p>
+    <div class="preset-row">
+      <button class="chip-btn" type="button" data-gpre="seep">Seepage · α 0.25 · 9 d</button>
+      <button class="chip-btn" type="button" data-gpre="crac">C. racemosa · α 0.57 · 17 d</button>
+      <button class="chip-btn" type="button" data-gpre="hela">H. elatus · α 0.70 · 21 d</button>
+      <button class="chip-btn" type="button" data-gpre="hcre">H. crepitans · α 3.7 · 62 d</button>
+    </div>
+    <div class="slider-row">
+      <label for="gAlpha">shape α</label>
+      <input type="range" id="gAlpha" min="0.15" max="5" step="0.01" value="0.25">
+      <output id="gAlphaOut">0.25</output>
+    </div>
+    <div class="slider-row">
+      <label for="gMtt">mean transit time αβ</label>
+      <input type="range" id="gMtt" min="2" max="120" step="1" value="9">
+      <output id="gMttOut">9 d</output>
+    </div>
+    <div class="chart-card"><svg id="gamSvg" viewBox="0 0 960 340" role="img" aria-label="Gamma transit time distribution"></svg></div>
+    <div class="readouts four">
+      <div class="tile"><div class="lab">scale β</div><div class="val" id="gBeta">—</div><div class="sub">time per "compartment"</div></div>
+      <div class="tile"><div class="lab">median</div><div class="val" id="gMed">—</div><div class="sub">vs mean <span id="gMeanEcho">—</span></div></div>
+      <div class="tile"><div class="lab">younger than 7 d</div><div class="val" id="gY7">—</div><div class="sub">one week's worth</div></div>
+      <div class="tile"><div class="lab">skewness 2/√α</div><div class="val" id="gSkew">—</div><div class="sub">the tail-heaviness index</div></div>
+    </div>
+    <div class="explain-panel small" id="gamMsg" aria-live="polite"></div>
+  </div>
+
+  <div class="callout plant">The seepage α of ~0.25 sits below the 0.3–0.7 range reported for real catchments — an extremely young-water-dominated outflow — while the tree fits (0.57, 0.70) land squarely inside that catchment range, and H. crepitans (α 3.7, a six-week hump) behaves like a piston with dispersion. Two species never showed the label at all: one apparently living on the mesocosm's "stream," the other on stored water — a free lesson that <b>a tracer you never see constrains a source you cannot otherwise reject.</b> And the modelled mass recoveries (~60% seepage, ~45% transpiration) remind you the accounting was closed enough to mean something. "Trees are not straws": species, not just soil physics, set the age of transpired water.</div>
+</section>
+
+<!-- ================= 10. BREAKTHROUGH ================= -->
+<section id="s-btc">
+  <div class="sec-label">10 · Two ways to read a curve</div>
+  <h2>The breakthrough curve, parametric and phenomenological</h2>
+  <p class="lede">The 2026 Comment reopens the same Biosphere 2 dataset with a teaching agenda: strip transit-time analysis down to two approaches simple enough for any lab group to run, apply both to every breakthrough curve (BTC), and be honest about what neither can promise. It is the shortest path in this course from "I have tracer data" to "I have a defensible timescale."</p>
+
+  <div class="duo card">
+    <div class="col">
+      <h3><span class="dot" style="background:var(--s1)"></span>Parametric (mechanistic)</h3>
+      <ul>
+        <li>Fit the BTC with a theoretical TTD and interpret the parameters. Two candidate shapes, two hypotheses about plumbing: <b>gamma = serial</b> (water queues through compartments in series — the sum of exponential steps), <b>lognormal = parallel</b> (many simultaneous pathways whose effects multiply).</li>
+        <li>Selection by a six-criteria vote (AIC, BIC, R², RMSE, KS, Anderson–Darling): gamma won 7 of 8 soil curves; lognormal won 4 of 5 xylem curves. Serial soils, parallel trees — <i>as a hypothesis, not a verdict</i>; the paper is explicit that the fits are descriptive, and several are near-ties.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3><span class="dot" style="background:var(--s2)"></span>Phenomenological (data-based)</h3>
+      <ul>
+        <li>No assumed shape. Read three numbers straight off the curve: <b>t<sub>z</sub></b>, when the peak arrives; <b>t<sub>μ</sub></b>, the concentration-weighted mean time; and <b>Δt = t<sub>μ</sub> − t<sub>z</sub></b>, a tailing metric — how far dispersion and retention drag the mean past the peak.</li>
+        <li>Plus a velocity: flowpath length over t<sub>μ</sub> — 2–14 cm d⁻¹ through the soils, 18 cm d⁻¹ to deep percolation, and 52–193 cm d⁻¹ up the trees.</li>
+        <li>The cost of assumption-freedom: the numbers only integrate over the observed window, so where the tail is unfinished (the trees, above all) t<sub>μ</sub> is a <b>lower bound</b>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Anatomy of a breakthrough curve</h3>
+    <p class="small">A synthetic BTC with two knobs: when the peak comes, and how heavy the tail is. Watch the three phenomenological metrics respond — then truncate the record and watch t<sub>μ</sub> quietly shrink, which is precisely why the Comment reports its empirical means as lower bounds.</p>
+    <div class="slider-row">
+      <label for="bPeak">peak arrival t<sub>z</sub></label>
+      <input type="range" id="bPeak" min="2" max="35" step="1" value="7">
+      <output id="bPeakOut">7 d</output>
+    </div>
+    <div class="slider-row">
+      <label for="bTail">tail heaviness</label>
+      <input type="range" id="bTail" min="0.05" max="2.5" step="0.01" value="0.35">
+      <output id="bTailOut">0.35</output>
+    </div>
+    <div class="slider-row">
+      <label for="bWin">observation window</label>
+      <input type="range" id="bWin" min="30" max="240" step="5" value="240">
+      <output id="bWinOut">240 d</output>
+    </div>
+    <div class="chart-card"><svg id="btcSvg" viewBox="0 0 960 340" role="img" aria-label="Breakthrough curve with peak time, mean time and tailing metric"></svg></div>
+    <div class="readouts">
+      <div class="tile"><div class="lab">t<sub>z</sub> (peak)</div><div class="val" id="btcTz">—</div><div class="sub">the fast pathway's vote</div></div>
+      <div class="tile"><div class="lab">t<sub>μ</sub> (mean, within window)</div><div class="val" id="btcTmu">—</div><div class="sub">every pathway's vote</div></div>
+      <div class="tile"><div class="lab">Δt (tailing)</div><div class="val" id="btcDt">—</div><div class="sub">dispersion + retention</div></div>
+    </div>
+    <div class="explain-panel small" id="btcMsg" aria-live="polite"></div>
+  </div>
+
+  <div class="card">
+    <h3>What the reanalysis found — and proposed</h3>
+    <ul class="tight">
+      <li><b>Preferential flow, quantified.</b> In one soil pit the tracer peaked at 2 days at <i>every</i> depth from 15 to 130 cm — vertically coherent bypass channels — while the neighbouring pit's peaks walked down (2 → 20 days). Two pits a few metres apart, two different plumbing diagrams: a warning against single-profile generalization.</li>
+      <li><b>"Xylem bias," a named hypothesis.</b> Tracer velocities up the five trees spanned 0.52–1.93 m d⁻¹, and the fraction of labelled water at the xylem peak averaged only ~20% — roughly 80% of what trees transpired was older, stored water. The Comment proposes that stands route a disproportionate share of transpiration through hydraulically "advantaged" individuals — preferential flow's canopy-level analogue — offered explicitly as something to test, with sap-flux and storage measurements named as the test.</li>
+      <li><b>Method matters at the tree scale.</b> Parametric and data-based means nearly agree in soils (14 ± 2 vs 12 ± 2 days) but split two-fold in plants (59 ± 13 vs 29 ± 6 days) — the unfinished tails again. And a concentration BTC is <i>not</i> a TTD: without coupling concentrations to water fluxes, all such timescales are comparative metrics, not absolute means. The Comment says so of its own numbers, repeatedly — model that candour.</li>
+      <li><b>The stakes.</b> A table of ten climate and terrestrial-biosphere models (CLM, JULES, ORCHIDEE, …) shows none representing the weeks-to-months lag between infiltration and transpiration, or tree-internal storage, that both papers document. The "call for broader dialogue" of the title is aimed there — at ecophysiology, soil physics and catchment hydrology jointly instrumenting the next experiment.</li>
+    </ul>
+    <details class="tableview"><summary>2019 vs 2026: the same trees, different numbers — a discussion point, not an erratum</summary>
+      <table><thead><tr><th>Outflux</th><th>2019 MTT (flow-weighted gamma)</th><th>2026 MTT (parametric BTC fit)</th><th>2026 t<sub>μ</sub> (data-based)</th></tr></thead><tbody>
+        <tr><td>Seepage / recharge</td><td class="num">≈ 9 d</td><td class="num">22 d</td><td class="num">19 d</td></tr>
+        <tr><td>C. racemosa</td><td class="num">≈ 17 d</td><td class="num">53 d</td><td class="num">—</td></tr>
+        <tr><td>H. elatus</td><td class="num">≈ 21 d</td><td class="num">45 d</td><td class="num">—</td></tr>
+        <tr><td>H. crepitans</td><td class="num">≈ 62 d</td><td class="num">109 d</td><td class="num">47 d</td></tr>
+        <tr><td>P. indicus</td><td class="num">excluded (no label uptake)</td><td class="num">18 d</td><td class="num">15 d</td></tr>
+      </tbody></table>
+      <p class="small">Per-species t<sub>μ</sub> is quoted in the Comment's text only for the fastest and slowest trees; across species t<sub>μ</sub> spans 15–47 days. Same dataset, defensible choices at every step, materially different numbers. The 2019 study convolved the input in flow-weighted time and required tracer-mass accounting; the 2026 Comment fits concentration curves directly and says its timescales are experiment-specific comparisons. Nothing here is hidden — the Comment cites the 2019 uncertainty analysis as the fuller treatment. For the seminar: which choices moved the numbers, and which number would <i>you</i> put in a model? (Notice the pattern of Section 7 returning at days-scale: methods weight the same mixture differently.)</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 11. THE PAPERS ================= -->
+<section id="s-papers">
+  <div class="sec-label">11 · Reading the four papers</div>
+  <h2>Four papers, three blocks, one argument</h2>
+  <p class="lede">Cook &amp; Böhlke supply the working machinery of groundwater dating; Bethke &amp; Johnson dismantle its central assumption; the Block 3 pair rebuilds the same ideas at the scale of a soil profile and a tree. The guides below are maps, not substitutes: what each paper asks, where its load-bearing figures live, which equations to recognize, and where a careful reader might press. The notes and the critique are yours to write.</p>
+
+  <div class="paper">
+    <div class="ptag">Block 1 · Core reading</div>
+    <h3>Cook, P. G., &amp; Böhlke, J.-K. (2000). Determining timescales for groundwater flow and solute transport. Ch. 1 of Cook &amp; Herczeg (eds.), <i>Environmental Tracers in Subsurface Hydrology</i>. Kluwer.</h3>
+    <p class="cite">Thirty pages that set up the whole enterprise: tracer types, the transport models, and what age data are used for. The reading list cites the volume by its editors (Cook &amp; Herczeg); the chapter itself is by Cook and Böhlke. <a href="https://doi.org/10.1007/978-1-4615-4557-6" rel="noopener">doi:10.1007/978-1-4615-4557-6</a> (volume)</p>
+    <div class="acc" id="accCook"></div>
+  </div>
+
+  <div class="paper">
+    <div class="ptag">Block 2 · Supplementary reading</div>
+    <h3>Bethke, C. M., &amp; Johnson, T. M. (2008). Groundwater age and groundwater age dating. <i>Annu. Rev. Earth Planet. Sci.</i>, 36, 121–152.</h3>
+    <p class="cite">The conceptual reset: age as a property of molecules, samples as mixtures, and reactive transport modeling as the way forward. Thirty-two pages, generously illustrated, no field data of its own — every example is a model with a purpose. <a href="https://doi.org/10.1146/annurev.earth.36.031207.124210" rel="noopener">doi:10.1146/annurev.earth.36.031207.124210</a></p>
+    <div class="acc" id="accBethke"></div>
+  </div>
+
+  <div class="paper">
+    <div class="ptag">Block 3a · Paired reading</div>
+    <h3>Evaristo, J., Kim, M., van Haren, J., Pangle, L. A., Harman, C. J., Troch, P. A., &amp; McDonnell, J. J. (2019). Characterizing the fluxes and age distribution of soil water, plant water, and deep percolation in a model tropical ecosystem. <i>Water Resour. Res.</i>, 55(4), 3307–3327.</h3>
+    <p class="cite">The controlled experiment: a drought, a deuterium-labelled rewetting, and transit-time distributions for seepage, soil and transpiration in one closed system. Open access (CC BY-NC-ND). <a href="https://doi.org/10.1029/2018WR023265" rel="noopener">doi:10.1029/2018WR023265</a></p>
+    <div class="acc" id="accEv19"></div>
+  </div>
+
+  <div class="paper">
+    <div class="ptag">Block 3b · Paired reading</div>
+    <h3>Evaristo, J., Wright, C., Bauser, H. H., Knighton, J., Johnson, D. M., &amp; Kim, M. (2026). Tracer labelling and transit time modelling in soil–plant systems: perspectives and a call for broader dialogue in ecohydrology. <i>Ecohydrology</i>, 19(1), e70182.</h3>
+    <p class="cite">A Commentary that reuses the 2019 dataset as a teaching testbed: two accessible modelling routes, a named hypothesis (xylem bias), and an argument about what land-surface models are missing. Open access, with code and data links. <a href="https://doi.org/10.1002/eco.70182" rel="noopener">doi:10.1002/eco.70182</a></p>
+    <div class="acc" id="accEv26"></div>
+  </div>
+
+  <div class="callout">Cross-paper synthesis, in one line: <b>Cook &amp; Böhlke teach you to compute an age, Bethke &amp; Johnson teach you not to trust one, and the Biosphere 2 pair shows both lessons operating in a system small enough to audit.</b> The question that carries forward: when your proposal says "we will date the water," which of this week's four meanings of that sentence will it mean — and would the other three give the same answer?</div>
+</section>
+
+<!-- ================= 12. PRACTICE ================= -->
+<section id="s-practice">
+  <div class="sec-label">12 · Practice</div>
+  <h2>Four situations to reason through</h2>
+  <p class="lede">Each scenario gives the kind of evidence a Week 3 reader should now be able to interrogate. Choose the reading you would defend first, then compare with the debrief.</p>
+  <div id="scenarios"></div>
+  <div class="callout">Habit to keep: before quoting any water age, say aloud <i>which</i> age it is — a piston-flow sample age, a mean of a distribution you have argued for, or a comparative timescale from one experiment — and what the same measurement would read if the sample were a mixture. Most published "ages" survive the first question and stumble on the second.</div>
+</section>
+
+<!-- ================= 13. QUIZ ================= -->
+<section id="s-quiz">
+  <div class="sec-label">13 · Self-check</div>
+  <h2>Ten questions before the meeting</h2>
+  <p class="lede">Immediate feedback, no grade, no record. If you miss one, the linked section is the fix.</p>
+  <div id="quiz"></div>
+  <div class="quiz-score" id="quizScore" aria-live="polite"></div>
+</section>
+
+<!-- ================= 14. GLOSSARY ================= -->
+<section id="s-glossary">
+  <div class="sec-label">14 · Vocabulary</div>
+  <h2>Glossary</h2>
+  <p class="lede">The Week 3 working vocabulary, plus a few terms you will meet again in Weeks 5 and 11. Search or browse.</p>
+  <input class="gloss-search" id="glossSearch" type="search" placeholder="Search terms… (e.g., piston flow, age mass, breakthrough)" aria-label="Search glossary">
+  <div class="gloss-grid" id="glossGrid"></div>
+</section>
+
+<!-- ================= 15. NEXT ================= -->
+<section id="s-next">
+  <div class="sec-label">15 · Where to go next</div>
+  <h2>The Week 3 readings — and two optional companions</h2>
+  <p class="lede">Papers are not posted for this course: retrieving them from the citation and DOI — via the UGA Libraries, GALILEO, or the publisher — is part of the training. Two of this week's four are open access.</p>
+
+  <div class="card" style="padding-top:8px; padding-bottom:8px">
+    <div class="reading">
+      <span class="rtag">CORE</span>
+      <div><h4>Cook, P. G., &amp; Herczeg, A. L. (eds.) (2000). <i>Environmental Tracers in Subsurface Hydrology</i>, Ch. 1 — Determining timescales for groundwater flow and solute transport (Cook &amp; Böhlke).</h4>
+      <p>Tracer types and time windows; Vogel-type age models and the lumped-parameter zoo; recharge, velocity, archive and reaction-rate applications. The week's machinery. <a href="https://doi.org/10.1007/978-1-4615-4557-6" rel="noopener">doi:10.1007/978-1-4615-4557-6</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">RESET</span>
+      <div><h4>Bethke, C. M., &amp; Johnson, T. M. (2008). Groundwater age and groundwater age dating. <i>Annu. Rev. Earth Planet. Sci.</i>, 36, 121–152.</h4>
+      <p>Age as a mixture property; the three clock classes and their mixing biases; age mass, aquitards, and reactive transport inversion. The week's argument. <a href="https://doi.org/10.1146/annurev.earth.36.031207.124210" rel="noopener">doi:10.1146/annurev.earth.36.031207.124210</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">TEST</span>
+      <div><h4>Evaristo, J., et al. (2019). Characterizing the fluxes and age distribution of soil water, plant water, and deep percolation in a model tropical ecosystem. <i>Water Resour. Res.</i>, 55(4), 3307–3327.</h4>
+      <p>A drought–rewetting D₂O experiment at Biosphere 2: transit times for seepage (~9 d) versus transpiration (17–62 d), and matrix-water use by trees. Open access. <a href="https://doi.org/10.1029/2018WR023265" rel="noopener">doi:10.1029/2018WR023265</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">DIALOGUE</span>
+      <div><h4>Evaristo, J., et al. (2026). Tracer labelling and transit time modelling in soil–plant systems. <i>Ecohydrology</i>, 19(1), e70182.</h4>
+      <p>The 2019 dataset reread two ways — parametric (gamma/lognormal) and phenomenological (t<sub>z</sub>, t<sub>μ</sub>, Δt) — plus the xylem-bias hypothesis and the case to the land-surface-modelling community. Open access. <a href="https://doi.org/10.1002/eco.70182" rel="noopener">doi:10.1002/eco.70182</a></p></div>
+    </div>
+    <div class="reading">
+      <span class="rtag supp">OPTIONAL</span>
+      <div><h4>Suckow, A. (2014). The age of groundwater — definitions, models and why we do not need this term. <i>Appl. Geochem.</i>, 50, 222–230. · Lehmann, B. E., Davis, S. N., &amp; Fabryka-Martin, J. T. (1993). Atmospheric and subsurface sources of stable and radioactive nuclides used for groundwater dating. <i>Water Resour. Res.</i>, 29(7), 2027–2040.</h4>
+      <p>Suckow pushes this week's logic to its provocative conclusion — retire the word "age" altogether in favour of tracer-specific statements. Lehmann and colleagues audit every nuclide's atmospheric and in-situ sources, and conclude ³H/³He and ⁸¹Kr carry the least interpretive baggage. Not discussed in a block.</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Coming after the holiday — Groundwater dating II: young water</h3>
+    <p class="small">The under-50-year window gets its own meeting: ³H/³He as a self-starting clock, CFCs and SF₆ as calendar clocks with atmospheric complications, and the lumped-parameter models of Section 6 turned into a working tool (the TracerLPM workbook). Everything this week said about mixtures applies with the signs filled in.</p>
+    <p class="small" style="margin-bottom:0"><b>Carry-forward question, for your proposal topic:</b> for the water your question cares about, what age <i>range</i> do you expect — and does a tracer exist whose window, source terms, and mixing behaviour could actually resolve it? If the answer is "not cleanly," that is not a dead end; it is a proposal rationale.</p>
+  </div>
+</section>
+
+<footer>
+  <p><b>WASR 8000 — Rates and Dates: Hydrological Methods and Applications</b> · Fall 2026 · Mondays 2:55–5:35 PM · Dr. Jaivime Evaristo · University of Georgia</p>
+  <p>This page accompanies the Week 3 meeting (Aug 31, 2026). Facts, equations and numbers are drawn from Cook &amp; Böhlke (2000), Ch. 1 of Cook &amp; Herczeg, <i>Environmental Tracers in Subsurface Hydrology</i> (tracer classes, eqs. 1.1–1.6, Table 1.1, Figs. 1.1–1.5, the field examples of §1.4); Bethke &amp; Johnson (2008), <i>Annu. Rev. Earth Planet. Sci.</i> 36:121–152 (definitions, eqs. 1–26, Figs. 1–11, Table 1, the Great Artesian Basin and Paris Basin cases); Evaristo et al. (2019), <i>Water Resour. Res.</i> 55:3307–3327 (experiment design, MTTs, shape parameters, source-apportionment results); Evaristo et al. (2026), <i>Ecohydrology</i> 19:e70182 (parametric vs data-based metrics, Tables 1–4, xylem-bias hypothesis); with half-lives as quoted in Bethke &amp; Johnson and windows after Lehmann, Davis &amp; Fabryka-Martin (1993), <i>Water Resour. Res.</i> 29:2027–2040. The Vogel aquifer, distribution, mixing, aquitard, gamma and breakthrough demonstrations are reconstructions from those equations, not site data; preset values transcribe the papers' reported parameters.</p>
+  <p>The simulations run entirely in this page; nothing is recorded or submitted.</p>
+</footer>
+
+<div class="viz-tip" id="vizTip" role="tooltip"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const SVGNS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const n=document.createElementNS(SVGNS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);if(parent)parent.appendChild(n);return n;}
+function hel(tag,cls,parent,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;if(parent)parent.appendChild(n);return n;}
+function cssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const fmt=(x,d)=>{let s=(Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toFixed(d);if(s==="-0"||/^-0\.0*$/.test(s))s=s.replace("-","");return s.replace("-","−");};
+const fmtInt=x=>Math.round(x).toLocaleString("en-US");
+function fmtYr(t){ /* t in years */
+  if(t<1) return fmt(t*12,1)+" months";
+  if(t<1000) return (t<10?fmt(t,1):fmtInt(t))+" yr";
+  if(t<1e6) return fmt(t/1000,t<1e4?2:t<1e5?1:0)+" kyr";
+  return fmt(t/1e6,2)+" Myr";
+}
+function fmtDay(t){ return (t<10?fmt(t,1):fmtInt(t))+" d"; }
+const reduceMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* log-gamma (Lanczos) and regularized lower incomplete gamma */
+function lnGamma(z){
+  const g=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let x=z,y=z,tmp=x+5.5;tmp-=(x+0.5)*Math.log(tmp);
+  let ser=1.000000000190015;for(let j=0;j<6;j++){ser+=g[j]/(++y);}
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+function gammainc(a,x){ /* regularized P(a,x) */
+  if(x<=0)return 0;
+  if(x<a+1){ /* series */
+    let ap=a,sum=1/a,del=sum;
+    for(let n=1;n<300;n++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-12)break;}
+    return sum*Math.exp(-x+a*Math.log(x)-lnGamma(a));
+  }else{ /* continued fraction */
+    let b=x+1-a,c=1/1e-300,d=1/b,h=d;
+    for(let i=1;i<300;i++){
+      const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;
+      c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;
+      if(Math.abs(del-1)<1e-12)break;
+    }
+    return 1-Math.exp(-x+a*Math.log(x)-lnGamma(a))*h;
+  }
+}
+const gammaPdf=(t,al,be)=>t<=0?0:Math.exp((al-1)*Math.log(t/be)-t/be-lnGamma(al))/be;
+const gammaCdf=(t,al,be)=>gammainc(al,t/be);
+
+/* tooltip */
+const tip=$("#vizTip");
+function showTip(rows,x,y){tip.textContent="";rows.forEach(r=>{const d=hel("div",null,tip);if(r.key){const k=hel("span","tk",d);k.style.borderColor=r.key;}hel("span","tv",d,r.v+" ");hel("span",null,d,r.t);});tip.style.display="block";const w=tip.offsetWidth,h=tip.offsetHeight;let px=x+14,py=y-h-10;if(px+w>innerWidth-8)px=x-w-14;if(py<8)py=y+16;tip.style.left=px+"px";tip.style.top=py+"px";}
+function hideTip(){tip.style.display="none";}
+
+/* redraw registry for theme changes */
+const redraws=[];
+
+/* ============ theme ============ */
+const themeBtn=$("#themeBtn");
+let theme=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+function applyTheme(){document.documentElement.setAttribute("data-theme",theme);themeBtn.textContent=theme==="dark"?"◐ Light":"◐ Dark";redraws.forEach(f=>f());}
+themeBtn.addEventListener("click",()=>{theme=theme==="dark"?"light":"dark";applyTheme();});
+
+/* ============ nav active state ============ */
+const navLinks=$$(".navchips a");
+const secObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){navLinks.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+e.target.id));}});},{rootMargin:"-30% 0px -60% 0px"});
+$$("main section").forEach(s=>secObs.observe(s));
+
+/* ============ axes helper ============ */
+function axis(svg,L,R,T,B,opts){
+  const grid=cssVar("--grid"),base=cssVar("--baseline"),ink2=cssVar("--ink-2");
+  el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
+  if(opts&&opts.left)el("line",{x1:L,y1:T,x2:L,y2:B,stroke:base,"stroke-width":1.2},svg);
+  return {grid,base,ink2};
+}
+
+/* ============ §1 poll ============ */
+const pollText={
+ A:{h:"The field's own first instinct — for about three decades.",b:"Each method here is internally consistent and carefully done; that is the point of the example. Bethke & Johnson's review is blunt about it: the disagreements between physical and chemical estimates, and among the chemical methods themselves, are \"in many cases too broad to attribute to any plausible level of uncertainty in parameter estimation.\" When honest methods disagree this systematically, the error is usually in the shared assumption, not the instruments."},
+ B:{h:"Tempting — and it makes the number worse, not better.",b:"An average is an estimate of something only if the things averaged estimate the same quantity. These three do not: each clock weights the mixture of ages in the sample differently (Section 7 shows exactly how). Averaging a young-biased reading, an old-weighted reading and a flow-path calculation produces a number with no referent at all."},
+ C:{h:"Correct — and it changes what \"dating groundwater\" means.",b:"Drop the assumption that the sample is one water with one age, and the three answers stop being contradictory. A groundwater sample is a crowd of molecules with a distribution of ages; each method integrates that distribution in its own way. The task is not to pick the right clock but to use their disagreement to reconstruct the distribution."}
+};
+$$(".poll-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  $$(".poll-btn").forEach(b=>{b.classList.toggle("picked",b===btn);b.setAttribute("aria-pressed",b===btn?"true":"false");});
+  const t=pollText[btn.dataset.pick];
+  $("#pollHeadline").textContent="You chose "+btn.dataset.pick+". "+t.h;
+  $("#pollBody").textContent=t.b;
+  $("#pollReveal").classList.add("open");
+}));
+
+/* ============ §2 composition picker (Bethke & Johnson Fig. 2) ============ */
+const comps=[
+ {k:"piston",name:"A piston, more or less",
+  explain:"The closed-packet ideal: every molecule recharged at about the same time, so the distribution is a narrow spike at the mean — broadened a little if longitudinal dispersion has smeared the packet. This is the only composition for which the classical dating formulas are exactly right, and the only one they can ever report.",
+  mk:(ts,tave)=>ts.map(t=>Math.exp(-0.5*Math.pow((t-tave)/(0.09*tave),2)))},
+ {k:"aquitard",name:"Flow plus aquitard neighbours",
+  explain:"Water flowing along the aquifer, salted with old molecules that diffused in from the confining beds. The bulk of the sample is younger than the mean; a long tail of aquitard water drags the average out. Most confined-aquifer samples live here — and the tail is invisible to a decay clock (Section 7).",
+  mk:(ts,tave)=>{const m=0.55*tave;return ts.map(t=>gammaPdf(t,1.6,m/1.6)*0.8+gammaPdf(t,1.1,2.6*tave/1.1)*0.225);}},
+ {k:"upwell",name:"With upwelling ancient water",
+  explain:"A young-to-middling aquifer water blended with a distinct slug of far older water discharging from below — Bethke & Johnson's panel (c). The distribution is bimodal; no single number describes it, and the mean falls in a gap where almost no actual molecules sit.",
+  mk:(ts,tave)=>ts.map(t=>Math.exp(-0.5*Math.pow((t-0.45*tave)/(0.13*tave),2))+0.393*Math.exp(-0.5*Math.pow((t-2.4*tave)/(0.2*tave),2)))},
+ {k:"recharge",name:"With modern recharge from above",
+  explain:"An older resident water refreshed by a thread of very young water leaking down from the surface — panel (d), and the hook example's anatomy. The young spike dominates any bomb-era or decaying tracer; the old hump carries the accumulating ones. One sample, two honest stories.",
+  mk:(ts,tave)=>ts.map(t=>0.5*Math.exp(-0.5*Math.pow((t-0.06*tave)/(0.045*tave),2))+Math.exp(-0.5*Math.pow((t-1.47*tave)/(0.28*tave),2)))}
+];
+let compSel=0;
+const compStepWrap=$("#compSteps");
+comps.forEach((c,i)=>{
+  const b=hel("button","step-btn",compStepWrap);b.type="button";
+  hel("span","n",b,String(i+1));b.appendChild(document.createTextNode(c.name));
+  b.addEventListener("click",()=>{compSel=i;compDraw();});
+});
+function compDraw(){
+  $$("#compSteps .step-btn").forEach((b,i)=>b.setAttribute("aria-pressed",i===compSel?"true":"false"));
+  const svg=$("#compSvg");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),ink2=cssVar("--ink-2"),mut=cssVar("--muted");
+  const L=60,R=920,T=26,B=250;const A=axis(svg,L,R,T,B,{});
+  const tave=100;const ts=[];for(let t=0;t<=320;t+=1)ts.push(t);
+  /* raw shape, normalized to unit area, then to plot height */
+  let ys=comps[compSel].mk(ts,tave);
+  /* shift shapes so the weighted mean is exactly tave: compute & annotate actual mean of drawn curve */
+  let area=0,m1=0;for(let i=0;i<ts.length;i++){area+=ys[i];m1+=ys[i]*ts[i];}
+  const mean=m1/area;
+  const ymax=Math.max(...ys);
+  const sc=100/mean; /* rescale time so every drawn curve's mean sits exactly at 100 */
+  const xOf=t=>L+(R-L)*clamp(t*sc,0,320)/320, yOf=y=>B-(B-T-14)*y/ymax;
+  /* grid */
+  for(let t=0;t<=300;t+=100)el("line",{x1:xOf(t),y1:T,x2:xOf(t),y2:B,stroke:A.grid,"stroke-width":1},svg);
+  /* curve */
+  let d="M"+xOf(ts[0])+","+yOf(ys[0]);for(let i=1;i<ts.length;i++)d+="L"+fmt(xOf(ts[i]),1)+","+fmt(yOf(ys[i]),1);
+  el("path",{d:d+"L"+xOf(320)+","+B+"L"+xOf(0)+","+B+"Z",fill:cssVar("--wash1"),stroke:"none"},svg);
+  el("path",{d,fill:"none",stroke:s1,"stroke-width":2.2,"stroke-linejoin":"round"},svg);
+  /* mean marker: by construction at axis position 100 after rescaling */
+  const mx=L+(R-L)*100/320;
+  el("line",{x1:mx,y1:T-4,x2:mx,y2:B,stroke:s2,"stroke-width":2,"stroke-dasharray":"5 4"},svg);
+  el("text",{x:mx+7,y:T+10,fill:s2,"font-size":13,"font-weight":600},svg).textContent="mean age τave — same in all four";
+  el("text",{x:L,y:B+26,fill:A.ink2,"font-size":13},svg).textContent="age of individual water molecules →";
+  el("text",{x:R,y:B+26,fill:mut,"font-size":12,"text-anchor":"end"},svg).textContent="areas normalized; sketches after Bethke & Johnson (2008), Fig. 2";
+  const ex=$("#compExplain");ex.textContent="";hel("p","small",ex,comps[compSel].explain);
+}
+redraws.push(compDraw);compDraw();
+
+/* ============ §3 clock cards ============ */
+const clockInfo={
+ decay:{title:"The draining clock — radioactive decay",
+  body:"Recharge arrives carrying a cosmogenic (or bomb-made) radionuclide at concentration C₀; underground, cut off from the atmosphere, the concentration drains along e^(−λt). Divide, take a logarithm, and the elapsed time falls out (eq. 1.1). Everything hangs on two promises: that C₀ is known — for ¹⁴C it is upset by \"dead\" carbon dissolving from the aquifer (Section 4); for ³H it varied so wildly through the bomb era that the clock only became reliable once its daughter ³He could be measured too, letting the sample reconstruct its own C₀ (the ³H/³He method) — and that decay is the only thing changing the concentration, which subsurface production (Lehmann et al., 1993) and mixing (Section 7) both break. One more subtlety from Cook & Böhlke: a short-lived nuclide like ²²²Rn (t½ = 3.8 days) reaches production–decay equilibrium within about a month and then carries no age information at all — a decaying tracer is a clock only on timescales comparable to its half-life."},
+ accum:{title:"The filling clock — radiogenic accumulation",
+  body:"Uranium and thorium in the rock shed alpha particles; each one becomes a ⁴He atom that leaks into the pore water. If the source rate is steady and uniform, concentration climbs linearly with time — C = C₀ + Rα·t/φ — and age is just the excess helium divided by the fill rate (Bethke & Johnson eqs. 8–9). No initial-condition problem, no half-life ceiling, and (uniquely — Section 7) no mixing bias. The price is the source term: aquitards and deep crust also export helium into aquifers, often dominating local production, so the fill rate is the least-known number in the equation. ⁴⁰Ar from potassium decay works on paper the same way but releases erratically from minerals; it has never become routine. Cook & Böhlke's verdict: semi-quantitative, spanning 10⁴–10⁸ years — the only clock that reaches truly deep time."},
+ event:{title:"The calendar clock — matching an input history",
+  body:"Human history wrote time-stamps into the atmosphere: the 1950s–60s bomb pulse of ³H, ³⁶Cl and ¹⁴C, and the monotonic industrial rise of ⁸⁵Kr, the CFCs and SF₆. Measure the marker, look up when the atmosphere last matched, and the recharge date is read straight off the calendar. Rising inputs give unique dates; a pulse gives two candidate dates (rising limb or falling limb), and bomb-era enrichment brackets recharge into a known decade even when it cannot pin a year. The fine print: the atmospheric ³H pulse has now decayed and mixed away so thoroughly that waters recharged in the last ~25 years are hard to tell apart; CFC concentrations have stopped rising and begun to fall under emissions agreements, so one measured value again matches two dates; and any admixture of pre-history water drags the apparent date young (Section 7)."}
+};
+function clockMini(svg,kind){
+  svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),s3=cssVar("--s3"),base=cssVar("--baseline");
+  el("line",{x1:12,y1:78,x2:228,y2:78,stroke:base,"stroke-width":1},svg);
+  el("line",{x1:12,y1:10,x2:12,y2:78,stroke:base,"stroke-width":1},svg);
+  let d="";
+  if(kind==="decay"){for(let i=0;i<=100;i++){const x=12+2.16*i,y=14+62*(1-Math.exp(-i/28));d+=(i?"L":"M")+x+","+(92-y);}el("path",{d,fill:"none",stroke:s1,"stroke-width":2.2},svg);}
+  if(kind==="accum"){el("path",{d:"M12,74L228,18",fill:"none",stroke:s3,"stroke-width":2.2},svg);}
+  if(kind==="event"){
+    for(let i=0;i<=100;i++){const t=i/100;const y=Math.exp(-0.5*Math.pow((t-0.35)/0.10,2));const x=12+2.16*i;d+=(i?"L":"M")+x+","+(76-58*y);}
+    el("path",{d,fill:"none",stroke:s2,"stroke-width":2.2},svg);
+  }
+}
+$$(".clock").forEach(btn=>{
+  clockMini(btn.querySelector("svg"),btn.dataset.clock);
+  btn.addEventListener("click",()=>{
+    $$(".clock").forEach(b=>b.setAttribute("aria-pressed",b===btn?"true":"false"));
+    const info=clockInfo[btn.dataset.clock];
+    const ex=$("#clockExplain");ex.textContent="";
+    const h=hel("h4",null,ex,info.title);h.style.margin="0 0 4px";
+    hel("p","small",ex,info.body);
+  });
+});
+redraws.push(()=>$$(".clock").forEach(btn=>clockMini(btn.querySelector("svg"),btn.dataset.clock)));
+
+/* ============ §3 ruler of time ============ */
+const rulerData=[
+ {n:"³H / ³He",cls:"decay",lo:1,hi:50,note:"Half-life 12.3 yr. The bomb pulse made ³H alone ambiguous; adding tritiogenic ³He rebuilds the starting amount, so the pair is a self-contained clock for water younger than ~50 years — the least-complicated young-water method (Lehmann et al., 1993). Week 5's headliner."},
+ {n:"⁸⁵Kr",cls:"event",lo:2,hi:50,note:"Half-life 10.76 yr; released during the operation of nuclear reactors and fuel handling, atmospheric concentration rising steadily for decades — so one measurement maps to one date (after decay is accounted for). Gas samples, low-level counting."},
+ {n:"CFCs · SF₆",cls:"event",lo:1,hi:70,note:"Manufactured gases with dated atmospheric histories. SF₆ still rises; the CFCs have peaked and begun declining, so a CFC value now matches two possible dates — and microbial degradation (CFC-11 in anoxic water: rate constants 0.2–1.6 yr⁻¹ at Sturgeon Falls) and sorption (CFC-113) can quietly re-age them. Week 5."},
+ {n:"³²Si",cls:"decay",lo:30,hi:1000,weak:true,note:"Half-life 152 yr — on paper the perfect gap-filler. In practice it sorbs strongly to sediment surfaces and has, to date, \"not provided reliable results\" (Bethke & Johnson, after Morgenstern 2000). A cautionary bar: a good half-life is not a good clock."},
+ {n:"³⁹Ar",cls:"decay",lo:50,hi:1000,note:"Half-life 269 yr; chemically inert. The only trustworthy bridge across the 50–1,000-year gap. Costs: large samples and heroic counting (historically), and subsurface production from potassium via neutron capture where U and Th are rich (Lehmann et al., 1993)."},
+ {n:"¹⁴C",cls:"decay",lo:2000,hi:40000,note:"Half-life 5,730 yr; the workhorse window Cook & Böhlke put at ~2,000–40,000 yr (usable toward ~50,000 in favourable settings). Not a water molecule but dissolved carbon — so every carbonate reaction along the flow path edits the clock (Section 4)."},
+ {n:"⁸¹Kr",cls:"decay",lo:50000,hi:1000000,note:"Half-life 229,000 yr; inert, negligible subsurface production, initial concentration set by the atmosphere. Lehmann et al. (1993) called it the least-complicated old-water clock — held back only by the difficulty of counting a few thousand atoms, which modern atom-counting has finally cracked."},
+ {n:"³⁶Cl",cls:"decay",lo:100000,hi:1500000,note:"Half-life ~301,000 yr. Dated the Great Artesian Basin to around a million years (Bentley et al., 1986) — but chloride dissolves from halite, diffuses up from brines, and is manufactured underground by neutron capture on ³⁵Cl, so the meteoric signal needs a full accounting (Bethke & Johnson's running example)."},
+ {n:"⁴He",cls:"accum",lo:10000,hi:10000000,note:"No half-life — it accumulates. Semi-quantitative ages from 10⁴ to 10⁸ yr (Cook & Böhlke, after Mazor & Bosch), immune to mixing bias, hostage to the source rate: aquitards, the deep crust, and any unnoticed uranium enrichment all pour helium into the budget."}
+];
+function rulerDraw(){
+  const svg=$("#rulerSvg");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),s3=cssVar("--s3"),ink2=cssVar("--ink-2"),mut=cssVar("--muted"),grid=cssVar("--grid"),base=cssVar("--baseline");
+  const colOf=c=>c==="decay"?s1:(c==="accum"?s3:s2);
+  const L=120,R=930,T=18,B=330;
+  const x=t=>L+(R-L)*(Math.log10(t)-0)/7;
+  /* windows shading (Cook & Böhlke) */
+  el("rect",{x:x(1),y:T,width:x(50)-x(1),height:B-T,fill:cssVar("--wash1")},svg);
+  el("rect",{x:x(2000),y:T,width:x(40000)-x(2000),height:B-T,fill:cssVar("--wash1")},svg);
+  el("text",{x:(x(1)+x(50))/2,y:T+12,fill:ink2,"font-size":11,"text-anchor":"middle"},svg).textContent="window 1: < 50 yr";
+  el("text",{x:(x(2000)+x(40000))/2,y:T+12,fill:ink2,"font-size":11,"text-anchor":"middle"},svg).textContent="window 2: 2–40 kyr";
+  el("text",{x:(x(50)+x(2000))/2,y:T+12,fill:s2,"font-size":11,"text-anchor":"middle","font-weight":600},svg).textContent="the gap";
+  /* axis */
+  for(let e=0;e<=7;e++){
+    el("line",{x1:x(Math.pow(10,e)),y1:T,x2:x(Math.pow(10,e)),y2:B,stroke:grid,"stroke-width":1},svg);
+    const lab=e<3?fmtInt(Math.pow(10,e)):(e<6?fmtInt(Math.pow(10,e-3))+" k":fmtInt(Math.pow(10,e-6))+" M");
+    el("text",{x:x(Math.pow(10,e)),y:B+22,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=lab;
+  }
+  el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
+  el("text",{x:(L+R)/2,y:B+42,fill:ink2,"font-size":13,"text-anchor":"middle"},svg).textContent="age (years, log scale)";
+  /* bars */
+  rulerData.forEach((tr,i)=>{
+    const y=T+28+i*31;
+    const col=colOf(tr.cls);
+    el("text",{x:L-10,y:y+5,fill:ink2,"font-size":13,"text-anchor":"end","font-weight":600},svg).textContent=tr.n;
+    const bar=el("rect",{x:x(tr.lo),y:y-7,width:x(tr.hi)-x(tr.lo),height:14,rx:4,fill:col,opacity:tr.weak?0.35:0.85,cursor:"pointer"},svg);
+    if(tr.weak)el("line",{x1:x(tr.lo),y1:y,x2:x(tr.hi),y2:y,stroke:col,"stroke-width":1.4,"stroke-dasharray":"3 4"},svg);
+    const show=(cx,cy)=>{showTip([{key:col,v:tr.n,t:"— "+(tr.cls==="decay"?"draining":(tr.cls==="accum"?"filling":"calendar"))+" clock"}],cx,cy);
+      const exp=$("#rulerExplain");exp.textContent="";const h=hel("h4",null,exp,tr.n);h.style.margin="0 0 4px";hel("p","small",exp,tr.note);};
+    bar.addEventListener("pointermove",e=>show(e.clientX,e.clientY));
+    bar.addEventListener("pointerleave",hideTip);
+    bar.addEventListener("click",e=>show(e.clientX,e.clientY));
+  });
+}
+/* legend drawn in HTML instead for cleanliness */
+function rulerLegend(){
+  const wrap=$("#rulerSvg").parentElement;
+  let lg=wrap.querySelector(".legend");
+  if(!lg){lg=document.createElement("div");lg.className="legend";wrap.appendChild(lg);}
+  lg.textContent="";
+  [["draining (decay)","--s1"],["filling (accumulation)","--s3"],["calendar (event marker)","--s2"]].forEach(k=>{
+    const sp=hel("span","key",lg);const sw=hel("span","swatch",sp);sw.style.background=cssVar(k[1]);sp.appendChild(document.createTextNode(k[0]));
+  });
+}
+redraws.push(()=>{rulerDraw();rulerLegend();});rulerDraw();rulerLegend();
+
+/* ============ §4 decay calculator ============ */
+const nuclides=[
+ {n:"³H",hl:12.3,unit:"yr"},
+ {n:"³⁹Ar",hl:269,unit:"yr"},
+ {n:"¹⁴C",hl:5730,unit:"yr"},
+ {n:"⁸¹Kr",hl:229000,unit:"yr"},
+ {n:"³⁶Cl",hl:301000,unit:"yr"}
+];
+let nucSel=2;
+const nucSeg=$("#nucSeg");
+nuclides.forEach((nu,i)=>{
+  const b=hel("button",null,nucSeg,nu.n);b.type="button";
+  b.addEventListener("click",()=>{nucSel=i;decayUpdate();});
+});
+function decayUpdate(){
+  $$("#nucSeg button").forEach((b,i)=>b.setAttribute("aria-pressed",i===nucSel?"true":"false"));
+  const nu=nuclides[nucSel];
+  const lam=Math.LN2/nu.hl;
+  const f=(+$("#pmcSlider").value)/100;
+  $("#pmcOut").textContent=fmt(f*100,1)+"%";
+  const t=-Math.log(f)/lam;
+  const nh=t/nu.hl;
+  const sigT=0.02/(lam*f);
+  $("#ageOut").textContent=fmtYr(t);
+  $("#ageSub").textContent="t = −ln("+fmt(f,3)+") / λ, "+nu.n+" (t½ "+fmtYr(nu.hl)+")";
+  $("#hlOut").textContent=fmt(nh,2);
+  $("#sigOut").textContent="± "+fmtYr(sigT);
+  /* chart */
+  const svg=$("#decaySvg");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),ink2=cssVar("--ink-2"),grid=cssVar("--grid"),base=cssVar("--baseline"),good=cssVar("--good-text");
+  const L=70,R=920,T=24,B=280;
+  const X1=6;/* in half-lives */
+  const xOf=h=>L+(R-L)*h/X1, yOf=c=>B-(B-T)*c;
+  /* sweet band 0.1–5 half-lives */
+  el("rect",{x:xOf(0.1),y:T,width:xOf(5)-xOf(0.1),height:B-T,fill:cssVar("--wash1")},svg);
+  el("text",{x:(xOf(0.1)+xOf(5))/2,y:T+14,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent="the clock's comfortable range (~0.1–5 half-lives)";
+  for(let h=0;h<=X1;h++){el("line",{x1:xOf(h),y1:T,x2:xOf(h),y2:B,stroke:grid,"stroke-width":1},svg);
+    el("text",{x:xOf(h),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=h+" t½";}
+  [1,0.5,0.25,0.125].forEach(c=>{el("line",{x1:L,y1:yOf(c),x2:R,y2:yOf(c),stroke:grid,"stroke-width":1,"stroke-dasharray":"2 5"},svg);
+    el("text",{x:L-8,y:yOf(c)+4,fill:ink2,"font-size":12,"text-anchor":"end"},svg).textContent=fmt(c*100,c<0.25?1:0)+"%";});
+  el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
+  let d="";for(let i=0;i<=240;i++){const h=X1*i/240;d+=(i?"L":"M")+fmt(xOf(h),1)+","+fmt(yOf(Math.pow(0.5,h)),1);}
+  el("path",{d,fill:"none",stroke:s1,"stroke-width":2.4},svg);
+  /* sample point */
+  el("line",{x1:xOf(nh),y1:yOf(f),x2:xOf(nh),y2:B,stroke:s2,"stroke-width":1.6,"stroke-dasharray":"4 4"},svg);
+  el("circle",{cx:xOf(clamp(nh,0,X1)),cy:yOf(f),r:7,fill:s2,stroke:cssVar("--surface"),"stroke-width":2},svg);
+  el("text",{x:clamp(xOf(nh),L+70,R-90),y:yOf(f)-14,fill:s2,"font-size":13,"font-weight":600,"text-anchor":"middle"},svg).textContent="your sample: "+fmt(f*100,1)+"% → "+fmtYr(t);
+  el("text",{x:L,y:T-8,fill:ink2,"font-size":13},svg).textContent="remaining fraction C/C₀";
+  const m=$("#decayMsg");
+  if(nh<0.1)m.innerHTML="<b>Too young for this clock.</b> Less than a tenth of a half-life has passed — the "+fmt((1-f)*100,1)+"% loss is inside typical measurement precision. Pick a shorter-lived nuclide, or a calendar clock with a rising input.";
+  else if(nh<=5)m.innerHTML="<b>Inside the window.</b> "+fmt(f*100,1)+"% remains after "+fmtYr(t)+". A ±2% (absolute) measurement maps to about ±"+fmtYr(sigT)+" here — and that is the <i>easy</i> uncertainty, before the initial condition (dead carbon, Thief 1) and mixing (Thief 2, Section 7) have their say.";
+  else m.innerHTML="<b>Beyond the clock.</b> After "+fmt(nh,1)+" half-lives, "+(f*100).toExponential(1)+"% remains — background territory. ¹⁴C-dead water is older than roughly 30,000–50,000 years, and that is all ¹⁴C alone can say; reach for ⁸¹Kr, ³⁶Cl or ⁴He.";
+}
+$("#pmcSlider").addEventListener("input",decayUpdate);
+redraws.push(decayUpdate);decayUpdate();
+
+/* dead carbon */
+function deadUpdate(){
+  const q=+$("#qSlider").value;
+  $("#qOut").textContent=fmt(q,2);
+  const extra=Math.log(1/q)*(5730/Math.LN2);
+  $("#deadOut").textContent="+ "+fmtYr(extra);
+  $("#deadMsg").innerHTML="With q = "+fmt(q,2)+", a water that recharged <b>yesterday</b> already reads "+fmtYr(extra)+" old — and every genuinely old sample carries the same offset on top of its true age. Correction schemes (δ¹³C mixing, mass-balance models) estimate q and subtract this term; their own uncertainty, typically q ± 0.05 or worse, is why careful workers call ¹⁴C results \"model ages\" and report the model beside the number.";
+}
+$("#qSlider").addEventListener("input",deadUpdate);
+deadUpdate();
+
+/* ============ color ramp util ============ */
+function hexToRgb(h){h=h.replace("#","");if(h.length===3)h=h.split("").map(c=>c+c).join("");return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix2(c1,c2,t){const a=hexToRgb(c1),b=hexToRgb(c2);return "rgb("+Math.round(lerp(a[0],b[0],t))+","+Math.round(lerp(a[1],b[1],t))+","+Math.round(lerp(a[2],b[2],t))+")";}
+function ageColor(u){ /* u in 0..1 young..old */
+  const y=cssVar("--age-young"),m=cssVar("--age-mid"),o=cssVar("--age-old");
+  return u<0.5?mix2(y,m,u*2):mix2(m,o,(u-0.5)*2);
+}
+
+/* ============ §5 Vogel aquifer ============ */
+const vR=$("#vR"),vH=$("#vH"),vEps=$("#vEps");
+const Rof=s=>Math.pow(10,lerp(-1,3.30103,s/100)); /* 0.1 → 2000 mm/yr */
+const sOfR=R=>100*(Math.log10(R)+1)/4.30103;
+let vProbeZ=null;
+function vogelAge(z,H,eps,Rm){ /* Rm in m/yr */
+  if(z>=H)return Infinity;
+  return (H*eps/Rm)*Math.log(H/(H-z));
+}
+function vogelUpdate(){
+  const H=+vH.value, eps=+vEps.value, R=Rof(+vR.value), Rm=R/1000;
+  $("#vHOut").textContent=fmtInt(H)+" m";
+  $("#vEpsOut").textContent=fmt(eps,2);
+  $("#vROut").textContent=(R<1?fmt(R,2):R<10?fmt(R,1):fmtInt(R))+" mm yr⁻¹";
+  const tau=H*eps/Rm; /* mean transit time of full discharge */
+  $("#vVel").textContent=(Rm/eps<0.01?fmt(Rm/eps*1000,1)+" mm yr⁻¹":fmt(Rm/eps,2)+" m yr⁻¹");
+  $("#vTau").textContent=fmtYr(tau);
+  const s2=cssVar("--s2"),ink2=cssVar("--ink-2"),mut=cssVar("--muted"),grid=cssVar("--grid"),base=cssVar("--baseline"),surface=cssVar("--surface");
+  /* --- cross-section --- */
+  const xs=$("#vogelXsec");xs.textContent="";
+  const L=64,Rx=436,T=40,B=250;
+  const zOf=z=>T+(B-T)*z/H;
+  /* age bands */
+  const N=60;
+  const tmax=vogelAge(0.99*H,H,eps,Rm);
+  for(let i=0;i<N;i++){
+    const z1=H*i/N, z2=H*(i+1)/N;
+    const tmid=vogelAge((z1+z2)/2,H,eps,Rm);
+    const u=clamp(Math.log(1+tmid/(0.15*tau))/Math.log(1+tmax/(0.15*tau)),0,1);
+    el("rect",{x:L,y:zOf(z1),width:Rx-L,height:zOf(z2)-zOf(z1)+0.6,fill:ageColor(u)},xs);
+  }
+  /* isochrons at fractions of tau */
+  [0.25,0.5,1,2,3].forEach(k=>{
+    const t=k*tau, z=H*(1-Math.exp(-t/tau));
+    if(z<0.995*H){
+      el("line",{x1:L,y1:zOf(z),x2:Rx,y2:zOf(z),stroke:surface,"stroke-width":1.2,"stroke-dasharray":"6 4",opacity:0.9},xs);
+      el("text",{x:Rx-6,y:zOf(z)-4,fill:surface,"font-size":11,"text-anchor":"end","font-weight":600},xs).textContent=fmtYr(t);
+    }
+  });
+  /* recharge arrows */
+  for(let i=0;i<6;i++){
+    const ax=L+(Rx-L)*(i+0.5)/6;
+    el("line",{x1:ax,y1:T-22,x2:ax,y2:T-6,stroke:cssVar("--s1"),"stroke-width":2},xs);
+    el("path",{d:"M"+(ax-4)+","+(T-10)+"L"+ax+","+(T-4)+"L"+(ax+4)+","+(T-10)+"Z",fill:cssVar("--s1")},xs);
+  }
+  el("text",{x:L,y:T-28,fill:ink2,"font-size":12},xs).textContent="uniform recharge R";
+  el("line",{x1:L,y1:T,x2:Rx,y2:T,stroke:base,"stroke-width":1.4},xs);
+  el("line",{x1:L,y1:B,x2:Rx,y2:B,stroke:base,"stroke-width":2.2},xs);
+  el("text",{x:L-8,y:T+5,fill:ink2,"font-size":11,"text-anchor":"end"},xs).textContent="0 m";
+  el("text",{x:L-8,y:B+4,fill:ink2,"font-size":11,"text-anchor":"end"},xs).textContent=fmtInt(H)+" m";
+  el("text",{x:(L+Rx)/2,y:B+24,fill:mut,"font-size":11,"text-anchor":"middle"},xs).textContent="isochrons labelled with age; base is effectively infinite-age";
+  /* probe */
+  if(vProbeZ!=null&&vProbeZ<H){
+    el("line",{x1:L,y1:zOf(vProbeZ),x2:Rx,y2:zOf(vProbeZ),stroke:s2,"stroke-width":2},xs);
+  }
+  /* --- profile --- */
+  const pf=$("#vogelProf");pf.textContent="";
+  const pL=70,pR=436,pT=20,pB=250;
+  const tScale=3*tau;
+  const xT=t=>pL+(pR-pL)*clamp(t/tScale,0,1.02);
+  for(let k=0;k<=3;k++){el("line",{x1:xT(k*tau),y1:pT,x2:xT(k*tau),y2:pB,stroke:grid,"stroke-width":1},pf);
+    el("text",{x:xT(k*tau),y:pB+18,fill:ink2,"font-size":11,"text-anchor":"middle"},pf).textContent=k===0?"0":fmtYr(k*tau);}
+  el("line",{x1:pL,y1:pT,x2:pL,y2:pB,stroke:base,"stroke-width":1.2},pf);
+  el("line",{x1:pL,y1:pB,x2:pR,y2:pB,stroke:base,"stroke-width":1.2},pf);
+  el("text",{x:(pL+pR)/2,y:pB+34,fill:ink2,"font-size":12,"text-anchor":"middle"},pf).textContent="groundwater age →";
+  el("text",{x:pL-8,y:pT+6,fill:ink2,"font-size":11,"text-anchor":"end"},pf).textContent="0";
+  el("text",{x:pL-8,y:pB+2,fill:ink2,"font-size":11,"text-anchor":"end"},pf).textContent=fmtInt(H)+" m";
+  let d="";
+  for(let i=0;i<=200;i++){
+    const z=H*i/200*0.985;
+    const t=vogelAge(z,H,eps,Rm);
+    if(t>tScale*1.02)break;
+    d+=(d?"L":"M")+fmt(xT(t),1)+","+fmt(pT+(pB-pT)*z/H,1);
+  }
+  el("path",{d,fill:"none",stroke:cssVar("--s1"),"stroke-width":2.4},pf);
+  if(vProbeZ!=null&&vProbeZ<H){
+    const t=vogelAge(vProbeZ,H,eps,Rm);
+    el("circle",{cx:xT(t),cy:pT+(pB-pT)*vProbeZ/H,r:6,fill:s2,stroke:surface,"stroke-width":2},pf);
+    $("#vProbe").textContent=isFinite(t)?fmtYr(t):"∞";
+    $("#vProbeSub").textContent="at "+fmt(vProbeZ,1)+" m below the water table";
+  }
+}
+function vogelProbe(e,svg,isProfile){
+  const H=+vH.value;
+  const r=svg.getBoundingClientRect();
+  const py=(e.clientY-r.top)*300/r.height;
+  const T=isProfile?20:40,B=250;
+  vProbeZ=clamp((py-T)/(B-T)*H,0,0.985*H);
+  vogelUpdate();
+}
+$("#vogelXsec").addEventListener("pointermove",e=>vogelProbe(e,$("#vogelXsec"),false));
+$("#vogelProf").addEventListener("pointermove",e=>vogelProbe(e,$("#vogelProf"),true));
+vH.addEventListener("input",()=>{vogelMsgDefault();vogelUpdate();});
+vEps.addEventListener("input",()=>{vogelMsgDefault();vogelUpdate();});
+vR.addEventListener("input",()=>{vogelMsgDefault();vogelUpdate();});
+function vogelMsgDefault(){$("#vogelMsg").innerHTML="Notice the two levers: thicker or more porous means older everywhere (more stored water per unit recharge); more recharge means younger everywhere. The <i>shape</i> — logarithmic crowding of isochrons toward the base — never changes. That is why a handful of dated depths can pin R: the curve has only one free scale.";}
+$("#vPresetCape").addEventListener("click",()=>{vH.value=33;vEps.value=0.35;vR.value=sOfR(1155);vogelUpdate();
+  $("#vogelMsg").innerHTML="<b>Cape Cod sand aquifer</b> (Solomon et al., 1995; Cook &amp; Böhlke §1.4.1): H = 33 m, ε = 0.35, and a water-table velocity R/ε of 3.3 m yr⁻¹. Probe ~27 m depth — the model puts ~17 years there, right where the ³H and ³He peaks sat with a ³H/³He age of ~16 years. The bomb peak fell 30 years before sampling; the missing ~14 years is the unsaturated-zone lag above the water table.";});
+$("#vPresetPolda").addEventListener("click",()=>{vH.value=20;vEps.value=0.30;vR.value=sOfR(30);vogelUpdate();
+  $("#vogelMsg").innerHTML="<b>A semi-arid basin</b> in the spirit of Allison &amp; Holmes's Polda Basin ³H work (Cook &amp; Böhlke §1.4.1): recharge of ~30 mm yr⁻¹ makes the full-depth mean residence time ~200 years — the top of their 50–200-year range. Wells sampled over their whole depth here are mixtures spanning decades to centuries.";});
+$("#vPresetMurray").addEventListener("click",()=>{vH.value=40;vEps.value=0.40;vR.value=sOfR(0.15);vogelUpdate();
+  $("#vogelMsg").innerHTML="<b>Recharge at 0.1–0.2 mm yr⁻¹</b> — the Murray Group regime (Leaney &amp; Allison, 1986). The mean age leaps to ~10⁵ years and almost the entire section is radiocarbon-scale or older. Same geometry, same equation; only R moved. \"Rates and dates\" in one slider.";});
+vogelMsgDefault();redraws.push(vogelUpdate);vogelUpdate();
+
+/* ============ §6 lumped-parameter distributions ============ */
+const lpmModels=[
+ {k:"EM",n:"Exponential",geo:"An unconfined aquifer of constant thickness sampled over its full depth — the Vogel section you just left. Every age is present; young dominates; the tail is long. g(t) = (1/τ)·e^(−t/τ)."},
+ {k:"PFM",n:"Piston flow",geo:"A confined aquifer far from a small recharge area: all flow lines reaching the well are the same length, so one age arrives — the assumption every dating formula makes, now visible as the most extreme member of the family."},
+ {k:"EPM",n:"Exponential-piston",geo:"A confined aquifer whose recharge area sits upstream: an age-stratified (exponential) parcel that then travels a fixed extra distance. Young water is absent below a threshold; the tail survives. The workhorse compromise."},
+ {k:"LIN",n:"Linear",geo:"A wedge-shaped unconfined aquifer thickening downgradient (Cook & Böhlke's geometry B): all ages up to 2τ equally represented, none beyond. Rare in pure form; instructive as the \"flat\" end-member."},
+ {k:"GAM",n:"Gamma (α = 0.5)",geo:"Not one of Table 1.1's geometries — the flexible two-parameter family that Block 3 fits to real breakthrough data, here with α = 0.5: even more young-dominated than exponential, with a heavier tail. Preview of Section 9."}
+];
+let lpmSel=0;
+const lpmSeg=$("#lpmSeg");
+lpmModels.forEach((m,i)=>{
+  const b=hel("button",null,lpmSeg,m.n);b.type="button";
+  b.addEventListener("click",()=>{lpmSel=i;$("#lpmEtaRow").hidden=(m.k!=="EPM");lpmUpdate();});
+});
+function lpmPdf(t,tau,k,p){
+  if(k==="EM")return Math.exp(-t/tau)/tau;
+  if(k==="LIN")return t<=2*tau?1/(2*tau):0;
+  if(k==="EPM"){const t0=p*tau,te=tau-t0;return t<t0?0:Math.exp(-(t-t0)/te)/te;}
+  if(k==="GAM")return gammaPdf(t,0.5,tau/0.5);
+  return 0;
+}
+function lpmCdf(t,tau,k,p){
+  if(k==="EM")return 1-Math.exp(-t/tau);
+  if(k==="LIN")return clamp(t/(2*tau),0,1);
+  if(k==="EPM"){const t0=p*tau,te=tau-t0;return t<t0?0:1-Math.exp(-(t-t0)/te);}
+  if(k==="GAM")return gammaCdf(t,0.5,tau/0.5);
+  if(k==="PFM")return t>=tau?1:0;
+  return 0;
+}
+function lpmUpdate(){
+  $$("#lpmSeg button").forEach((b,i)=>b.setAttribute("aria-pressed",i===lpmSel?"true":"false"));
+  const m=lpmModels[lpmSel],tau=+$("#lpmTau").value,p=+$("#lpmEta").value;
+  $("#lpmTauOut").textContent=tau+" yr";
+  $("#lpmEtaOut").textContent=fmtInt(p*100)+"%";
+  const svg=$("#lpmSvg");svg.textContent="";
+  const s1=cssVar("--s1"),s3=cssVar("--s3"),s2=cssVar("--s2"),ink2=cssVar("--ink-2"),grid=cssVar("--grid"),base=cssVar("--baseline");
+  const L=70,R=920,T=26,B=290;
+  const tmax=3.2*tau;
+  const xOf=t=>L+(R-L)*t/tmax;
+  for(let k=0;k<=3;k++){el("line",{x1:xOf(k*tau),y1:T,x2:xOf(k*tau),y2:B,stroke:grid,"stroke-width":1},svg);
+    el("text",{x:xOf(k*tau),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=k===0?"0":(k+"τ = "+fmtInt(k*tau)+" yr");}
+  el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
+  /* pdf */
+  if(m.k==="PFM"){
+    el("line",{x1:xOf(tau),y1:B,x2:xOf(tau),y2:T+16,stroke:s1,"stroke-width":5},svg);
+    el("path",{d:"M"+(xOf(tau)-7)+","+(T+22)+"L"+xOf(tau)+","+(T+6)+"L"+(xOf(tau)+7)+","+(T+22)+"Z",fill:s1},svg);
+    el("text",{x:xOf(tau)+10,y:T+18,fill:s1,"font-size":13,"font-weight":600},svg).textContent="all discharge at exactly τ";
+  }else{
+    const ts=[],ys=[];const n=560;
+    for(let i=1;i<=n;i++){const t=tmax*i/n;ts.push(t);ys.push(lpmPdf(t,tau,m.k,p));}
+    let ymax=0;ys.forEach(y=>{if(isFinite(y)&&y>ymax)ymax=y;});
+    ymax=Math.min(ymax,(m.k==="GAM"?3.2/tau:4/tau));
+    const yOf=y=>B-(B-T-16)*clamp(y/ymax,0,1.04);
+    let d="";for(let i=0;i<ts.length;i++){d+=(i?"L":"M")+fmt(xOf(ts[i]),1)+","+fmt(yOf(ys[i]),1);}
+    el("path",{d:d+"L"+fmt(xOf(tmax),1)+","+B+"L"+xOf(ts[0])+","+B+"Z",fill:cssVar("--wash1")},svg);
+    el("path",{d,fill:"none",stroke:s1,"stroke-width":2.4,"stroke-linejoin":"round"},svg);
+  }
+  /* cdf */
+  let dc="";for(let i=0;i<=280;i++){const t=tmax*i/280;dc+=(i?"L":"M")+fmt(xOf(t),1)+","+fmt(B-(B-T-16)*lpmCdf(t,tau,m.k,p),1);}
+  el("path",{d:dc,fill:"none",stroke:s3,"stroke-width":2,"stroke-dasharray":"5 4"},svg);
+  el("text",{x:R-6,y:T+12,fill:s3,"font-size":12,"text-anchor":"end"},svg).textContent="cumulative (dashed): fraction younger than t";
+  el("text",{x:L,y:T-8,fill:ink2,"font-size":13},svg).textContent="g(t) — fraction of discharge per unit age";
+  /* readouts */
+  const med=(function(){
+    if(m.k==="PFM")return tau;
+    let lo=0,hi=tmax*3;
+    for(let i=0;i<60;i++){const mid=(lo+hi)/2;(lpmCdf(mid,tau,m.k,p)<0.5)?lo=mid:hi=mid;}
+    return (lo+hi)/2;
+  })();
+  const y1=m.k==="PFM"?(tau<1?1:0):lpmCdf(1,tau,m.k,p);
+  const old2=m.k==="PFM"?0:1-lpmCdf(2*tau,tau,m.k,p);
+  $("#lpmMean").textContent=fmtInt(tau)+" yr";
+  $("#lpmMed").textContent=(med<10?fmt(med,1):fmtInt(med))+" yr";
+  $("#lpmY1").textContent=fmt(y1*100,y1<0.005?2:1)+"%";
+  $("#lpmOld").textContent=fmt(old2*100,1)+"%";
+  let extra="";
+  if(m.k==="EM"&&tau===10)extra=" <b>Check against the chapter:</b> just under 10% younger than a year (here "+fmt(y1*100,1)+"%), and the 9-to-10-year band holds "+fmt((lpmCdf(10,tau,"EM",0)-lpmCdf(9,tau,"EM",0))*100,1)+"% — Cook & Böhlke's own readings of Fig. 1.4.";
+  $("#lpmMsg").innerHTML=m.geo+extra;
+}
+$("#lpmTau").addEventListener("input",lpmUpdate);
+$("#lpmEta").addEventListener("input",lpmUpdate);
+redraws.push(lpmUpdate);lpmUpdate();
+
+/* ============ §7 mixing bias ============ */
+const HL14=5730, LAM14=Math.LN2/HL14;
+const mixEls={A:$("#mixA"),B:$("#mixB"),F:$("#mixF")};
+/* sliders are in log-years: value v -> age = 10^(v/25)-1 approx; simpler: piecewise mapping 0..100 -> 0..1e6 log */
+const ageOfSlider=v=>v===0?0:Math.pow(10,lerp(0,6,v/100)); /* 1 yr .. 1e6 yr; 0 stays 0 */
+const sliderOfAge=a=>a<=0?0:clamp(100*Math.log10(a)/6,0,100);
+function apparent14C(c){ if(c<=1e-9)return Infinity; return -Math.log(c)/LAM14; }
+function mixUpdate(){
+  const tA=ageOfSlider(+mixEls.A.value), tB=ageOfSlider(+mixEls.B.value), f=+mixEls.F.value;
+  $("#mixAOut").textContent=fmtYr(tA);
+  $("#mixBOut").textContent=fmtYr(tB);
+  $("#mixFOut").textContent=fmtInt(f*100)+"%";
+  const tMean=f*tA+(1-f)*tB;
+  /* 14C-style */
+  const cMix=f*Math.exp(-LAM14*tA)+(1-f)*Math.exp(-LAM14*tB);
+  const app14=apparent14C(cMix);
+  /* 4He-style: linear, apparent = mean exactly */
+  /* SF6-style: rising input over 60 yr: C(t)=max(0,1-t/60); invert */
+  const cs=t=>Math.max(0,1-t/60);
+  const cCal=f*cs(tA)+(1-f)*cs(tB);
+  const appCal=cCal<=0?Infinity:(1-cCal)*60;
+  $("#mixTrue").textContent=fmtYr(tMean);
+  $("#mixDecay").textContent=isFinite(app14)?fmtYr(app14):"¹⁴C-dead";
+  $("#mixDecaySub").textContent=isFinite(app14)?("reads "+fmt(100*(tMean-app14)/Math.max(tMean,1e-9),0)+"% young"):"no ¹⁴C left to read";
+  $("#mixHe").textContent=fmtYr(tMean);
+  $("#mixCal").textContent=isFinite(appCal)?fmtYr(appCal):"pre-history";
+  $("#mixCalSub").textContent=(tA>60&&tB>60)?"both waters pre-date the marker":(tB>60||tA>60)?"apparent date rides the young thread":"both inside the 60-yr history";
+  /* chart: concentration vs age, curve + chord */
+  const svg=$("#mixSvg");svg.textContent="";
+  const s1=cssVar("--s1"),s2=cssVar("--s2"),s3=cssVar("--s3"),ink2=cssVar("--ink-2"),grid=cssVar("--grid"),base=cssVar("--baseline"),surface=cssVar("--surface");
+  const L=70,R=920,T=26,B=280;
+  const tmax=Math.max(tA,tB,1000)*1.15;
+  const xOf=t=>L+(R-L)*t/tmax, yOf=c=>B-(B-T)*c;
+  for(let k=1;k<=4;k++)el("line",{x1:L+(R-L)*k/5,y1:T,x2:L+(R-L)*k/5,y2:B,stroke:grid,"stroke-width":1},svg);
+  el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
+  el("text",{x:R,y:B+20,fill:ink2,"font-size":12,"text-anchor":"end"},svg).textContent="age → ("+fmtYr(tmax)+" full scale)";
+  el("text",{x:L,y:T-8,fill:ink2,"font-size":13},svg).textContent="¹⁴C concentration (fraction of C₀) against age — curve vs mixing chord";
+  let d="";for(let i=0;i<=280;i++){const t=tmax*i/280;d+=(i?"L":"M")+fmt(xOf(t),1)+","+fmt(yOf(Math.exp(-LAM14*t)),1);}
+  el("path",{d,fill:"none",stroke:s1,"stroke-width":2.4},svg);
+  /* endpoints and chord */
+  const ax=xOf(tA),ay=yOf(Math.exp(-LAM14*tA)),bx=xOf(tB),by=yOf(Math.exp(-LAM14*tB));
+  el("line",{x1:ax,y1:ay,x2:bx,y2:by,stroke:s2,"stroke-width":2,"stroke-dasharray":"6 4"},svg);
+  el("circle",{cx:ax,cy:ay,r:6,fill:s1,stroke:surface,"stroke-width":2},svg);
+  el("text",{x:ax+9,y:ay+16,fill:ink2,"font-size":12,"font-weight":600},svg).textContent="A";
+  el("circle",{cx:bx,cy:by,r:6,fill:cssVar("--age-old"),stroke:surface,"stroke-width":2},svg);
+  el("text",{x:bx+9,y:by-8,fill:ink2,"font-size":12,"font-weight":600},svg).textContent="B";
+  /* mixture point on chord at mean age x, blended c */
+  const mx=xOf(tMean),my=yOf(cMix);
+  el("circle",{cx:mx,cy:my,r:7,fill:s2,stroke:surface,"stroke-width":2},svg);
+  el("text",{x:mx+10,y:my-10,fill:s2,"font-size":12.5,"font-weight":600},svg).textContent="the blend (true mean "+fmtYr(tMean)+")";
+  /* apparent age: horizontal from blend to curve */
+  if(isFinite(app14)){
+    el("line",{x1:mx,y1:my,x2:xOf(app14),y2:my,stroke:s2,"stroke-width":1.6},svg);
+    el("circle",{cx:xOf(app14),cy:my,r:5,fill:"none",stroke:s2,"stroke-width":2.4},svg);
+    el("text",{x:xOf(app14),y:my+22,fill:s2,"font-size":12.5,"text-anchor":"middle","font-weight":600},svg).textContent="reads as "+fmtYr(app14);
+  }
+  const m=$("#mixMsg");
+  if(!isFinite(app14))m.innerHTML="Both end-members are effectively ¹⁴C-dead, so the blend is too — the clock returns only \"old\", not a number.";
+  else if(tMean>0&&(tMean-app14)/tMean>0.5)m.innerHTML="<b>The chord effect at full strength.</b> The blend sits on the straight line between A and B, but the dating formula reads ages off the curved decay law — and the curve lies well to the left of the chord. The apparent age misses the true mean by "+fmt(100*(tMean-app14)/tMean,0)+"%. No amount of analytical precision fixes this; it is built into applying a single-age formula to a mixture.";
+  else m.innerHTML="With similar end-member ages the chord hugs the curve and the bias stays modest — Bethke & Johnson's longitudinal-dispersion case. Drag B far older than A (or press the second preset) to watch it become catastrophic.";
+}
+Object.values(mixEls).forEach(e=>e.addEventListener("input",mixUpdate));
+$$("[data-mixpre]").forEach(b=>b.addEventListener("click",()=>{
+  const k=b.dataset.mixpre;
+  if(k==="equal"){mixEls.A.value=sliderOfAge(20);mixEls.B.value=sliderOfAge(40);mixEls.F.value=0.5;}
+  if(k==="dead"){mixEls.A.value=0;mixEls.B.value=sliderOfAge(80000);mixEls.F.value=0.5;}
+  if(k==="trickle"){mixEls.A.value=sliderOfAge(5);mixEls.B.value=sliderOfAge(30000);mixEls.F.value=0.10;}
+  mixUpdate();
+}));
+redraws.push(mixUpdate);mixUpdate();
+
+/* ============ §8 aquitard ============ */
+const YRS=3.15576e7; /* seconds per year */
+function aqUpdate(){
+  const b=+$("#aqB").value;
+  const Dexp=lerp(-11,-9,(+$("#aqD").value)/100); /* 1e-11 .. 1e-9 */
+  const D=Math.pow(10,Dexp);
+  $("#aqBOut").textContent=fmtInt(b)+" m";
+  $("#aqDOut").textContent=fmt(Math.pow(10,Dexp-Math.floor(Dexp)),1)+"×10"+String(Math.floor(Dexp)).replace("-","⁻").replace(/(\d)/g,m=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[+m])+" m² s⁻¹";
+  const peak=b*b/(2*D)/YRS;
+  $("#aqPeak").textContent=fmtYr(peak);
+  const svg=$("#aqSvg");svg.textContent="";
+  const s1=cssVar("--s1"),ink2=cssVar("--ink-2"),grid=cssVar("--grid"),base=cssVar("--baseline"),wash=cssVar("--wash1");
+  const L=80,R=430,T=30,B=290,mid=(T+B)/2;
+  /* aquifers */
+  el("rect",{x:L,y:T-14,width:R-L,height:16,fill:wash},svg);
+  el("rect",{x:L,y:B-2,width:R-L,height:16,fill:wash},svg);
+  el("text",{x:L+4,y:T-2,fill:ink2,"font-size":11},svg).textContent="aquifer (age τaqf) — flow →";
+  el("text",{x:L+4,y:B+11,fill:ink2,"font-size":11},svg).textContent="aquifer — flow →";
+  el("line",{x1:L,y1:T,x2:L,y2:B,stroke:base,"stroke-width":1.2},svg);
+  el("line",{x1:L,y1:mid,x2:R,y2:mid,stroke:grid,"stroke-width":1,"stroke-dasharray":"3 5"},svg);
+  el("text",{x:R-4,y:mid-5,fill:ink2,"font-size":11,"text-anchor":"end"},svg).textContent="aquitard centreline (z = 0)";
+  /* parabola: excess age tau'(z)= (b^2 - z^2)/2D  ; x = tau', y = z from -b..b */
+  const xOf=tp=>L+(R-L-16)*tp/peak;
+  let d="";
+  for(let i=0;i<=120;i++){
+    const z=-b+2*b*i/120;
+    const tp=(b*b-z*z)/(2*D)/YRS;
+    d+=(i?"L":"M")+fmt(xOf(tp),1)+","+fmt(T+(B-T)*(z+b)/(2*b),1);
+  }
+  el("path",{d,fill:"none",stroke:s1,"stroke-width":2.6},svg);
+  el("text",{x:xOf(peak)-6,y:mid+4,fill:s1,"font-size":12,"text-anchor":"end","font-weight":600},svg).textContent="b²/2D* = "+fmtYr(peak);
+  el("text",{x:(L+R)/2,y:B+34,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent="excess age τ′ beyond the aquifers →";
+  el("text",{x:L-10,y:T+8,fill:ink2,"font-size":11,"text-anchor":"end"},svg).textContent="+b";
+  el("text",{x:L-10,y:B,fill:ink2,"font-size":11,"text-anchor":"end"},svg).textContent="−b";
+  $("#aqMsg").innerHTML="Bethke &amp; Johnson's own example (their Fig. 4): b = 50 m and D* = 10⁻¹⁰ m² s⁻¹ put ~<b>400,000 years</b> of excess age at the centreline of a stagnant aquitard. Slide D* up and the parabola flattens — molecules escape before growing ancient — but the readout beside it holds: the aquitard's aging <i>shipment</i> to its neighbours never changes. Cross-formational flow skews the profile without changing the average shipment either (their eq. 22).";
+}
+$("#aqB").addEventListener("input",aqUpdate);
+$("#aqD").addEventListener("input",aqUpdate);
+redraws.push(aqUpdate);aqUpdate();
+
+/* ============ §8 case accordions ============ */
+function buildAcc(id,rows){
+  const acc=$(id);
+  rows.forEach(r=>{
+    const item=hel("div","acc-item",acc);
+    const head=hel("button","acc-head",item);head.type="button";head.setAttribute("aria-expanded","false");
+    hel("span","tag",head,r.tag);hel("span","q",head,r.q);hel("span","caret",head,"▸");
+    const body=hel("div","acc-body",item);body.innerHTML=r.html;
+    head.addEventListener("click",()=>{const open=body.classList.toggle("open");head.setAttribute("aria-expanded",open?"true":"false");});
+  });
+}
+buildAcc("#accCases",[
+ {tag:"MODEL",q:"A hypothetical basin: where piston flow works, and where it inverts the flow direction",html:"<p>Park et al. (2002) built a 240-km cross-section — aquifer sandwiched in aquitards, the upper one fractured, flow left to right at ~0.5 m yr⁻¹ slowing to ~0.2 at depth — and transported ³⁶Cl through it with decay, a saline base (up to ~30 mmol L⁻¹ against &lt;4 in the aquifer) and neutron-capture production. Along the first 100 km, piston-flow dating tracks the full model almost perfectly: no recharge enters from above, and diffusion losses to the upper aquitard happen to balance production gains from below. Then a secondary recharge area near mid-section drips young, ³⁶Cl-rich water into the aquifer — concentration <i>rises</i> downgradient — and eq. 1.1 dutifully reports ages decreasing along flow, as if the river ran uphill. Deeper, subsurface production makes ³⁶Cl concentrations at the base of the lower aquitard the highest anywhere in the model. <b>Moral:</b> the piston-flow formula is not wrong; it is conditionally right, and the conditions are mappable.</p>"},
+ {tag:"FIELD",q:"The Great Artesian Basin: ³⁶Cl and ⁴He refusing to agree — until they were asked different questions",html:"<p>Australia's giant artesian system is the field's favourite controversy. ³⁶Cl ages rise cleanly along an upgradient stretch of the J aquifer, giving a velocity near 1 m yr⁻¹ and implying a coarse-rock conductivity of 1–2 m day⁻¹, comfortably inside well-test values. But ⁴He, which piston-flow logic says should rise linearly along the same aquifer, instead climbs roughly <i>exponentially</i>, to discharge-end concentrations far beyond local production (Torgersen et al.'s data). Bethke et al. (1999) resolved the standoff with a two-unit transport model: helium streaming up from the crystalline crust stays sequestered in deep, fine-grained layers — concentrations two orders of magnitude above the sampled aquifer top — until artesian upwelling near the discharge end hauls the deep, helium-rich water into shallow strata. Fit the fine-grained conductivity (~10⁻³ m day⁻¹) and the whole pattern reproduces. <b>Division of labour:</b> ³⁶Cl constrains flow <i>along</i> the aquifer; ⁴He constrains leakage <i>across</i> the confining beds. Neither alone dates the water; together they parameterize the basin.</p>"},
+ {tag:"INVERT",q:"The Paris Basin: eleven knobs, fifty observations, and an optimizer",html:"<p>Berger's east–west Paris Basin model carries ⁴He (in-basin production plus a crustal basal flux), brine dissolving off Triassic halite, conductive-advective heat, and groundwater ages to ~50 million years, across seven stratigraphic units cut by two conductive fault zones. Eleven adjustable parameters — unit permeabilities, fault permeability, thermal conductivities, an aquitard formation factor — against fifty observations of helium, head, salinity and temperature, tuned not by hand but by an optimizer (UCODE). The optimized model matches the helium and salinity fields dramatically better than the hand-built starting guess. <b>The lesson Bethke &amp; Johnson draw:</b> this is age dating's future shape — multiple tracers plus physical data inverted jointly — and its price: parameter choices need expertise, solutions are not unique, and the optimizer will happily polish a physically absurd model if you let it.</p>"}
+]);
+
+/* ============ §9 gamma TTD explorer ============ */
+const gPresets={
+ seep:{a:0.25,m:9,msg:"<b>Seepage — the deep percolation leaving the 3-m soil.</b> α = 0.25 [0.23, 0.27]: an extreme L-shape. Most of the tracer that will ever arrive arrives almost immediately — preferential flowpaths delivering \"new\" water straight through — while a thin tail dribbles on for months and props the mean up to ~9 days. An α this far below 1 sits under the 0.3–0.7 catchment range and screams bypass flow; it is also why the mean is a poor summary here (the median is a fraction of it)."},
+ crac:{a:0.57,m:17,msg:"<b>C. racemosa.</b> α = 0.57 [0.44, 0.71] — inside the range real catchments show. Young water still dominates the transpiration stream, but less violently than the seepage; the mean transit time roughly doubles to ~17 days. A tree behaving like a small catchment."},
+ hela:{a:0.70,m:21,msg:"<b>H. elatus.</b> α = 0.70 [0.45, 1.27] — the least skewed of the label-bearing trees (skewness 2/√α ≈ 2.4), MTT ~21 days. Note the confidence interval brushes α = 1: the data cannot quite exclude a well-mixed, exponential tree."},
+ hcre:{a:3.7,m:62,msg:"<b>H. crepitans — the slow one.</b> α = 3.7 [2.3, 5.8]: the distribution has flipped to a delayed hump peaking after weeks, more piston-with-dispersion than well-mixed reservoir. The tracer took six weeks to crest in the xylem and the MTT is ~62 days — the tree that, by itself, spreads the species range to a factor of ~4 and makes \"trees are not straws\" quantitative."}
+};
+function gamUpdate(msg){
+  const a=+$("#gAlpha").value, m=+$("#gMtt").value, be=m/a;
+  $("#gAlphaOut").textContent=fmt(a,2);
+  $("#gMttOut").textContent=fmtInt(m)+" d";
+  $("#gBeta").textContent=fmt(be,1)+" d";
+  $("#gMeanEcho").textContent=fmtInt(m)+" d";
+  const svg=$("#gamSvg");svg.textContent="";
+  const s4=cssVar("--s4"),s3=cssVar("--s3"),ink2=cssVar("--ink-2"),grid=cssVar("--grid"),base=cssVar("--baseline");
+  const L=70,R=920,T=26,B=290;
+  const tmax=Math.max(3*m,40);
+  const xOf=t=>L+(R-L)*t/tmax;
+  const ticks=tmax>200?[0,60,120,180,240]:tmax>100?[0,30,60,90,120,150]:[0,10,20,30,40,50,60,70,80,90,100];
+  ticks.filter(t=>t<=tmax).forEach(t=>{el("line",{x1:xOf(t),y1:T,x2:xOf(t),y2:B,stroke:grid,"stroke-width":1},svg);
+    el("text",{x:xOf(t),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=t+" d";});
+  el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
+  const n=560,ys=[];
+  for(let i=1;i<=n;i++){ys.push(gammaPdf(tmax*i/n,a,be));}
+  let ymax=0;ys.forEach(y=>{if(isFinite(y)&&y>ymax)ymax=y;});
+  ymax=Math.min(ymax,a<1?4.5/m:ymax);
+  const yOf=y=>B-(B-T-16)*clamp(y/ymax,0,1.05);
+  let d="";for(let i=0;i<ys.length;i++){d+=(i?"L":"M")+fmt(xOf(tmax*(i+1)/n),1)+","+fmt(yOf(ys[i]),1);}
+  el("path",{d:d+"L"+fmt(xOf(tmax),1)+","+B+"L"+fmt(xOf(tmax/n),1)+","+B+"Z",fill:cssVar("--wash4")},svg);
+  el("path",{d,fill:"none",stroke:s4,"stroke-width":2.4,"stroke-linejoin":"round"},svg);
+  /* cdf */
+  let dc="";for(let i=0;i<=280;i++){const t=tmax*i/280;dc+=(i?"L":"M")+fmt(xOf(t),1)+","+fmt(B-(B-T-16)*gammaCdf(t,a,be),1);}
+  el("path",{d:dc,fill:"none",stroke:s3,"stroke-width":2,"stroke-dasharray":"5 4"},svg);
+  el("text",{x:R-6,y:T+12,fill:s3,"font-size":12,"text-anchor":"end"},svg).textContent="cumulative (dashed)";
+  /* mean marker */
+  el("line",{x1:xOf(m),y1:T,x2:xOf(m),y2:B,stroke:cssVar("--s2"),"stroke-width":1.8,"stroke-dasharray":"5 4"},svg);
+  el("text",{x:xOf(m)+6,y:T+14,fill:cssVar("--s2"),"font-size":12,"font-weight":600},svg).textContent="mean αβ";
+  el("text",{x:L,y:T-8,fill:ink2,"font-size":13},svg).textContent="g(t) — transit-time distribution (α "+fmt(a,2)+", β "+fmt(be,1)+" d)";
+  /* readouts */
+  let lo=0,hi=tmax*4;for(let i=0;i<60;i++){const mid=(lo+hi)/2;(gammaCdf(mid,a,be)<0.5)?lo=mid:hi=mid;}
+  const med=(lo+hi)/2;
+  $("#gMed").textContent=(med<10?fmt(med,1):fmtInt(med))+" d";
+  const y7=gammaCdf(7,a,be);
+  $("#gY7").textContent=fmt(y7*100,0)+"%";
+  $("#gSkew").textContent=fmt(2/Math.sqrt(a),2);
+  $("#gamMsg").innerHTML=msg||"Two knobs, complete personality change. Hold the mean fixed and slide α: the same MTT can mean \"mostly instant plus a long tail\" (α ≪ 1) or \"almost nothing for two weeks, then a wave\" (α ≫ 1). Any argument built on the mean alone cannot tell those apart — Week 11 returns to this as the aggregation problem.";
+}
+$("#gAlpha").addEventListener("input",()=>gamUpdate());
+$("#gMtt").addEventListener("input",()=>gamUpdate());
+$$("[data-gpre]").forEach(b=>b.addEventListener("click",()=>{
+  const p=gPresets[b.dataset.gpre];
+  $("#gAlpha").value=p.a;$("#gMtt").value=p.m;gamUpdate(p.msg);
+}));
+redraws.push(()=>gamUpdate());gamUpdate(gPresets.seep.msg);
+
+/* ============ §10 BTC anatomy ============ */
+function btcUpdate(){
+  const tz=+$("#bPeak").value, tail=+$("#bTail").value, win=+$("#bWin").value;
+  $("#bPeakOut").textContent=tz+" d";
+  $("#bTailOut").textContent=fmt(tail,2);
+  $("#bWinOut").textContent=win+" d";
+  /* build a gamma-shaped concentration curve whose MODE is tz: mode=(a-1)b for a>1 */
+  const a=1+1/Math.max(tail,0.02)*0.9;          /* heavier tail -> smaller a */
+  const be=tz/(a-1);
+  const tmaxFull=240;
+  const svg=$("#btcSvg");svg.textContent="";
+  const s3=cssVar("--s3"),s2=cssVar("--s2"),s1=cssVar("--s1"),ink2=cssVar("--ink-2"),mut=cssVar("--muted"),grid=cssVar("--grid"),base=cssVar("--baseline"),surface=cssVar("--surface");
+  const L=70,R=920,T=30,B=280;
+  const xOf=t=>L+(R-L)*t/tmaxFull;
+  [0,60,120,180,240].forEach(t=>{el("line",{x1:xOf(t),y1:T,x2:xOf(t),y2:B,stroke:grid,"stroke-width":1},svg);
+    el("text",{x:xOf(t),y:B+20,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent=t+" d";});
+  el("line",{x1:L,y1:B,x2:R,y2:B,stroke:base,"stroke-width":1.2},svg);
+  /* curve values */
+  const n=480,ts=[],cs=[];
+  let cmax=0;
+  for(let i=0;i<=n;i++){const t=tmaxFull*i/n;const c=gammaPdf(t,a,be);ts.push(t);cs.push(c);if(c>cmax)cmax=c;}
+  const yOf=c=>B-(B-T-18)*c/cmax;
+  /* window shading beyond */
+  if(win<tmaxFull){
+    el("rect",{x:xOf(win),y:T,width:xOf(tmaxFull)-xOf(win),height:B-T,fill:cssVar("--wash2")},svg);
+    el("text",{x:(xOf(win)+xOf(tmaxFull))/2,y:T+14,fill:cssVar("--s2"),"font-size":12,"text-anchor":"middle"},svg).textContent="unobserved";
+  }
+  let d="";for(let i=0;i<=n;i++){d+=(i?"L":"M")+fmt(xOf(ts[i]),1)+","+fmt(yOf(cs[i]),1);}
+  el("path",{d,fill:"none",stroke:s3,"stroke-width":2.4},svg);
+  /* metrics within window */
+  let m0=0,m1=0;
+  for(let i=0;i<=n;i++){if(ts[i]<=win){m0+=cs[i];m1+=cs[i]*ts[i];}}
+  const tmu=m1/Math.max(m0,1e-12);
+  const dt=tmu-tz;
+  /* full-record mean for comparison */
+  let f0=0,f1=0;for(let i=0;i<=n;i++){f0+=cs[i];f1+=cs[i]*ts[i];}
+  const tmuFull=f1/f0;
+  el("line",{x1:xOf(tz),y1:T+8,x2:xOf(tz),y2:B,stroke:s1,"stroke-width":1.8,"stroke-dasharray":"5 4"},svg);
+  el("text",{x:xOf(tz),y:T+4,fill:s1,"font-size":12.5,"text-anchor":"middle","font-weight":600},svg).textContent="tz";
+  el("line",{x1:xOf(tmu),y1:T+8,x2:xOf(tmu),y2:B,stroke:s2,"stroke-width":1.8,"stroke-dasharray":"5 4"},svg);
+  const muLabX=(xOf(tmu)-xOf(tz)<34)?xOf(tmu)+22:xOf(tmu);
+  el("text",{x:muLabX,y:T+4,fill:s2,"font-size":12.5,"text-anchor":"middle","font-weight":600},svg).textContent="tμ";
+  /* delta-t arrow */
+  const ay=T+34;
+  el("line",{x1:xOf(tz),y1:ay,x2:xOf(tmu),y2:ay,stroke:ink2,"stroke-width":1.4},svg);
+  el("path",{d:"M"+(xOf(tmu)-6)+","+(ay-4)+"L"+xOf(tmu)+","+ay+"L"+(xOf(tmu)-6)+","+(ay+4)+"Z",fill:ink2},svg);
+  el("text",{x:(xOf(tz)+xOf(tmu))/2,y:ay-8,fill:ink2,"font-size":12,"text-anchor":"middle"},svg).textContent="Δt = "+fmt(dt,1)+" d";
+  el("text",{x:L,y:T-10,fill:ink2,"font-size":13},svg).textContent="tracer concentration in the outflux";
+  $("#btcTz").textContent=fmt(tz,0)+" d";
+  $("#btcTmu").textContent=fmt(tmu,1)+" d";
+  $("#btcDt").textContent=fmt(dt,1)+" d";
+  const lost=tmuFull-tmu;
+  $("#btcMsg").innerHTML=(win<tmaxFull&&lost>0.5)?
+    "<b>Truncation at work.</b> Cutting the record at "+win+" days moved t<sub>μ</sub> down by "+fmt(lost,1)+" days — the unobserved tail carried that much of the mean. The 2019 study's trees had exactly this problem (label still in the xylem at the last sampling), which is one reason its flow-weighted gamma MTTs and the 2026 Comment's windowed empirical means differ, and why the Comment brands every empirical t<sub>μ</sub> a lower bound.":
+    "For the B2 experiment, read these three numbers per compartment: soils peaked fast (t<sub>z</sub> 2–20 d) with light tails (Δt ~5 ± 2–3 d); trees peaked later (7–35 d) and tailed hard (Δt ~18 ± 14 d); recharge peaked at 2 days but tailed 17 — fast pipes plus slow matrix in one curve. Heavier tail, bigger Δt: dispersion and storage made visible without fitting anything.";
+}
+["bPeak","bTail","bWin"].forEach(id=>$("#"+id).addEventListener("input",btcUpdate));
+redraws.push(btcUpdate);btcUpdate();
+
+/* ============ §11 paper guides ============ */
+buildAcc("#accCook",[
+ {tag:"QUESTION",q:"What is the chapter trying to establish?",html:"<p>How environmental tracers yield subsurface residence times, and what those times are good for. It is a methods synthesis, not an argument: tracer types first (§1.2), then the transport models that turn concentrations into ages (§1.3), then four families of application (§1.4) — recharge rates and velocities, groundwater records of environmental change, and reaction timescales. The authors define their subject with care: environmental tracers are compounds \"widely distributed in the near-surface environment,\" explicitly excluding tracers you inject on purpose — a boundary worth remembering when Block 3 crosses it.</p>"},
+ {tag:"MAP",q:"Where things are in 30 pages",html:"<ul><li><b>§1.1–1.2</b> — the uses of hydrochronology; the three tracer classes (radioactive, accumulating, event markers), the input functions of Fig. 1.1, and the two usable time windows with the gap between them.</li><li><b>§1.3</b> — the models: unsaturated-zone piston flow; Vogel-type saturated-zone geometries (Fig. 1.2, Table 1.1 — the table to photocopy); groundwater-discharge age distributions and the convolution integral (eq. 1.6, Fig. 1.4); multi-tracer resolution of τ and model shape (Fig. 1.5); multi-cell and distributed models and where lumped models stop being enough.</li><li><b>§1.4.1</b> — hydrostratigraphy in action: bomb-peak profiles (Cyprus, Fig. 1.6), multi-level dating (Cape Cod, Fig. 1.7), horizontal velocities (Carrizo), discharge-model residence times, tracer-calibrated flow models.</li><li><b>§1.4.2</b> — groundwater as archive: nitrate (Fig. 1.8), the unsaturated-zone record (Fig. 1.9), acid deposition, the Danube halocarbon record (Fig. 1.10).</li><li><b>§1.4.3</b> — reaction rates from dated water: denitrification, sulphate reduction (Fig. 1.11), CFC degradation, dedolomitization.</li></ul>"},
+ {tag:"EQUATIONS",q:"Equations to recognize on sight",html:"<ul><li><b>eq. 1.1</b> — t = −(1/λ)·ln(C/C₀): the decay clock, and the whole initial-condition problem hiding in C₀.</li><li><b>eq. 1.3</b> — t = (Hε/R)·ln[H/(H−z)]: Vogel's age–depth law; note it is independent of horizontal position.</li><li><b>eq. 1.4</b> — t = zε/R: the shallow-limit approximation that turns any dated shallow sample into a recharge estimate.</li><li><b>eq. 1.5</b> — τ = V/Q: mean residence time as storage over flow, the definition every \"turnover time\" claim leans on.</li><li><b>eq. 1.6</b> — the convolution integral, with the e^(−λt) factor quietly coupling decay to the age distribution.</li></ul>"},
+ {tag:"NUMBERS",q:"Numbers you should be able to quote",html:"<ul><li>The two windows: &lt; ~50 yr and ~2,000–40,000 yr; ²²²Rn equilibrates in ~30 days (why short half-lives stop being clocks).</li><li>Unsaturated-zone velocities from bomb peaks: 0.9 m yr⁻¹ (English Chalk; also Cyprus); recharge 23 mm yr⁻¹ (Saudi dunes) and 63 mm yr⁻¹ (Cyprus, with θ = 0.072).</li><li>Cape Cod: ³H and ³He peaks ~27 m deep; H = 33 m; water-table velocity R/ε = 3.3 m yr⁻¹; 14 years of unsaturated-zone lag.</li><li>Recharge ranges by method: 100–1,200 mm yr⁻¹ (³H/³He, CFCs); 2–100 mm yr⁻¹ (¹⁴C); 0.1–0.2 mm yr⁻¹ (Murray Group ¹⁴C).</li><li>Carrizo Sand: 2.4 → 1.6 m yr⁻¹ between 15 and 50 km, consistent with hydraulics.</li><li>Maryland nitrate: recharge flux up ×3–6 from 1950–1990; ~30% of fertilizer N reaching the water table; recharge 0.23 m yr⁻¹ from the CFC age gradient.</li><li>Reaction half-lives from dated water: NO₃⁻ ~1.2–2.1 yr (Fe-sulphide aquifer) but ~5,000 yr (Kalahari); SO₄²⁻ ~3 yr (Sturgeon Falls) to 76–100 yr; CFC-11 degradation 0.2–1.6 yr⁻¹.</li></ul>"},
+ {tag:"PRESS ON",q:"Where a careful reader might press",html:"<ul><li><b>Piston flow is assumed almost everywhere</b> in §1.4's success stories. Which of them would survive the Bethke &amp; Johnson critique unmodified — and which (Cape Cod's discrete-depth samples? the Carrizo's age differences?) are naturally robust to it?</li><li><b>Table 1.1's geometries are exact and exactly ideal:</b> constant thickness, uniform recharge, homogeneous conductivity. What field observation would tell you which geometry — if any — your aquifer resembles, before you fit its model?</li><li><b>The convolution needs the input history C<sub>in</sub>:</b> for ¹⁴C that means pre-bomb initial activities and carbonate chemistry; for CFCs, local air and recharge temperature. How much of an \"age\" is really an input-history assumption?</li><li><b>Dispersion is dismissed as small</b> for coarse unconfined aquifers, on tracer evidence — a claim doing quiet load-bearing work. Where would it fail (fractured rock, thick aquitards, long screens)?</li><li><b>The archive applications assume the dated water and the dated solute travelled together.</b> Sorption, degradation and gas exchange all break the pairing — the chapter says so for nitrogen but the caveat generalizes.</li></ul>"},
+ {tag:"THREAD",q:"How it connects — backwards and forwards",html:"<p><b>Back:</b> eq. 1.1 is Week 2's decay law with the logarithm solved for t; conservative-tracer logic underwrites every equation here. <b>Forward:</b> Table 1.1 and eq. 1.6 are the mathematical chassis of Week 5's TracerLPM lab; the nitrate archive returns in Week 6; the noble-gas recharge temperatures of §1.4.2 get their own meeting in Week 7; and the young-window tracers (³H/³He, CFCs, SF₆) headline Week 5. When your proposal says \"we will estimate recharge,\" this chapter is the menu it is ordering from.</p>"}
+]);
+buildAcc("#accBethke",[
+ {tag:"QUESTION",q:"What is the review trying to establish?",html:"<p>That the field's working definition of groundwater age — one packet, one number — is conceptually broken, and that a rigorous replacement exists. The argument runs: samples are mixtures of molecules with individual ages (their Fig. 2); the standard dating methods, applied to mixtures, return biased \"sample ages\" (Fig. 3); the quantity that transports honestly is age mass (Goode's insight), which obeys a transport equation with a +1 source; and reactive transport modeling can invert multiple tracers jointly for the flow regime, making apparent inter-method contradictions informative rather than embarrassing. The closing sections are a manifesto: tomorrow's studies will sample marker <i>sets</i> across whole stratigraphies and invert them together.</p>"},
+ {tag:"MAP",q:"Where things are in 32 pages",html:"<ul><li><b>Introduction &amp; Evolving Concept</b> — why age matters (sustainability, vulnerability, repositories); piston flow and its failure; the molecular definition.</li><li><b>Groundwater Age Dating</b> — the three method classes: asymptotic decay (¹⁴C, ³⁶Cl, ³H/³He, ³⁹Ar, ⁸¹Kr, ³²Si), linear accumulation (⁴He, ⁴⁰Ar), history matching (bomb pulse, ⁸⁵Kr, CFCs, SF₆).</li><li><b>Effects of Mixing</b> — Fig. 3, the section to master before the meeting.</li><li><b>Distribution of Groundwater Age</b> — age mass; the transport equation (eqs. 11–18); aquitard profiles (eqs. 19–22, Fig. 4); the ρφb efflux theorem (eqs. 23–24); corrected velocities (eqs. 25–26).</li><li><b>Reactive Transport Modeling</b> — the hypothetical ³⁶Cl basin (Figs. 5–6), the Great Artesian Basin ⁴He story (Figs. 7–8), the optimized Paris Basin model (Figs. 9–10).</li><li><b>Error Analysis</b> — differential diffusion (Fig. 11, Table 1) and source-term mismatches, method by method.</li><li><b>Significance</b> — the three-clocks example, the future-of-the-field program, and a frank list of practical obstacles.</li></ul>"},
+ {tag:"FIGURES",q:"Figures worth being able to point to",html:"<ul><li><b>Fig. 1</b> — the piston flow cartoon: one packet, no exchange. Everything after it is this figure's demolition.</li><li><b>Fig. 2</b> — four age distributions with one mean: piston ± dispersion, aquitard tail, upwelling, surface recharge (Section 2's interactive).</li><li><b>Fig. 3</b> — apparent vs true age for the three method classes: the chord-below-the-curve geometry (Section 7's interactive).</li><li><b>Fig. 4</b> — parabolic excess age in an aquitard: up to ~400 kyr for b = 50 m, D* = 10⁻¹⁰ m² s⁻¹ (Section 8's interactive).</li><li><b>Figs. 5–6</b> — the model basin where piston-flow ³⁶Cl dating works for 100 km, then implies flow reversal.</li><li><b>Figs. 7–8</b> — GAB: ³⁶Cl ages linear (v ≈ 1 m yr⁻¹) while ⁴He climbs exponentially; the two-layer model that reconciles them.</li><li><b>Fig. 11 / Table 1</b> — diffusion coefficients (He ~70, water and Cl⁻ ~20 ×10⁻¹⁰ m² s⁻¹ at 20 °C) and the source-term ledger for age mass vs ³⁶Cl vs ⁴He.</li></ul>"},
+ {tag:"NUMBERS",q:"Numbers you should be able to quote",html:"<ul><li>Half-lives: ³H 12.3 yr; ⁸⁵Kr 10.76 yr; ³²Si 152 yr; ³⁹Ar 269 yr; ¹⁴C 5,730 yr; ⁸¹Kr 229,000 yr; ³⁶Cl ~301,000 yr.</li><li>Mixing arithmetic: equal parts of 20-yr and 40-yr water = 30-yr water (age mass); half modern + half dead ¹⁴C water reads exactly one half-life.</li><li>The aquitard theorem: efflux = ρφb — one kilogram-year per year per kilogram of stored aquitard water, independent of D* and flow.</li><li>³⁶Cl diffuses only ~30 m per half-life (D* = 10⁻¹⁰ m² s⁻¹) — why it cannot see across thick aquitards.</li><li>GAB calibration: coarse-rock K 1–2 m day⁻¹ (well tests: 0.1–10); fine-grained 10⁻³ m day⁻¹ (reported: 10⁻⁴–10⁻²).</li><li>Paris Basin: 11 parameters, 50 observations (⁴He, head, salinity, temperature), ages to ~50 Myr.</li><li>The hook example: Darcy ~10⁵ yr; ¹⁴C at ~10% of pre-bomb activity → &lt;20,000 yr; ⁴He → millions.</li></ul>"},
+ {tag:"PRESS ON",q:"Where a careful reader might press",html:"<ul><li><b>The mean is still a number.</b> The \"new definition\" replaces one scalar (piston age) with another (mean over molecules). Fig. 2's own panels show the mean can sit where no water is. Is the right target the mean, or the distribution — and does the age-mass machinery actually deliver distributions?</li><li><b>Where are the error bars?</b> The review argues piston-flow dating has unquantifiable conceptual error, but the RTM alternative's uncertainties (parameterization non-uniqueness, optimizer local minima) are described qualitatively. Is a biased number with known sign worse than an unbiased framework with unstated variance?</li><li><b>The ρφb theorem is steady-state.</b> Aquifers pumped for a century, or basins still relaxing from the Pleistocene, are not. How fragile is \"aquitards age aquifers\" to transience?</li><li><b>Practicality cuts the other way.</b> Their own list: dating gaps with no tracer, wells only where screens are, few modelers among daters. Eighteen years on — has the program they predicted (\"today's practitioners may hardly recognize tomorrow's age-dating studies\") actually arrived? What would count as evidence?</li><li><b>Everything is a model.</b> The GAB and Paris cases <i>demonstrate consistency</i>, not uniqueness; a different layer structure might fit too. What observation would distinguish rival parameterizations?</li></ul>"},
+ {tag:"THREAD",q:"How it connects",html:"<p><b>Back:</b> Week 1's mixture lesson (rapid response ≠ young water) is this paper's thesis at aquifer scale; Week 2's decay law supplies every formula being critiqued. <b>Forward:</b> the mixing biases reappear in Week 5 as \"apparent vs mixed ages\" for young-water tracers; ⁴He returns as a clock in its own right in Week 10; and the multi-tracer inversion program is the intellectual scaffolding for any proposal that says \"we will combine tracers.\" Block 3 shows the same molecule-crowd thinking transplanted to soil and xylem.</p>"}
+]);
+buildAcc("#accEv19",[
+ {tag:"QUESTION",q:"What is the paper trying to establish?",html:"<p>Whether ecohydrological separation — Week 2's \"two water worlds\" — is a separation in <i>space</i> (trees drawing on different pore water than recharge) or in <i>time</i> (tree water and recharge water having different transit times), using the one setting where the question is fully auditable: a rainforest in a box. The null hypothesis is stated like a physicist's: transpiration and recharge are sampled from a single well-mixed reservoir, with no preference for old or young water. Both halves of the null get rejected, quantitatively.</p>"},
+ {tag:"MAP",q:"Where the argument lives",html:"<ul><li><b>§1</b> — the two-water-worlds scoreboard since Brooks et al. (2010), and why field sites cannot settle the space-vs-time question: boundary conditions \"unknown and largely unknowable.\"</li><li><b>§2.1–2.3</b> — the facility and instrumentation: 1,936 m², soil 1–3.5 m over a drained basement, three Plexiglas-walled soil pits, controlled rainfall (~1,300 mm yr⁻¹ at −60.2 ± 4.2‰ δ²H), and the drought–rewetting design (68 days dry; 66 mm at +152‰ over four events; 87 mm at −60‰ over 13).</li><li><b>§2.5</b> — the isotope mass balance closing the books on where the water went.</li><li><b>§2.6</b> — space: a five-source Bayesian mixing model (three rewetting soil depths, pre-rewetting \"resident\" water, and zero-tension seepage) on weekly xylem samples from five canopy species.</li><li><b>§2.7</b> — time: TTDs estimated from breakthrough curves in flow-weighted time, gamma form, with the assumptions stated (time-invariant partitioning; assumed outflux structure).</li><li><b>§3–4</b> — results and the two-worlds re-reading: Figures 5–6 (δ-space and p-space) and Figure 7 (BTCs, TTDs, posteriors).</li></ul>"},
+ {tag:"FIGURES",q:"Figures worth being able to point to",html:"<ul><li><b>Fig. 3</b> — the drought signature: ecosystem ET falling from ~1,733 to ~877 kg day⁻¹; soil moisture and matric potential recovering ~8–14 days after rewetting.</li><li><b>Fig. 5</b> — δ-space, eight sampling dates: the label roars through seepage within days while xylem and bulk soil move slowly and together — visible ecohydrological separation, before any model.</li><li><b>Fig. 6</b> — p-space: posterior source fractions per species and date; seepage water never dominant in any tree.</li><li><b>Fig. 7</b> — the money figure: observed and modeled BTCs for seepage and three trees, cumulative TTDs, parameter posteriors. Note the seepage curve's instant rise and the 6-week delay in H. crepitans.</li></ul>"},
+ {tag:"NUMBERS",q:"Numbers you should be able to quote",html:"<ul><li>MTTs: seepage ≈ 9 d (215 hr [205, 250]); soil at 0.25 m ≈ 14 d; C. racemosa ≈ 17 d; H. elatus ≈ 21 d; H. crepitans ≈ 62 d. Recharge 2–7× faster than transpiration.</li><li>Gamma shapes: seepage α ≈ 0.25; H. elatus 0.70; C. racemosa 0.57; H. crepitans 3.7 (catchment range for comparison: ~0.3–0.7).</li><li>Source apportionment: 89 ± 6% of xylem water from bulk soil in the first two weeks; seepage-type water only 11 ± 6% then, 16 ± 8% over the full record — versus seepage's ~1% share of the water budget (a disproportion worth discussing).</li><li>Mass recovery: ~60% of labelled tracer via seepage; ~45% via transpiration (35–63% by species); ~52% at 0.25 m.</li><li>Two trees never took up the label: C. pentandra (xylem δ²H flat at −56 ± 4.5‰) and P. indicus (apparently using \"stream\" water) — excluded from TTD fitting for that reason.</li></ul>"},
+ {tag:"PRESS ON",q:"Where a careful reader might press",html:"<ul><li><b>The TTD assumptions are load-bearing:</b> time-invariant flow-path partitioning, an assumed seepage recession (0.5-day timescale), uniform transpiration structure, and a gamma form chosen a priori. The authors flag all four. Which of the headline contrasts (2–7×) could survive their failure, and which could not?</li><li><b>n = 1 for three of five species</b> (and the analyzed C. racemosa stands in for its three replicates). How far can species-level claims travel from single trees — and what would replication have cost?</li><li><b>Cryogenic extraction defines \"bulk soil water\"</b> and xylem water alike; Weeks 8 and 13 will show this method carries its own biases. Would extraction artifacts move both soil and xylem the same way, or differentially?</li><li><b>The mesocosm's realism:</b> constant-composition rainfall is what makes the label so clean — and it is precisely what real catchments lack (their input varies seasonally, which is what Week 11's methods exploit). Which findings transfer, and which are creatures of the controlled boundary?</li><li><b>\"Seepage = groundwater recharge\"</b> is an analogy: a drained basement at 3 m is not a water table. Does the analogy matter for the time-separation claim, the space-separation claim, both, or neither?</li></ul>"},
+ {tag:"THREAD",q:"How it connects",html:"<p><b>Back:</b> this is Week 2's Evaristo et al. (2015) offset given a mechanism — matrix vs preferential water — and Week 1's rates-vs-dates distinction operating at 3-metre scale. <b>Forward:</b> the gamma TTD machinery reappears in Week 11 (young-water fractions, aggregation bias); extraction methods get their reckoning in Weeks 8 and 13; and the 2026 Comment (next guide) is this paper arguing with itself in public — the healthiest thing a dataset can do.</p>"}
+]);
+buildAcc("#accEv26",[
+ {tag:"QUESTION",q:"What is the Comment trying to establish?",html:"<p>Three things, explicitly: that simple transit-time tools — two parametric fits and three curve-read metrics — are within reach of any group with tracer data, not just catchment specialists (open scripts and a tutorial ship with the paper); that the reanalyzed B2 data support two transport claims worth testing elsewhere (strong preferential flow in the vadose zone, and \"xylem bias\" — stand-scale routing of transpiration through hydraulically advantaged trees); and that climate and terrestrial biosphere models are missing the weeks-to-months infiltration-to-transpiration lags and tree-internal storage the data demonstrate. It is a Commentary in the honest sense: methods pedagogy plus hypothesis generation plus a call for interdisciplinary company.</p>"},
+ {tag:"MAP",q:"Where the argument lives",html:"<ul><li><b>§1</b> — the case that soil–plant transit times are the neglected half of the exit-age problem, and a compact tour of MTT-vs-young-water-fraction issues (aggregation bias, Kirchner 2016) you will meet again in Week 11.</li><li><b>§2.1–2.2</b> — the recycled experiment (drought, ~67 mm of D₂O label, five species with wood-density and phenology context in Table 1).</li><li><b>§2.3</b> — the parametric route: gamma (serial/additive) and lognormal (parallel/multiplicative) fits to concentration BTCs; the six-criteria model vote (Table 2); the crucial caveat that concentration BTCs are not mass-flux TTDs.</li><li><b>§2.4</b> — the phenomenological route: t<sub>μ</sub>, t<sub>z</sub>, Δt, and velocities; truncation makes empirical means lower bounds.</li><li><b>§3</b> — results by compartment (Figs. 2–3; Tables 2–3), then the two-approach comparison (Fig. 4).</li><li><b>§4</b> — interpretation as hypotheses: preferential flow and xylem bias (§4.1), serial-vs-parallel readings (§4.2), methods complementarity (§4.3), field-deployment advice for sprinkler labelling (§4.4), and the CTBM table (§4.5, Table 4).</li></ul>"},
+ {tag:"NUMBERS",q:"Numbers you should be able to quote",html:"<ul><li>Parametric MTTs: vadose zone 14 ± 6 d; \"recharge\" 22 d; trees 55 ± 50 d (species: P. indicus 18, H. elatus 45, C. racemosa 53, H. crepitans 109; C. pentandra's three breakthroughs 10, 11, 138 d).</li><li>Data-based means: soils 12 ± 2 d; plants 29 ± 6 d — half the parametric 59 ± 13 d, the truncated-tail signature.</li><li>Peak arrivals t<sub>z</sub>: 2 days at every depth in Pit 1 (15–130 cm) — coherent preferential flow — vs 2→20 days with depth in Pit 2; trees 2–35 days.</li><li>Tracer velocities: soils 2–14 cm d⁻¹; deep percolation 18 cm d⁻¹; trees 52–193 cm d⁻¹ (P. indicus fastest, H. crepitans slowest).</li><li>New-water fractions at peak (f<sub>pulse</sub>): Pit 1 ~0.68–0.79; recharge 0.63; trees 0.19 ± 0.12 — i.e., ~80% of peak-time xylem water was older, stored water (against 6–28% trunk-storage estimates from non-tracer work, a discrepancy §4.5 leaves deliberately open).</li><li>Model vote: gamma 7 of 8 soil BTCs; lognormal 4 of 5 xylem BTCs.</li></ul>"},
+ {tag:"PRESS ON",q:"Where a careful reader might press",html:"<ul><li><b>The two papers' numbers differ for the same trees</b> (Section 10's table): flow-weighted, mass-constrained gamma fits (2019) vs concentration-BTC fits (2026); P. indicus excluded there, MTT 18 d here. The Comment's own framing — comparative, not absolute — is the defense; is it also a concession that between-study MTT comparisons in this literature are shaky in general?</li><li><b>Serial = gamma, parallel = lognormal is an interpretive bridge,</b> and the paper repeatedly calls the fits descriptive; several votes are near-ties, and a flexible gamma can mimic many lognormals. What experiment — not fit statistic — would actually distinguish serial from parallel transport?</li><li><b>Xylem bias vs rooting depth:</b> the paper itself offers the alternative (fast trees may simply root differently). What measurement separates \"stronger pull / bigger store\" from \"different straw\"?</li><li><b>Six criteria, majority vote, ties broken by priority</b> — a defensible convention, but a convention. Would AIC-only or KS-only selection change any conclusion that matters?</li><li><b>The CTBM indictment</b> (Table 4) is a literature reading, not a simulation: no model run shows that adding storage lags changes a climate-relevant output. What is the cheapest experiment or model exercise that would make the \"call\" compelling to a land-surface modeler?</li></ul>"},
+ {tag:"THREAD",q:"How it connects",html:"<p><b>Back:</b> the aggregation-bias discussion imports Kirchner (2016) — Week 11's core reading — into the soil–plant world, and the whole Comment is Bethke &amp; Johnson's \"mixtures read differently by different methods\" lesson at days scale. <b>Forward:</b> the sprinkler-labelling design advice (§4.4 — background characterization, ~3× contrast, wet-vs-dry-antecedent deployments, field-deployable laser spectrometers) is a ready-made methods paragraph for proposals; the in-situ measurement thread continues in Week 8's lab; and the open scripts and data (HydroShare; the authors' code repository) mean any of this week's figures can be rebuilt — and challenged — on your own laptop.</p>"}
+]);
+
+/* ============ §12 scenarios ============ */
+const scenarios=[
+ {letter:"A",title:"Old age, young tritium",q:"A municipal well in a semi-confined aquifer returns a ¹⁴C model age of 15,000 years — and a clear tritium detection. The lab is reputable. What do you conclude first?",
+  opts:[
+   {t:"The sample is a mixture: a young component (recharged within ~60 years, hence the ³H) is blended into predominantly old water, and the ¹⁴C \"age\" describes neither part. The well's vulnerability to modern contamination just became the headline.",best:true,
+    fb:"The two tracers are not in conflict — they are triangulating a mixture, exactly as in Section 7. Even a few percent of bomb-era water carries detectable ³H while barely denting the ¹⁴C budget. Bethke & Johnson's program: use young markers in old-water studies deliberately, because a fast path from the surface is the finding that changes decisions."},
+   {t:"The tritium is laboratory contamination; water this old cannot contain it. Re-sample with better protocols.",best:false,
+    fb:"Re-sampling is never wrong, but \"cannot\" assumes the sample has one age — the piston-flow reflex this week retires. Fifteen-thousand-year piston water cannot hold ³H; a 95:5 old:young blend easily can. Rule out the mundane explanation that is also the most consequential before invoking error."},
+   {t:"The ¹⁴C age is wrong because of dead carbon; correct it and the disagreement will disappear.",best:false,
+    fb:"Dead carbon shifts ¹⁴C ages older (Section 4), but no carbonate correction manufactures tritium. The δ¹³C audit is worth doing — it may pull 15,000 toward 12,000 — yet the ³H still demands a young fraction. Corrections refine the old end-member; they cannot explain the young one."}],
+  debrief:{choice:"A mixture, with the young thread as the actionable finding.",check:"Quantify it: measure ³H/³He or SF₆ to date the young fraction, estimate its proportion from the ³H level against modern recharge, and re-read the ¹⁴C as a mixed signal (the Section 7 demo, run backwards)."}},
+ {letter:"B",title:"The 500-year problem",q:"A colleague needs the residence time of spring water suspected to be a few centuries old — beyond ³H/³He and CFCs, but young enough that ¹⁴C decay (~6% per 500 yr) drowns in dead-carbon corrections. What is the honest recommendation?",
+  opts:[
+   {t:"³⁹Ar: its 269-year half-life is built for the 50–1,000-year window, it is chemically inert, and modern atom-counting has made the measurement feasible — with the caveat that U-and-Th-rich rock can produce ³⁹Ar underground, so check the geology.",best:true,
+    fb:"This is the gap on Section 3's ruler, and ³⁹Ar is the only clean tenant (³²Si having failed on sorption). The subsurface-production audit (³⁹K(n,p)³⁹Ar — Lehmann et al., 1993) and the sample-size logistics are the honest costs to quote."},
+   {t:"¹⁴C anyway — with a careful δ¹³C-based dead-carbon model, the precision will be adequate.",best:false,
+    fb:"Run the arithmetic from Section 4: at 500 years only ~6% of the ¹⁴C is gone, while a dead-carbon fraction of 15% mimics ~1,300 years of age. The correction uncertainty exceeds the signal several times over. ¹⁴C is the right tool two half-life-decades later, not here."},
+   {t:"There is no tracer for that window; report \"pre-modern\" and move on.",best:false,
+    fb:"Half right — the window is genuinely hard, and \"pre-modern (³H-dead)\" is a defensible floor. But it concedes too early: ³⁹Ar exists for exactly this range, and even bounding results (³H-dead + measurable ³⁹Ar) beat an open interval. Reach for the gap-bridger before declaring the gap empty."}],
+  debrief:{choice:"³⁹Ar, with its production audit and logistics stated up front.",check:"Pair it with ³H (to confirm the young bound) and ¹⁴C (the old bound): bracketing a window with three clocks beats perfect faith in one — the multi-tracer habit this week keeps rewarding."}},
+ {letter:"C",title:"Two wells and an aquitard",q:"Two wells 10 km apart along a confined sandstone give ¹⁴C ages of 5,000 and 15,000 years. The aquifer (porosity 0.30, half-thickness 20 m) is sandwiched in thick shale (porosity 0.30, half-thickness 20 m per side). How fast is the water moving?",
+  opts:[
+   {t:"About 2 m yr⁻¹ — the naive 10 km / 10,000 yr = 1 m yr⁻¹, doubled, because the aquifer also carries the age mass its equal-water aquitards export into it (the 1 + φb/φB correction).",best:true,
+    fb:"Bethke & Johnson eqs. 25–26: with φ_aqt·b = φ_aqf·B the correction factor is exactly 2. The aquifer's water ages twice as fast as flow alone would age it, so ages along it accumulate at half the naive spacing — and the piston-flow velocity underestimates by the stored-water ratio. Aquitards age aquifers simply by existing."},
+   {t:"1 m yr⁻¹ — ten kilometres per ten thousand years, straight from the age gradient.",best:false,
+    fb:"That is the piston-flow answer, and it is what most published velocities are. It is exact only when b = 0 — no aquitards. Here the confining shale holds as much water as the aquifer itself, and every kilogram of it ships one kilogram-year of age per year into the flow. The real water moves twice as fast as the dates suggest — which halves every travel-time-to-well estimate built on them."},
+   {t:"The question is unanswerable: ¹⁴C ages in confined aquifers are meaningless after Bethke & Johnson.",best:false,
+    fb:"Overcorrection. The critique does not void the ages; it tells you what they measure — the accumulation of age mass, which includes the aquitard subsidy — and supplies the correction to recover flow. \"Meaningless\" and \"naively interpreted\" are different verdicts, and this week's skill is telling them apart."}],
+  debrief:{choice:"≈ 2 m yr⁻¹, stating the correction and its inputs (φ, b, B).",check:"Sensitivity-check the geometry: the factor is 1 + φ_aqt·b/(φ_aqf·B), so thin aquitards (b → 0) recover piston flow, and thick ones dominate it. If b is uncertain by ×2, so is your velocity — put that in the report."}},
+ {letter:"D",title:"Reading a labelling experiment",q:"In a B2-style sprinkler-labelling study, one instrumented soil pit shows the tracer peaking at 2 days at every depth from 15 to 130 cm; a second pit a few metres away shows peaks stepping from 2 to 20 days with depth. What is the defensible reading?",
+  opts:[
+   {t:"Pit 1 is dominated by vertically connected preferential flowpaths delivering water past the matrix; Pit 2 behaves more like matrix percolation. Metre-scale heterogeneity is first-order, so neither pit alone characterizes the site — replicate before generalizing.",best:true,
+    fb:"This is the 2026 Comment's own reading of its Figure 2, offered with its own warning about single-pit generalization. Coincident peaks at all depths cannot be produced by uniform Richards-type percolation; they demand bypass channels. The step-down pattern next door is the matrix story. Both are true; they are three metres apart."},
+   {t:"One of the pits is instrumentally faulty — probes at four depths cannot legitimately peak simultaneously.",best:false,
+    fb:"Simultaneous peaks are exactly what a connected macropore network produces, and preferential flow at 2 days to 130 cm is well within observed conduit velocities. Faulty probes drift or flatline; they rarely conspire to mimic physically coherent bypass flow. Distrust data, but distrust it for symptoms it actually shows."},
+   {t:"The difference is noise; average the two pits and report site-mean transit times.",best:false,
+    fb:"Averaging an L-shaped, bypass-dominated response with a stepped matrix response yields a hybrid that describes neither flowpath — the aggregation mistake this course keeps flagging (it returns as Kirchner's bias in Week 11). Report the pits as regimes, not replicates of one number."}],
+  debrief:{choice:"Two real regimes; heterogeneity as finding, not noise.",check:"Design the follow-up the Comment asks for: more pits (replication), a wet-antecedent vs dry-antecedent repeat (does bypass flow persist when the matrix is thirsty?), and truncation honesty — report empirical tμ as lower bounds where tails are unfinished."}}
+];
+const scenWrap=$("#scenarios");
+scenarios.forEach(sc=>{
+  const card=hel("div","scen",scenWrap);
+  const head=hel("div","scen-head",card);
+  hel("span","letter",head,sc.letter);
+  hel("h3",null,head,sc.title);
+  hel("p","scen-q",card,sc.q);
+  const list=hel("div","opt-list",card);
+  const fb=hel("div","feedback",card);
+  const db=hel("div","debrief",card);
+  sc.opts.forEach(op=>{
+    const b=hel("button","opt-btn",list,op.t);b.type="button";
+    b.addEventListener("click",()=>{
+      list.querySelectorAll(".opt-btn").forEach(x=>{x.classList.remove("sel-best","sel-weak");});
+      b.classList.add(op.best?"sel-best":"sel-weak");
+      fb.textContent="";hel("b",null,fb,op.best?"Defensible. ":"Look again. ");fb.appendChild(document.createTextNode(op.fb));
+      fb.classList.add("open");
+      db.textContent="";
+      const p1=hel("p",null,db);hel("b",null,p1,"The committed reading: ");p1.appendChild(document.createTextNode(sc.debrief.choice));
+      const p2=hel("p",null,db);hel("b",null,p2,"And the check: ");p2.appendChild(document.createTextNode(sc.debrief.check));
+      db.classList.add("open");
+    });
+  });
+});
+
+/* ============ §13 quiz ============ */
+const quiz=[
+ {q:"Rigorously defined (per Bethke & Johnson), the age of a groundwater sample is…",sec:"#s-age",secName:"§2 the word itself",opts:[
+   {t:"The time since the sampled packet of water recharged the subsurface.",ok:false,fb:"That is the piston-flow definition — the one the week retires, because closed packets do not exist."},
+   {t:"The average, over all water molecules in the sample, of the time each has spent in the subsurface.",ok:true,fb:"Yes — age as a property of a crowd, which is why the distribution behind the average matters."},
+   {t:"The result of the most reliable dating method applied to it.",ok:false,fb:"Methods return apparent ages of mixtures, each biased its own way (§7); none defines the quantity."}]},
+ {q:"A sample's ¹⁴C activity is 25% of its initial value. The piston-flow age is…",sec:"#s-radiocarbon",secName:"§4 the workhorse",opts:[
+   {t:"Two half-lives — about 11,460 years.",ok:true,fb:"ln(0.25)/ln(0.5) = 2 half-lives. And the very next question is whether the piston-flow reading means anything for this sample."},
+   {t:"A quarter of the half-life — about 1,430 years.",ok:false,fb:"Decay is exponential, not linear: 25% remaining means two halvings, 2 × 5,730 yr."},
+   {t:"About 8,270 years.",ok:false,fb:"That would be one mean life (1/λ), the time to fall to 37% — not to 25%."}]},
+ {q:"Dissolved dead carbon (from calcite, or ancient organic matter) makes a ¹⁴C model age read…",sec:"#s-radiocarbon",secName:"§4 thief 1",opts:[
+   {t:"Too old — the ¹⁴C per gram of carbon is diluted, mimicking extra decay.",ok:true,fb:"Right: with recharge-carbon fraction q, every sample gains ln(1/q)/λ of phantom age — ~1,340 yr at q = 0.85."},
+   {t:"Too young — extra carbon means extra ¹⁴C.",ok:false,fb:"The added carbon is ¹⁴C-free; it lowers the activity ratio and inflates the age."},
+   {t:"Unchanged, since ¹⁴C is measured as a ratio.",ok:false,fb:"The ratio is exactly what dead carbon corrupts — it changes the denominator."}]},
+ {q:"Water plausibly 300–800 years old sits in the range best served by…",sec:"#s-clocks",secName:"§3 the ruler",opts:[
+   {t:"³⁹Ar — half-life 269 years, spanning the 50–1,000-year gap.",ok:true,fb:"The gap-bridger, provided subsurface production is audited and the analytics are available."},
+   {t:"³H/³He.",ok:false,fb:"Blind beyond ~50 years: the tritium is gone."},
+   {t:"⁸¹Kr.",ok:false,fb:"Its 229,000-year half-life barely notices a few centuries — it is the 50 kyr–1 Myr clock."}]},
+ {q:"In Vogel's constant-thickness unconfined aquifer, groundwater age…",sec:"#s-aquifer",secName:"§5 one aquifer",opts:[
+   {t:"Increases logarithmically with depth and is independent of horizontal position.",ok:true,fb:"t = (Hε/R)·ln[H/(H−z)] — depth is the age axis, and the isochrons crowd toward the base."},
+   {t:"Increases linearly with distance from the recharge divide.",ok:false,fb:"That is the confined-aquifer pattern; in the Vogel geometry age stratifies vertically."},
+   {t:"Is uniform, because recharge mixes the aquifer.",ok:false,fb:"Nothing mixes it — stratification is the point, and \"groundwater stratigraphy\" the payoff."}]},
+ {q:"For the exponential age model with mean τ = 25 yr, the fraction of discharge younger than 25 yr is…",sec:"#s-distributions",secName:"§6 distributions",opts:[
+   {t:"About 63%.",ok:true,fb:"1 − e⁻¹ = 0.632: in an exponential distribution, most of the water is younger than the mean."},
+   {t:"Exactly 50%.",ok:false,fb:"That would make the mean the median; the exponential's long old tail drags the mean above the median (which is τ·ln 2 ≈ 17 yr)."},
+   {t:"About 37%.",ok:false,fb:"e⁻¹ is the fraction older than τ, not younger."}]},
+ {q:"Equal parts of 20-year-old and 40-year-old water are blended. A ⁴He accumulation age and a ¹⁴C decay age would read, respectively…",sec:"#s-mixtures",secName:"§7 mixtures",opts:[
+   {t:"30 years, and slightly less than 30 years.",ok:true,fb:"Linear accumulation mixes linearly → exactly the 30-yr mean; the decay clock's chord-below-curve geometry biases it young (imperceptibly here, catastrophically for young + ancient blends)."},
+   {t:"30 years, and slightly more than 30 years.",ok:false,fb:"Decay-clock mixing bias always points young — the chord lies left of the curve."},
+   {t:"Both exactly 30 years.",ok:false,fb:"Only the linear clock is exact on mixtures; the decay clock never is (the error is just small when the ages are similar)."}]},
+ {q:"Bethke & Johnson's aquitard theorem: the age mass an aquitard exports to its neighbouring aquifers depends on…",sec:"#s-agemass",secName:"§8 age mass",opts:[
+   {t:"Only the mass of water the aquitard stores (ρφb) — not its diffusion coefficient or the leakage rate.",ok:true,fb:"One kilogram-year per kilogram of stored water per year, at steady state. Slow exchange sends fewer, older molecules; fast exchange more, younger ones; the shipment is fixed."},
+   {t:"Mainly the diffusion coefficient — tighter aquitards export less age.",ok:false,fb:"Tighter aquitards hold their water longer, so what escapes is older; the product is unchanged. That insensitivity is the theorem's punch."},
+   {t:"Nothing — aquitards are barriers and exchange no water with aquifers.",ok:false,fb:"The barrier picture is piston flow's enabling fiction; molecule exchange across the contact is exactly what the theorem quantifies."}]},
+ {q:"In the Biosphere 2 experiment (2019), transit times compared as follows:",sec:"#s-soilplant",secName:"§9 soil & plants",opts:[
+   {t:"Deep percolation was 2–7× faster (~9 days) than transpiration (17–62 days by species).",ok:true,fb:"Recharge raced through preferential paths; trees drew older matrix water — separation in time and in space at once."},
+   {t:"Transpiration was faster, since trees pull water actively.",ok:false,fb:"Pull is not preference for the newest water: ~89% of xylem water was slower-moving matrix storage."},
+   {t:"They were indistinguishable, as a well-mixed soil requires.",ok:false,fb:"That was the null hypothesis — and the experiment's point was rejecting it."}]},
+ {q:"In the 2026 Comment's phenomenological toolkit, Δt = tμ − tz measures…",sec:"#s-btc",secName:"§10 breakthrough",opts:[
+   {t:"Breakthrough-curve asymmetry and tailing — how far dispersion and storage drag the mean beyond the peak.",ok:true,fb:"Small Δt: sharp pulse through fast paths. Large Δt: heavy retention (B2's trees: ~18 ± 14 days against soils' ~5)."},
+   {t:"The measurement error of the mean transit time.",ok:false,fb:"It is a physical descriptor of curve shape, not an uncertainty."},
+   {t:"The tracer's decay correction.",ok:false,fb:"D₂O is stable — no decay anywhere in this experiment; the metric is pure transport."}]}
+];
+const quizWrap=$("#quiz");let answered=0,correct=0;
+quiz.forEach((qz,qi)=>{
+  const card=hel("div","quiz-q",quizWrap);
+  hel("h4",null,card,(qi+1)+". "+qz.q);
+  const list=hel("div","opt-list",card);
+  const fb=hel("div","feedback",card);
+  let done=false;
+  qz.opts.forEach(op=>{
+    const b=hel("button","opt-btn",list,op.t);b.type="button";
+    b.addEventListener("click",()=>{
+      if(!done){answered++;if(op.ok)correct++;done=true;}
+      list.querySelectorAll(".opt-btn").forEach(x=>x.classList.remove("sel-best","sel-weak"));
+      b.classList.add(op.ok?"sel-best":"sel-weak");
+      fb.textContent="";
+      const s=hel("span",op.ok?"tick":"cross",fb,op.ok?"✓ ":"✗ ");
+      fb.appendChild(document.createTextNode(op.fb+" "));
+      const a=hel("a",null,fb,qz.secName);a.href=qz.sec;
+      fb.classList.add("open");
+      $("#quizScore").textContent="Score so far: "+correct+" of "+answered+" on first click"+(answered===quiz.length?" — done. Anything missed, the linked section covers.":"");
+    });
+  });
+});
+
+/* ============ §14 glossary ============ */
+const gloss=[
+ ["Groundwater age","core","The time since water entered the subsurface. For a sample — a crowd of molecules — the rigorous version is the average of the molecules' individual residence times; the useful version is their whole distribution."],
+ ["Residence time","core","Synonym of age; some authors reserve it for the age of water at a discharge point. Cook & Böhlke's eq. 1.5 gives its steady-state mean as storage over throughflow, τ = V/Q."],
+ ["Transit (travel) time","core","The time from entry (recharge) to exit (well, spring, stream — or transpiration). The exit-side twin of residence time; distributed as the TTD."],
+ ["Piston-flow model","core","The closed-packet idealization: water migrates without exchanging molecules, so one sample has one age. The enabling assumption of every classical dating formula, exact only when aquitards, dispersion and mixing vanish."],
+ ["Apparent (sample) age","core","What a dating formula returns when applied to a real sample. Equals the true mean age only for piston flow; for mixtures it is biased — young for decay and calendar clocks, unbiased for uniform-source accumulation clocks."],
+ ["Hydrochronology","context","Cook & Böhlke's name for dating waters, by analogy with geochronology; \"groundwater stratigraphy\" is its reading of vertically ordered ages as an archive."],
+ ["Event marker","clocks","A tracer whose atmospheric history, not decay, carries the time information: bomb-pulse ³H, ³⁶Cl and ¹⁴C; rising ⁸⁵Kr, CFCs, SF₆. Read by matching concentration to the calendar."],
+ ["Accumulating tracer","clocks","A stable product that builds up underground at a (hopefully) known rate — radiogenic ⁴He above all. No initial-condition problem, no mixing bias; entirely hostage to the source-rate estimate."],
+ ["Bomb pulse","clocks","The 1950s–60s atmospheric spike of ³H, ¹⁴C and ³⁶Cl from weapons testing: a global, dated injection that bracketed an era of recharge. Its decay and dilution since is why young waters are getting harder to date with ³H alone."],
+ ["Dead carbon","clocks","Carbon with no ¹⁴C — from calcite dissolution or ancient organic matter — that dilutes a sample's activity and inflates its apparent age. Estimated via δ¹³C and mass-balance models; the reason ¹⁴C results are \"model ages.\""],
+ ["Percent modern carbon (pmc)","clocks","¹⁴C activity expressed relative to the pre-bomb atmospheric standard; 100 pmc ≈ modern recharge, ~0 pmc ≈ ¹⁴C-dead (older than ~30–50 kyr)."],
+ ["³H/³He method","clocks","Dating from the ratio of tritium to its accumulated daughter helium-3: the sample reconstructs its own initial tritium, defeating the bomb pulse's variable input. The premier &lt;50-yr clock (Week 5)."],
+ ["Secular equilibrium","clocks","The steady state where a short-lived nuclide's decay balances its production (²²²Rn within ~30 days): concentration then carries no age information — a clock only ticks on timescales near its half-life."],
+ ["Subsurface (in-situ) production","clocks","Underground manufacture of \"atmospheric\" nuclides — ³⁶Cl by neutron capture, ³⁹Ar from potassium, ⁴He from U/Th — driven by the rock's radioactivity. Lehmann et al. (1993): given time and uranium, it can overshadow the meteoric signal."],
+ ["Lumped-parameter model","distributions","A one-box description of an aquifer's age distribution with a few parameters (τ, shape): exponential, piston, exponential-piston, linear, dispersion. Fit via the convolution integral; Week 5's TracerLPM operationalizes them."],
+ ["Exponential model (EM)","distributions","g(t) = (1/τ)e^(−t/τ): the full-depth-well limit of the Vogel aquifer. Most water younger than the mean; a long old tail; ~63% younger than τ."],
+ ["Exponential-piston model (EPM)","distributions","An exponential parcel delayed by a piston segment: no water younger than the offset, exponential tail beyond it. The workhorse for partly confined systems."],
+ ["Convolution integral","distributions","C_out(t) = ∫C_in(t−t′)·g(t′)·e^(−λt′)dt′ — the machine turning an input history plus an age distribution into today's measured concentration, and (inverted) measurements into distributions."],
+ ["Transit-time distribution (TTD)","distributions","The probability distribution of travel times from entry to a given exit. \"Groundwater age distribution\" is its storage-side sibling; Week 11 upgrades both to time-variable form."],
+ ["Mean transit time (MTT)","distributions","The TTD's first moment. Legitimate summary when the shape is known; treacherous when assumed — heavy tails make it exquisitely sensitive to what the data cannot see (aggregation bias, Week 11)."],
+ ["Age mass","new thinking","Goode's transportable quantity: water mass × age (kg·yr). Mixes linearly, advects and disperses like a solute, and is produced everywhere at 1 kg·yr per kg per year — the \"+1\" in the age transport equation."],
+ ["Cross-formational flow","new thinking","Groundwater leaking across confining layers rather than along aquifers. Carrier of young water downward and ancient water upward — the composer of most mixtures."],
+ ["Aquitard","new thinking","The slow-flow bed bounding an aquifer. Not a wall but a reservoir of old water in molecular exchange with the flow: excess age b²/2D* at its centre, and an export of age mass fixed at ρφb regardless of transport rates."],
+ ["Reactive transport modeling","new thinking","Simulating flow plus each tracer's full source/sink law across a 2-D or 3-D regime, then adjusting properties until all observations fit at once. Bethke & Johnson's replacement for one-sample-one-formula dating."],
+ ["Breakthrough curve (BTC)","soil–plant","Tracer concentration versus time at an observation point after a labelled input. The raw material of Block 3; distinct from a TTD unless concentrations are coupled to water fluxes."],
+ ["Gamma TTD","soil–plant","Two-parameter family (shape α, scale β; mean αβ). α < 1: L-shaped, young-dominated (B2 seepage, 0.25); α ≈ 1: exponential; α > 1: delayed hump (H. crepitans, 3.7). Interpretable as α serial compartments of mean stay β."],
+ ["Lognormal TTD","soil–plant","The multiplicative-processes family: many parallel pathways whose effects compound. The 2026 Comment's counter-hypothesis to the gamma; it won the vote in 4 of 5 tree curves."],
+ ["Peak arrival time (t_z)","soil–plant","When the BTC crests: the fast-pathway timescale. B2: 2 days to 130 cm depth in one pit — preferential flow's signature."],
+ ["Mean travel time (t_μ)","soil–plant","The concentration-weighted mean time of the observed BTC. Assumption-free and window-limited: with an unfinished tail it is a lower bound, not an estimate."],
+ ["Tailing metric (Δt)","soil–plant","t_μ − t_z: how far the mean lags the peak. Dispersion, exchange and storage all widen it; B2 trees ~18 days, soils ~5."],
+ ["f_pulse","soil–plant","Fraction of labelled (new) water in a sample at peak, from a two-member mixing model. B2: 0.68–0.79 at one soil pit but 0.10–0.27 at the other, 0.63 in recharge, ~0.2 in xylem — trees transpired mostly older, stored water."],
+ ["Preferential flow","soil–plant","Transport through connected fast pathways (macropores, fractures, root channels) that bypass the matrix. Diagnosed by early, depth-coherent peaks and α ≪ 1."],
+ ["Xylem bias","soil–plant","The 2026 Comment's hypothesis: stands route transpiration disproportionately through hydraulically advantaged trees — preferential flow's canopy analogue. Offered for testing, with sap flux and storage measurements named as the test."],
+ ["Matrix water","soil–plant","Water held in the fine-pore soil matrix, slow to drain but demonstrably available to roots — the term Brantley et al. and the 2019 paper prefer to the misleading \"tightly bound water.\""],
+ ["Young water fraction","preview","The fraction of discharge younger than a threshold (roughly 2–3 months, in Kirchner's 2016 formulation) — the robust alternative when MTTs are unidentifiable. Week 11's core concept, previewed in the 2026 Comment's methods discussion."]
+];
+const glossGrid=$("#glossGrid");
+gloss.forEach(g=>{
+  const d=hel("details","gloss",glossGrid);
+  const s=hel("summary",null,d,g[0]);
+  hel("span","pill",s,g[1]);
+  hel("p",null,d,g[2]);
+});
+$("#glossSearch").addEventListener("input",e=>{
+  const v=e.target.value.trim().toLowerCase();
+  $$("#glossGrid details").forEach(d=>{
+    const txt=d.textContent.toLowerCase();
+    d.style.display=!v||txt.includes(v)?"":"none";
+  });
+});
+
+/* keyboard: avoid space scrolling when focused on buttons inside accordions etc. is default-fine */
+})();
+</script>
+</body>
+</html>
