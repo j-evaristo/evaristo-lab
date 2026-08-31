@@ -1165,7 +1165,7 @@ function clockMini(svg,kind){
   el("line",{x1:12,y1:78,x2:228,y2:78,stroke:base,"stroke-width":1},svg);
   el("line",{x1:12,y1:10,x2:12,y2:78,stroke:base,"stroke-width":1},svg);
   let d="";
-  if(kind==="decay"){for(let i=0;i<=100;i++){const x=12+2.16*i,y=14+62*(1-Math.exp(-i/28));d+=(i?"L":"M")+x+","+(92-y);}el("path",{d,fill:"none",stroke:s1,"stroke-width":2.2},svg);}
+  if(kind==="decay"){for(let i=0;i<=100;i++){const x=12+2.16*i,y=14+62*(1-Math.exp(-i/28));d+=(i?"L":"M")+x+","+y;}el("path",{d,fill:"none",stroke:s1,"stroke-width":2.2},svg);}
   if(kind==="accum"){el("path",{d:"M12,74L228,18",fill:"none",stroke:s3,"stroke-width":2.2},svg);}
   if(kind==="event"){
     for(let i=0;i<=100;i++){const t=i/100;const y=Math.exp(-0.5*Math.pow((t-0.35)/0.10,2));const x=12+2.16*i;d+=(i?"L":"M")+x+","+(76-58*y);}
