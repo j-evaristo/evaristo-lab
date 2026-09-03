@@ -2888,10 +2888,10 @@ function initPLANT(){
     const s3 = slider({label:'Heartwood radius h', min:0, max:39, step:0.5, value:hh, unit:'cm', onInput:x => { hh=Math.min(x, R-1); s3.set(hh); scale(); }});
     host.appendChild(h('div', {class:'controls'}, s2.row, s3.row));
     const scaleNote = h('div', {class:'callout aqua', id:'sap-note'}); host.appendChild(scaleNote);
-    host.appendChild(h('p', {class:'mini', html:'Simulation: a line-source pulse spreading by conduction (κ = 0.25 mm² s⁻¹) while the sap carries it upward; traces are the temperature rise at each sensor, normalized. The crossing time depends only on how far the sap has shifted the pulse — not on κ — which is the point of the compensation method. Real installations use four probe sets at different depths and apply wound and wood-matrix corrections (Smith &amp; Allen 1996).'}));
+    host.appendChild(h('p', {class:'mini', html:'Simulation: a line-source pulse spreading by conduction (κ = 0.25 mm² s⁻¹) while the sap carries it upward; traces are the temperature rise at each sensor, normalized to the window. <strong>Mind the clock:</strong> the time axis always spans 3t<sub>e</sub> and the animation plays it in about four seconds, so the slower the sap, the greater the playback speed-up (shown on the chart) — at 5 cm h⁻¹ you are watching nine minutes of physics, at 50 cm h⁻¹ under a minute. That longer <em>simulated</em> time is also why the slow-sap pulse arrives broad and faint: diffusion gets the whole waiting time t<sub>e</sub> = (x<sub>d</sub> − x<sub>u</sub>)/2v to act before the crossing, and the pulse’s peak decays roughly as 1/√t. This low-flow fuzziness is a real limitation of heat-pulse instruments, not just of the cartoon. The crossing time itself depends only on how far the sap has shifted the pulse — not on κ — which is the point of the compensation method. Real installations use four probe sets at different depths and apply wound and wood-matrix corrections (Smith &amp; Allen 1996).'}));
     const vmm = () => v*10/3600; // mm/s
     function temp(x, t){ if (t <= 0) return 0; return Math.exp(-Math.pow(x - vmm()*t, 2)/(4*kappa*t))/Math.sqrt(t); }
-    function resetSim(){ running = false; tSim = 0; teFound = null; tMax = Math.max(40, 3*(SP.xd-SP.xu)/(2*vmm())); draw(); }
+    function resetSim(){ running = false; tSim = 0; teFound = null; tMax = Math.max(40, 3*(SP.xd-SP.xu)/(2*vmm())); scale(); draw(); }
     fire.addEventListener('click', () => { resetSim(); running = true; });
     function scale(){
       const A = Math.PI*(R*R - hh*hh); // cm²
@@ -2922,9 +2922,11 @@ function initPLANT(){
       // heat pulse blob
       if (tSim > 0){
         const yc = yH - vmm()*tSim*mmpx, sig = Math.sqrt(2*kappa*tSim)*mmpx;
-        const g = ctx.createRadialGradient(sx0+110, yc, 0, sx0+110, yc, Math.max(6, 2.2*sig));
-        g.addColorStop(0, 'rgba(208,59,59,0.85)'); g.addColorStop(1, 'rgba(208,59,59,0)');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx0+110, yc, Math.max(6, 2.2*sig), 0, 6.29); ctx.fill();
+        const rad = Math.min(90, Math.max(6, 2.2*sig));
+        const amp = Math.min(0.85, Math.max(0.12, 2.6/Math.sqrt(Math.max(4, tSim))));
+        const g = ctx.createRadialGradient(sx0+110, yc, 0, sx0+110, yc, rad);
+        g.addColorStop(0, 'rgba(208,59,59,' + amp.toFixed(2) + ')'); g.addColorStop(1, 'rgba(208,59,59,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx0+110, yc, rad, 0, 6.29); ctx.fill();
       }
       // ---- traces panel ----
       const pl = {x0:300, x1:W-16, y0:22, y1:H-44};
@@ -2945,6 +2947,11 @@ function initPLANT(){
         ctx.strokeStyle = C.s2; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(px, pl.y0); ctx.lineTo(px, pl.y1); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = C.s2; ctx.fillText('t_e = ' + fmt(teFound,1) + ' s', px+6, pl.y1-8);
       } else if (tEnd === 0){ ctx.fillStyle = C.muted; ctx.fillText('press “Fire a heat pulse”', pl.x0+8, (pl.y0+pl.y1)/2); }
+      if (tSim > 0){
+        ctx.fillStyle = C.muted; ctx.font = '600 10.5px system-ui,sans-serif'; ctx.textAlign = 'right';
+        ctx.fillText('t = ' + fmt(Math.min(tSim, tMax),0) + ' of ' + fmt(tMax,0) + ' s', pl.x1-4, pl.y0+14);
+        ctx.fillText('playback ×' + fmt(tMax/4,0), pl.x1-4, pl.y0+29);
+      }
       $('#sap-x').textContent = SP.xu + ' / ' + SP.xd;
       $('#sap-te').textContent = teFound != null ? fmt(teFound,1) : '—';
       $('#sap-vh').textContent = teFound != null ? fmt((SP.xd-SP.xu)/(2*teFound)*360, 1) : '—';
