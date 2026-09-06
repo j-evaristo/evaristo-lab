@@ -1,0 +1,1514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MODFLOW From Zero</title>
+</head>
+<body style="margin:0">
+<title>MODFLOW From Zero</title>
+<style>
+:root{
+  color-scheme:light;
+  --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s7:#4a3aa7;
+  --good:#0ca30c; --good-text:#006300; --crit:#d03b3b;
+  --seq100:#cde2fb; --seq200:#9ec5f4; --seq300:#6da7ec; --seq400:#3987e5;
+  --seq500:#256abf; --seq600:#184f95; --seq700:#0d366b;
+  --link:#256abf;
+  --topbar-bg:rgba(252,252,251,0.92);
+  --widget-bg:#fbfaf8; --inset-bg:#f6f5f2; --field-bg:#ffffff;
+  --sel-bg:#eaf2fc;
+  --cp-bg:#fffdf4; --cp-ink:#8a6100;
+  --ok-bg:#f0faf0; --ok-border:#bfe3bf; --ok-ink:#0b3d0b;
+  --no-bg:#fdf1f1; --no-border:#efc2c2; --no-ink:#5c1414;
+  --warn-bg:#fdf6e7; --warn-border:#ecd9a8; --warn-ink:#7a5600;
+  --co-blue:#f4f8fd; --co-orange:#fdf6f2; --co-aqua:#f2fbf7; --co-violet:#f5f4fb;
+  --fig-ink:#3f3a2c; --fig-blue-ink:#184f95;
+  --dry:#c9a227;
+  --radius:12px; --maxw:960px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --page:#141413; --surface:#1a1a19; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#8a887f;
+    --grid:#33322e; --axis:#55534a; --ring:rgba(255,255,255,0.12);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s7:#9085e9;
+    --good-text:#7ed67e; --link:#6da7ec;
+    --topbar-bg:rgba(20,20,19,0.92);
+    --widget-bg:#1f1f1e; --inset-bg:#242423; --field-bg:#262625;
+    --sel-bg:#1d3452;
+    --cp-bg:#2a2513; --cp-ink:#e3b341;
+    --ok-bg:#172a17; --ok-border:#2f5c2f; --ok-ink:#b5e3b5;
+    --no-bg:#321a1a; --no-border:#6b3232; --no-ink:#f0b9b9;
+    --warn-bg:#2e2712; --warn-border:#6b5a2a; --warn-ink:#e8c377;
+    --co-blue:#1c2733; --co-orange:#2e2019; --co-aqua:#17291f; --co-violet:#232134;
+    --fig-ink:#ded8c8; --fig-blue-ink:#9ec5f4;
+    --dry:#e0bc50;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page:#141413; --surface:#1a1a19; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#8a887f;
+  --grid:#33322e; --axis:#55534a; --ring:rgba(255,255,255,0.12);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s7:#9085e9;
+  --good-text:#7ed67e; --link:#6da7ec;
+  --topbar-bg:rgba(20,20,19,0.92);
+  --widget-bg:#1f1f1e; --inset-bg:#242423; --field-bg:#262625;
+  --sel-bg:#1d3452;
+  --cp-bg:#2a2513; --cp-ink:#e3b341;
+  --ok-bg:#172a17; --ok-border:#2f5c2f; --ok-ink:#b5e3b5;
+  --no-bg:#321a1a; --no-border:#6b3232; --no-ink:#f0b9b9;
+  --warn-bg:#2e2712; --warn-border:#6b5a2a; --warn-ink:#e8c377;
+  --co-blue:#1c2733; --co-orange:#2e2019; --co-aqua:#17291f; --co-violet:#232134;
+  --fig-ink:#ded8c8; --fig-blue-ink:#9ec5f4;
+  --dry:#e0bc50;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  transition:background-color .2s ease, color .2s ease;
+}
+.topbar{position:sticky; top:0; z-index:50; background:var(--topbar-bg); backdrop-filter:blur(8px); border-bottom:1px solid var(--grid)}
+.topbar-inner{max-width:var(--maxw); margin:0 auto; padding:10px 20px; display:flex; align-items:center; gap:12px}
+.topbar .crumb{font-size:14px; color:var(--ink-2); font-weight:600; letter-spacing:.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.topbar .course-tag{font-size:12.5px; color:var(--muted); margin-left:auto; white-space:nowrap}
+.btn-home,.btn-theme{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--grid); background:var(--surface); color:var(--ink);
+  border-radius:8px; padding:6px 12px; font-size:13.5px; font-weight:600; cursor:pointer; flex:none}
+.btn-home:hover,.btn-theme:hover{border-color:var(--axis)}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:28px 20px 80px}
+.view{display:none}
+.view.active{display:block}
+h1{font-size:28px; line-height:1.25; margin:6px 0 8px; letter-spacing:-0.01em; text-wrap:balance}
+h2{font-size:21px; margin:0 0 6px; letter-spacing:-0.005em; text-wrap:balance}
+h3{font-size:17px; margin:0 0 4px}
+p{margin:0 0 12px; max-width:72ch}
+.lede{color:var(--ink-2); font-size:16.5px; max-width:64ch}
+.kicker{font-size:12.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:4px}
+.small{font-size:13.5px; color:var(--ink-2)}
+.mini{font-size:12.5px; color:var(--muted)}
+a{color:var(--link)}
+code{background:var(--inset-bg); border:1px solid var(--grid); border-radius:5px; padding:1px 5px; font-size:.9em}
+var{font-style:italic; font-family:Georgia,"Times New Roman",serif}
+.hero{margin-bottom:22px}
+.module-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+@media (max-width:720px){ .module-grid{grid-template-columns:1fr} }
+.mcard{position:relative; text-align:left; width:100%; background:var(--surface); border:1px solid var(--ring); border-radius:var(--radius);
+  padding:18px 18px 16px; cursor:pointer; font:inherit; color:inherit; transition:box-shadow .15s ease, transform .15s ease}
+.mcard:hover{box-shadow:0 4px 18px rgba(11,11,11,.07); transform:translateY(-1px)}
+.mcard:focus-visible{outline:2px solid var(--s1); outline-offset:2px}
+.mcard .mnum{display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; letter-spacing:.05em; color:#fff;
+  border-radius:6px; padding:3px 8px; margin-bottom:10px}
+.mcard h2{font-size:18px; margin-bottom:4px}
+.mcard .mdesc{font-size:14px; color:var(--ink-2); margin-bottom:12px; min-height:42px; max-width:none}
+.mcard .mfoot{display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted)}
+.pring{width:34px; height:34px; flex:none}
+.pring .track{stroke:var(--grid)}
+.pring .fill{stroke-linecap:round; transition:stroke-dashoffset .4s ease}
+.pring text{font-size:9.5px; font-weight:700; fill:var(--ink-2)}
+.mfoot .stat{line-height:1.35}
+.objectives{background:var(--surface); border:1px solid var(--ring); border-radius:var(--radius); padding:18px 20px; margin:18px 0}
+.objectives ol{margin:6px 0 0; padding-left:22px}
+.objectives li{margin-bottom:6px; font-size:14.5px}
+.mhead{padding:22px 22px 18px; border-radius:var(--radius); color:#fff; margin-bottom:22px}
+.mhead .kicker{color:rgba(255,255,255,.75)}
+.mhead h1{color:#fff; margin:2px 0 6px}
+.mhead p{color:rgba(255,255,255,.92); max-width:66ch; margin:0; font-size:15.5px}
+.section{background:var(--surface); border:1px solid var(--ring); border-radius:var(--radius); padding:22px; margin-bottom:18px}
+.section > .kicker{margin-bottom:2px}
+.section h2{margin-bottom:10px}
+.eq{background:var(--inset-bg); border:1px solid var(--grid); border-radius:10px; padding:12px 16px; margin:12px 0; overflow-x:auto;
+  text-align:center; font-size:17px; font-family:Georgia,"Times New Roman",serif}
+.eq .tag{display:block; text-align:right; font-size:12px; color:var(--muted); margin-top:4px; font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.callout{border-left:3px solid var(--s1); background:var(--co-blue); border-radius:0 10px 10px 0; padding:10px 14px; margin:12px 0; font-size:14.5px}
+.callout.orange{border-left-color:var(--s2); background:var(--co-orange)}
+.callout.aqua{border-left-color:var(--s3); background:var(--co-aqua)}
+.callout.violet{border-left-color:var(--s7); background:var(--co-violet)}
+.callout p{margin:0 0 8px}
+.callout p:last-child{margin:0}
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+@media (max-width:720px){ .two-col{grid-template-columns:1fr} }
+.widget{border:1px solid var(--grid); border-radius:10px; background:var(--widget-bg); padding:16px; margin:14px 0}
+.widget-title{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14.5px; margin-bottom:10px}
+.widget-title .wicon{width:22px; height:22px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:12px; flex:none}
+.controls{display:flex; flex-wrap:wrap; gap:14px 22px; margin:10px 0}
+.ctrl{display:flex; flex-direction:column; gap:4px; min-width:150px; flex:1 1 150px; max-width:240px}
+.ctrl label{font-size:12.5px; font-weight:600; color:var(--ink-2)}
+.ctrl .val{font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums}
+input[type=range]{width:100%; accent-color:var(--s1); cursor:pointer}
+input[type=number],input[type=text]{border:1px solid var(--axis); border-radius:8px; padding:7px 10px; font:inherit; font-size:14.5px; width:110px;
+  background:var(--field-bg); color:var(--ink)}
+input[type=number]:focus,input[type=text]:focus{outline:2px solid var(--s1); outline-offset:1px; border-color:var(--s1)}
+.readout{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px}
+.stat-tile{background:var(--surface); border:1px solid var(--grid); border-radius:10px; padding:10px 14px; min-width:130px; flex:1 1 130px; max-width:230px}
+.stat-tile .lab{font-size:12px; color:var(--muted); font-weight:600}
+.stat-tile .num{font-size:22px; font-weight:650; letter-spacing:-.01em; font-variant-numeric:tabular-nums}
+.stat-tile .sub{font-size:11.5px; color:var(--muted)}
+.stat-tile.hl{border-color:var(--good); box-shadow:0 0 0 1px var(--good)}
+.canvas-holder{position:relative; margin:8px 0}
+canvas{width:100%; height:auto; display:block; border-radius:8px; background:var(--surface); border:1px solid var(--grid)}
+.pillbtn{border:1px solid var(--axis); background:var(--surface); border-radius:8px; padding:7px 14px; font-size:13.5px; font-weight:600; cursor:pointer; color:var(--ink)}
+.pillbtn:hover{border-color:var(--ink-2)}
+.pillbtn.primary{background:var(--s1); border-color:var(--s1); color:#fff}
+.pillbtn:disabled{opacity:.45; cursor:default}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-2); margin-top:8px; align-items:center}
+.legend .key{display:inline-flex; align-items:center; gap:6px}
+.key .swatch{width:12px; height:12px; border-radius:3px; display:inline-block}
+.key .linekey{width:16px; height:2px; display:inline-block; border-radius:2px}
+.badge{display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:4px 12px; font-size:13px; font-weight:700}
+.badge.ok{background:var(--ok-bg); color:var(--ok-ink); border:1px solid var(--ok-border)}
+.badge.warnb{background:var(--warn-bg); color:var(--warn-ink); border:1px solid var(--warn-border)}
+.badge.critb{background:var(--no-bg); color:var(--no-ink); border:1px solid var(--no-border)}
+.chart-tip{position:absolute; pointer-events:none; background:var(--ink); color:var(--page); font-size:12px; padding:5px 9px; border-radius:7px;
+  transform:translate(-50%,-130%); white-space:nowrap; opacity:0; transition:opacity .1s; z-index:5}
+.checkpoint{border:1px solid var(--grid); border-left:3px solid var(--s4); background:var(--cp-bg); border-radius:0 10px 10px 0; padding:14px 16px; margin:16px 0 4px}
+.checkpoint .cp-tag{font-size:11.5px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--cp-ink); margin-bottom:6px; display:flex; align-items:center; gap:6px}
+.qprompt{font-size:15px; font-weight:600; margin-bottom:10px; max-width:none}
+.opts{display:flex; flex-direction:column; gap:8px; margin-bottom:4px}
+.opt{text-align:left; border:1.5px solid var(--grid); background:var(--surface); border-radius:10px; padding:9px 13px; font:inherit; font-size:14.5px;
+  cursor:pointer; display:flex; gap:9px; align-items:flex-start; color:var(--ink)}
+.opt:hover{border-color:var(--axis)}
+.opt .marker{flex:none; width:20px; height:20px; border-radius:50%; border:1.5px solid var(--axis); font-size:11px; font-weight:700; display:inline-flex;
+  align-items:center; justify-content:center; color:var(--muted); margin-top:1px}
+.opt[aria-pressed="true"]{border-color:var(--s1); background:var(--sel-bg)}
+.opt[aria-pressed="true"] .marker{background:var(--s1); border-color:var(--s1); color:#fff}
+.opt.reveal-correct{border-color:var(--good); background:var(--ok-bg)}
+.opt.reveal-correct .marker{background:var(--good); border-color:var(--good); color:#fff}
+.opt.reveal-wrong{border-color:var(--crit); background:var(--no-bg)}
+.opt.reveal-wrong .marker{background:var(--crit); border-color:var(--crit); color:#fff}
+.opt:disabled{cursor:default; opacity:.92}
+.numrow{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.numrow .unit{font-size:14px; color:var(--ink-2)}
+.feedback{margin-top:10px; border-radius:10px; padding:10px 13px; font-size:14px; display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-bg); border:1px solid var(--ok-border); color:var(--ok-ink)}
+.feedback.no{background:var(--no-bg); border:1px solid var(--no-border); color:var(--no-ink)}
+.feedback .fb-head{font-weight:800; display:flex; gap:6px; align-items:center; margin-bottom:3px}
+.worked{border:1px solid var(--grid); border-radius:10px; background:var(--surface); margin-top:8px}
+.worked summary{cursor:pointer; padding:8px 12px; font-size:13.5px; font-weight:600; color:var(--ink-2)}
+.worked .wbody{padding:2px 14px 12px; font-size:14px}
+table.dtable{border-collapse:collapse; width:100%; font-size:13.5px; margin:10px 0}
+table.dtable th{color:var(--ink-2); font-weight:700; text-align:left; border-bottom:1px solid var(--axis); padding:6px 10px}
+table.dtable td{border-bottom:1px solid var(--grid); padding:6px 10px; font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+.divider{border:none; border-top:1px solid var(--grid); margin:18px 0}
+.footer-note{margin-top:34px; font-size:12.5px; color:var(--muted); line-height:1.6}
+.next-cta{display:flex; justify-content:flex-end; margin-top:6px}
+.chall{border:1.5px dashed var(--axis); background:var(--surface); border-radius:10px; padding:10px 14px; font-size:13.5px; margin:10px 0}
+.chall.won{border-style:solid; border-color:var(--good); background:var(--ok-bg)}
+.chall b{display:block; font-size:12.5px}
+.chall .cstat{font-weight:800; font-size:11.5px; letter-spacing:.04em}
+.gradbar{height:12px; border-radius:6px; border:1px solid var(--grid); margin-top:6px}
+.gradlabels{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums}
+@media (max-width:640px){
+  .wrap{padding:18px 14px 60px}
+  h1{font-size:23px}
+  .section{padding:16px}
+  .mhead{padding:18px}
+  .ctrl{max-width:none}
+  .topbar .course-tag{display:none}
+}
+</style>
+<div class="topbar">
+  <div class="topbar-inner">
+    <button class="btn-home" id="nav-home" type="button" hidden>← All modules</button>
+    <div class="crumb" id="crumb">MODFLOW From Zero</div>
+    <div class="course-tag">Groundwater Modeling · Evaristo Critical Zone Hydrology Lab</div>
+    <button class="btn-theme" id="btn-theme" type="button">☾ Dark</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ================= HOME ================= -->
+<section class="view active" id="view-home">
+  <div class="hero">
+    <div class="kicker">Interactive model-building companion</div>
+    <h1>MODFLOW From Zero</h1>
+    <p class="lede">Five groundwater models, built one on top of the other, running live in your browser. In each module you first work a number out <em>by hand</em>, then type it in, then run the model and watch your number appear in the water budget.</p>
+  </div>
+
+  <div class="objectives">
+    <div class="kicker">By the end you can</div>
+    <ol>
+      <li>Compute flow through an aquifer with Darcy's law and predict what a model must return.</li>
+      <li>Read a steady-state water budget and say where a pumping well's water actually comes from.</li>
+      <li>Explain why water-table aquifers fail suddenly, and find a well's maximum sustainable yield.</li>
+      <li>Split pumping between storage and capture through time, and explain the delay.</li>
+      <li>Predict when a pumping well flips a stream from gaining to losing, and by how much.</li>
+    </ol>
+  </div>
+
+  <div class="module-grid">
+    <button class="mcard" data-go="strip" type="button">
+      <span class="mnum" style="background:var(--s1)">MODULE 1</span>
+      <h2>An Aquifer in a Straight Line</h2>
+      <p class="mdesc">Head, gradient, and Darcy's law in a 21-cell aquifer you can check against algebra.</p>
+      <div class="mfoot" data-progress="strip"></div>
+    </button>
+    <button class="mcard" data-go="well" type="button">
+      <span class="mnum" style="background:var(--s2)">MODULE 2</span>
+      <h2>Drop In a Well</h2>
+      <p class="mdesc">A cone of depression in 2-D, and a budget that reveals where the well's water comes from.</p>
+      <div class="mfoot" data-progress="well"></div>
+    </button>
+    <button class="mcard" data-go="table" type="button">
+      <span class="mnum" style="background:var(--s3)">MODULE 3</span>
+      <h2>The Water Table Fights Back</h2>
+      <p class="mdesc">Unconfined flow: curved water tables, cells that go dry, and a hard limit on pumping.</p>
+      <div class="mfoot" data-progress="table"></div>
+    </button>
+    <button class="mcard" data-go="time" type="button">
+      <span class="mnum" style="background:var(--s4)">MODULE 4</span>
+      <h2>Borrowed Water</h2>
+      <p class="mdesc">Storage makes pumping look free — for a while. Watch a cone grow through ten years.</p>
+      <div class="mfoot" data-progress="time"></div>
+    </button>
+    <button class="mcard" data-go="stream" type="button">
+      <span class="mnum" style="background:var(--s7)">MODULE 5</span>
+      <h2>The Stream Pays</h2>
+      <p class="mdesc">Add a river and find out whose water the well was really pumping all along.</p>
+      <div class="mfoot" data-progress="stream"></div>
+    </button>
+  </div>
+
+  <div class="callout" style="margin-top:20px">
+    <p><strong>How this works.</strong> The solver behind every module is a finite-difference groundwater engine — it solves the same equations as <strong>MODFLOW</strong>, the U.S. Geological Survey's standard groundwater modeling code, on a 21 × 11 grid of 100 m cells. Every reference number here was cross-checked against real MODFLOW 6.8.0 runs of the same models (open the browser console to see the self-test). Checkpoints are self-assessment only; nothing is recorded, and progress resets if you reload.</p>
+  </div>
+</section>
+
+<!-- ================= MODULE 1 ================= -->
+<section class="view" id="view-strip">
+  <div class="mhead" style="background:linear-gradient(135deg,var(--s1),var(--seq600))">
+    <div class="kicker">Module 1 of 5</div>
+    <h1>An Aquifer in a Straight Line</h1>
+    <p>One row of 21 cells, water held at 10 m on the left and 0 m on the right. Small enough to solve on paper — which is exactly why we start here: if the model can't reproduce your algebra, nothing bigger can be trusted.</p>
+  </div>
+
+  <div class="section">
+    <div class="kicker">The one law under everything</div>
+    <h2>Water flows downhill in head</h2>
+    <p><strong>Hydraulic head</strong> <var>h</var> is the level water would rise to in a pipe stuck into the aquifer — a direct readout of the water's energy, in metres. Groundwater always moves from higher head to lower head, and Darcy's law says how fast:</p>
+    <div class="eq">Q&nbsp;=&nbsp;<var>K</var> · <var>b</var> · <var>W</var> · (Δ<var>h</var> / <var>L</var>)<span class="tag">Darcy's law for a confined slab of aquifer</span></div>
+    <p><var>K</var> is <strong>hydraulic conductivity</strong> — how easily the sediment lets water through (fine sand ≈ 1–10 m/d). <var>b</var> is the saturated thickness, <var>W</var> the width of the slab, and Δ<var>h</var>/<var>L</var> the <strong>gradient</strong> — the slope of the energy line. In this module the layer is <em>confined</em>: <var>b</var> is fixed at the full 10 m no matter what the head does, so everything stays beautifully linear.</p>
+    <p>Our aquifer: <var>K</var> = 10 m/d, thickness <var>b</var> = 10 m, one row <var>W</var> = 1 m wide. The two end cells are <strong>constant-head boundaries</strong> (MODFLOW's CHD package): head is pinned at 10.0 m and 0.0 m at the cell centres, which sit 2000 m apart.</p>
+
+    <div class="checkpoint" data-cp="strip-q1">
+      <div class="cp-tag">✏ Checkpoint · calculate by hand</div>
+      <p class="qprompt">How much water flows through this aquifer, in m³/day? Use Darcy's law with the numbers above.</p>
+      <div class="numrow">
+        <input type="number" id="cp-strip-q1" step="any" inputmode="decimal" aria-label="Flow in cubic metres per day">
+        <span class="unit">m³/d</span>
+        <button class="pillbtn primary" data-check="strip-q1" type="button">Check</button>
+      </div>
+      <div class="feedback" id="fb-strip-q1"></div>
+      <details class="worked"><summary>Show the worked solution</summary>
+        <div class="wbody">Q = K·b·W·Δh/L = 10 × 10 × 1 × (10 − 0)/2000 = 1000 × 0.005 = <strong>0.5 m³/d</strong>. Half a cubic metre a day through a metre-wide strip — groundwater is slow.</div>
+      </details>
+    </div>
+
+    <div class="checkpoint" data-cp="strip-q2">
+      <div class="cp-tag">✏ Checkpoint · calculate by hand</div>
+      <p class="qprompt">The 21 cell centres run from x = 50 m to x = 2050 m. If head drops linearly from 10 m to 0 m, what head should the model compute at the middle cell (cell 11, x = 1050 m)?</p>
+      <div class="numrow">
+        <input type="number" id="cp-strip-q2" step="any" inputmode="decimal" aria-label="Head at middle cell in metres">
+        <span class="unit">m</span>
+        <button class="pillbtn primary" data-check="strip-q2" type="button">Check</button>
+      </div>
+      <div class="feedback" id="fb-strip-q2"></div>
+      <details class="worked"><summary>Show the worked solution</summary>
+        <div class="wbody">Cell 11 sits exactly halfway between the boundaries (1000 of 2000 m), so h = 10 − ½ × 10 = <strong>5.0 m</strong>. In general h(i) = 10 − 0.5·(i − 1) for cell i.</div>
+      </details>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Now run the model</div>
+    <h2>Your algebra vs. the machine</h2>
+    <p>This is the exact model, solved by finite differences the way MODFLOW does it. If your two checkpoint answers were right, they should appear — to the decimal — in the tiles below.</p>
+    <div class="widget">
+      <div class="widget-title"><span class="wicon" style="background:var(--s1)">▶</span> The 21-cell aquifer</div>
+      <div class="controls">
+        <div class="ctrl"><label>Hydraulic conductivity K · <span class="val" id="v-k1">10</span> m/d</label>
+          <input type="range" id="k1" min="1" max="50" step="1" value="10"></div>
+        <div class="ctrl"><label>East boundary head · <span class="val" id="v-e1">0.0</span> m</label>
+          <input type="range" id="e1" min="0" max="8" step="0.5" value="0"></div>
+        <div class="ctrl" style="justify-content:flex-end"><button class="pillbtn" id="reset1" type="button">Reset lesson values</button></div>
+      </div>
+      <div class="canvas-holder"><canvas id="cv-m1" aria-label="Head in each of 21 cells, as colours and as a profile line"></canvas><div class="chart-tip" id="tip-m1"></div></div>
+      <div class="legend"><span class="key"><span class="swatch" style="background:var(--seq100)"></span> low head</span><span class="key"><span class="swatch" style="background:var(--seq700)"></span> high head</span><span class="key"><span class="linekey" style="background:var(--s1)"></span> head profile</span><span class="mini">hover the cells to read values</span></div>
+      <div class="readout">
+        <div class="stat-tile" id="t-m1-q"><div class="lab">Flow through aquifer</div><div class="num" id="n-m1-q">—</div><div class="sub">m³/d</div></div>
+        <div class="stat-tile" id="t-m1-h11"><div class="lab">Head at cell 11</div><div class="num" id="n-m1-h11">—</div><div class="sub">m</div></div>
+        <div class="stat-tile"><div class="lab">Budget error</div><div class="num" id="n-m1-err">—</div><div class="sub">in minus out, m³/d</div></div>
+      </div>
+    </div>
+    <div class="callout">
+      <p><strong>Two things to try.</strong> Double K and watch the flow double while the <em>heads don't move at all</em> — in a purely head-driven problem the profile is set by the boundaries; K only scales the throughput. Then raise the east boundary and watch the whole line pivot. The budget-error tile is the modeler's seatbelt: in ≈ out, always, or something is wrong.</p>
+    </div>
+
+    <div class="checkpoint" data-cp="strip-q3">
+      <div class="cp-tag">🔮 Checkpoint · predict, then test</div>
+      <p class="qprompt">Before you touch the slider: if K doubles from 10 to 20 m/d, what happens to the head at cell 11?</p>
+      <div class="opts" data-mc="strip-q3">
+        <button class="opt" type="button" data-opt="a"><span class="marker">A</span><span>It rises — more water gets through, so more head arrives</span></button>
+        <button class="opt" type="button" data-opt="b"><span class="marker">B</span><span>It stays exactly 5.0 m — the shape is set by the boundaries, not by K</span></button>
+        <button class="opt" type="button" data-opt="c"><span class="marker">C</span><span>It drops — faster flow drains the middle of the aquifer</span></button>
+      </div>
+      <div class="feedback" id="fb-strip-q3"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Beyond this page</div>
+    <h2>The professional version</h2>
+    <div class="callout aqua">
+      <p>Real aquifers are modelled with the same ingredients you just used: a grid, a K value per cell, and boundary conditions. In MODFLOW's vocabulary the pinned end cells are the <em>CHD (constant-head) package</em>. A MODFLOW 6.8.0 run of this exact model returns the linear profile to within 10⁻¹⁵ m and a water-budget discrepancy of 0.00% — reproducing a hand solution to machine precision is the standard first test of any modeling tool, and now you have performed it yourself.</p>
+    </div>
+    <div class="next-cta"><button class="pillbtn primary" data-go="well" type="button">Module 2: Drop In a Well →</button></div>
+  </div>
+</section>
+
+<!-- ================= MODULE 2 ================= -->
+<section class="view" id="view-well">
+  <div class="mhead" style="background:linear-gradient(135deg,var(--s2),#b04716)">
+    <div class="kicker">Module 2 of 5</div>
+    <h1>Drop In a Well</h1>
+    <p>The same aquifer, widened to 11 rows — a 2.1 km × 1.1 km slab — with a well pumping from dead centre. The head field becomes a landscape, and the budget starts answering the only question that matters: whose water is the well taking?</p>
+  </div>
+
+  <div class="section">
+    <div class="kicker">One number to rule the layer</div>
+    <h2>Transmissivity</h2>
+    <p>In 2-D it gets tedious to carry <var>K</var> and <var>b</var> separately, so hydrogeologists multiply them once and give the product a name:</p>
+    <div class="eq"><var>T</var>&nbsp;=&nbsp;<var>K</var> · <var>b</var><span class="tag">transmissivity, m²/d — the layer's capacity to transmit water sideways</span></div>
+
+    <div class="checkpoint" data-cp="well-q1">
+      <div class="cp-tag">✏ Checkpoint · calculate by hand</div>
+      <p class="qprompt">With K = 10 m/d and a 10 m thick confined layer, what is the transmissivity T?</p>
+      <div class="numrow">
+        <input type="number" id="cp-well-q1" step="any" inputmode="decimal" aria-label="Transmissivity">
+        <span class="unit">m²/d</span>
+        <button class="pillbtn primary" data-check="well-q1" type="button">Check</button>
+      </div>
+      <div class="feedback" id="fb-well-q1"></div>
+    </div>
+
+    <div class="checkpoint" data-cp="well-q2">
+      <div class="cp-tag">✏ Checkpoint · calculate by hand</div>
+      <p class="qprompt">Before any well: the aquifer is now 11 rows × 100 m = 1100 m wide. How much water flows through the whole slab, west to east, in m³/d? (Same Darcy's law as Module 1 — only W changed.)</p>
+      <div class="numrow">
+        <input type="number" id="cp-well-q2" step="any" inputmode="decimal" aria-label="Natural through-flow">
+        <span class="unit">m³/d</span>
+        <button class="pillbtn primary" data-check="well-q2" type="button">Check</button>
+      </div>
+      <div class="feedback" id="fb-well-q2"></div>
+      <details class="worked"><summary>Show the worked solution</summary>
+        <div class="wbody">Q = K·b·W·Δh/L = 10 × 10 × 1100 × 0.005 = <strong>550 m³/d</strong>. Watch for this number in the budget tiles when the pumping rate is zero.</div>
+      </details>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Run the model</div>
+    <h2>The cone of depression</h2>
+    <p>Drag the rate up and watch two things at once: the <em>shape</em> (heads dimple into a cone around the well) and the <em>budget</em> (the boundaries rearrange themselves to feed it).</p>
+    <div class="widget">
+      <div class="widget-title"><span class="wicon" style="background:var(--s2)">▶</span> Confined aquifer, 21 × 11 cells</div>
+      <div class="controls">
+        <div class="ctrl"><label>Pumping rate · <span class="val" id="v-rate2">500</span> m³/d</label>
+          <input type="range" id="rate2" min="0" max="1000" step="25" value="500"></div>
+      </div>
+      <div class="canvas-holder"><canvas id="cv-m2-map" aria-label="Plan view head map with well"></canvas><div class="chart-tip" id="tip-m2"></div></div>
+      <div class="gradbar" id="grad-m2"></div><div class="gradlabels"><span>0 m</span><span>head</span><span>10 m</span></div>
+      <div class="canvas-holder"><canvas id="cv-m2-prof" aria-label="Head profile along the well row"></canvas></div>
+      <div class="readout">
+        <div class="stat-tile"><div class="lab">In from west boundary</div><div class="num" id="n-m2-win">—</div><div class="sub">m³/d</div></div>
+        <div class="stat-tile"><div class="lab">Out to east boundary</div><div class="num" id="n-m2-wout">—</div><div class="sub">m³/d</div></div>
+        <div class="stat-tile"><div class="lab">Well</div><div class="num" id="n-m2-well">—</div><div class="sub">m³/d</div></div>
+        <div class="stat-tile"><div class="lab">Head at well cell</div><div class="num" id="n-m2-hwell">—</div><div class="sub">m</div></div>
+      </div>
+    </div>
+    <div class="callout orange">
+      <p><strong>Read the budget at 500 m³/d.</strong> Inflow rises 550 → 800 (+250) and outflow shrinks 550 → 300 (−250). The well's 500 is exactly half "new water pulled in" and half "water that used to leave" — the split is symmetric because the well sits dead centre. Hydrogeologists call this <strong>capture</strong>. Steady state has no storage: every drop the well takes is a drop some boundary gives up.</p>
+    </div>
+
+    <div class="checkpoint" data-cp="well-q3">
+      <div class="cp-tag">🔮 Checkpoint · predict, then test</div>
+      <p class="qprompt">At steady state, where does a pumping well's water come from?</p>
+      <div class="opts" data-mc="well-q3">
+        <button class="opt" type="button" data-opt="a"><span class="marker">A</span><span>Water stored in the aquifer around the well</span></button>
+        <button class="opt" type="button" data-opt="b"><span class="marker">B</span><span>Captured boundary flow — extra water drawn in, plus outflow that no longer leaves</span></button>
+        <button class="opt" type="button" data-opt="c"><span class="marker">C</span><span>It depends on the pumping rate — small wells use storage, big ones use boundaries</span></button>
+      </div>
+      <div class="feedback" id="fb-well-q3"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Beyond this page</div>
+    <h2>The professional version</h2>
+    <div class="callout aqua">
+      <p>In MODFLOW a pumping well is the <em>WEL package</em>: a single line of input naming the cell and the rate, negative for extraction — everything else you watched happen (the cone, the capture) is the physics responding to that one line. The MODFLOW 6.8.0 run of this model gives a well-cell head of <strong>0.993 m</strong> and the 800 / −300 budget you just reproduced. Agreement to the third decimal between two independent solvers is what "verified" means in modeling.</p>
+    </div>
+    <div class="next-cta"><button class="pillbtn primary" data-go="table" type="button">Module 3: The Water Table Fights Back →</button></div>
+  </div>
+</section>
+
+<!-- ================= MODULE 3 ================= -->
+<section class="view" id="view-table">
+  <div class="mhead" style="background:linear-gradient(135deg,var(--s3),#0c7a54)">
+    <div class="kicker">Module 3 of 5</div>
+    <h1>The Water Table Fights Back</h1>
+    <p>Flip one switch — the layer is now unconfined — and the model turns nonlinear. The saturated thickness <em>is</em> the water table, so pumping erodes the very property that delivers water to the well. This module is about what that feedback does.</p>
+  </div>
+
+  <div class="section">
+    <div class="kicker">The feedback loop</div>
+    <h2>Transmissivity that depends on the answer</h2>
+    <p>Unconfined, the transmissivity is <var>T</var> = <var>K</var> · <var>h</var> — thickness equals the water-table height above the aquifer bottom. Drop the water table and T drops with it. Two consequences:</p>
+    <p><strong>1 · The natural profile curves.</strong> With head 10 m on the west and 2 m on the east, the east side is thin and slow, so it needs a steeper gradient to carry the same flow. The result is the classic Dupuit parabola:</p>
+    <div class="eq"><var>h</var>²(<var>x</var>)&nbsp;=&nbsp;<var>h</var>₁² − (<var>h</var>₁² − <var>h</var>₂²) · <var>x</var>/<var>L</var><span class="tag">Dupuit: head-squared is linear, so head itself is curved</span></div>
+    <p><strong>2 · Wells can fail suddenly.</strong> Pumping thins the aquifer at the well → less T → less inflow → more drawdown → thinner still. Past a threshold the loop runs away and the cell dries out.</p>
+    <div class="callout aqua"><p><strong>Why the east boundary moved to 2 m.</strong> In Modules 1–2 it was 0 m — the aquifer bottom. Unconfined, that would mean zero saturated thickness at the outlet: T = 0, a wall no water can cross. A water-table boundary must stay wet, so this model holds the east side at 2 m.</p></div>
+
+    <div class="checkpoint" data-cp="table-q1">
+      <div class="cp-tag">✏ Checkpoint · calculate by hand</div>
+      <p class="qprompt">Use the Dupuit formula to predict the natural (no pumping) water-table height at the well column — x = 1000 m along the 2000 m between boundaries, with h₁ = 10 m, h₂ = 2 m. Give h, not h².</p>
+      <div class="numrow">
+        <input type="number" id="cp-table-q1" step="any" inputmode="decimal" aria-label="Dupuit head at well column">
+        <span class="unit">m</span>
+        <button class="pillbtn primary" data-check="table-q1" type="button">Check</button>
+      </div>
+      <div class="feedback" id="fb-table-q1"></div>
+      <details class="worked"><summary>Show the worked solution</summary>
+        <div class="wbody">h² = 100 − (100 − 4)·(1000/2000) = 100 − 48 = 52, so h = √52 ≈ <strong>7.21 m</strong>. A linear profile would have said 6.0 m — the curve holds the water table more than a metre higher at midfield.</div>
+      </details>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Run the model</div>
+    <h2>Find the maximum sustainable yield</h2>
+    <p>The solver below uses MODFLOW's standard formulation, where drying is abrupt. Raise the rate slowly and watch the delivered water and the well-cell head. Somewhere there is a cliff.</p>
+    <div class="widget">
+      <div class="widget-title"><span class="wicon" style="background:var(--s3)">▶</span> Unconfined aquifer, east boundary 2 m</div>
+      <div class="controls">
+        <div class="ctrl"><label>Requested pumping rate · <span class="val" id="v-rate3">200</span> m³/d</label>
+          <input type="range" id="rate3" min="0" max="400" step="1" value="200"></div>
+        <div class="ctrl"><label>Fine control</label>
+          <div class="numrow"><input type="number" id="rate3n" min="0" max="400" step="1" value="200" aria-label="Pumping rate, fine control"><span class="unit">m³/d</span></div></div>
+      </div>
+      <div class="canvas-holder"><canvas id="cv-m3-prof" aria-label="Water table profile along the well row with Dupuit reference"></canvas></div>
+      <div class="legend"><span class="key"><span class="linekey" style="background:var(--s3)"></span> water table now</span><span class="key"><span class="linekey" style="background:var(--muted)"></span> no-pumping Dupuit curve</span></div>
+      <div class="readout">
+        <div class="stat-tile"><div class="lab">Requested</div><div class="num" id="n-m3-req">—</div><div class="sub">m³/d</div></div>
+        <div class="stat-tile"><div class="lab">Delivered</div><div class="num" id="n-m3-del">—</div><div class="sub">m³/d</div></div>
+        <div class="stat-tile"><div class="lab">Head at well cell</div><div class="num" id="n-m3-h">—</div><div class="sub">m above aquifer bottom</div></div>
+        <div class="stat-tile"><div class="lab">Well status</div><div class="num" id="n-m3-status" style="font-size:16px; padding-top:4px">—</div><div class="sub" id="n-m3-statussub">&nbsp;</div></div>
+      </div>
+      <div class="chall" id="chall-m3"><b>CHALLENGE</b> Find the largest whole-number rate this well can actually sustain — delivered = requested, cell still wet. Bracket it with the fine control. <span class="cstat" id="chall-m3-stat">NOT YET FOUND</span></div>
+    </div>
+
+    <div class="checkpoint" data-cp="table-q2">
+      <div class="cp-tag">🔮 Checkpoint · explain what you saw</div>
+      <p class="qprompt">The confined aquifer of Module 2 delivered 500 m³/d without complaint. Why does the same aquifer, unconfined, fail near 280?</p>
+      <div class="opts" data-mc="table-q2">
+        <button class="opt" type="button" data-opt="a"><span class="marker">A</span><span>Unconfined aquifers hold less water than confined ones</span></button>
+        <button class="opt" type="button" data-opt="b"><span class="marker">B</span><span>Drawdown thins the saturated zone, which cuts transmissivity, which deepens drawdown — a runaway feedback confined layers don't have</span></button>
+        <button class="opt" type="button" data-opt="c"><span class="marker">C</span><span>The east boundary at 2 m instead of 0 m supplies less water</span></button>
+      </div>
+      <div class="feedback" id="fb-table-q2"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Beyond this page</div>
+    <h2>The professional version</h2>
+    <div class="callout aqua">
+      <p>In MODFLOW, confined versus unconfined is a single flag per cell (<code>ICELLTYPE</code>: 0 confined, 1 convertible) — the entire nonlinearity you just wrestled with switches on with one input value. A MODFLOW 6.8.0 bisection on this model put the maximum sustainable yield at <strong>282.5 m³/d</strong> — with a band just above it where the solver fails to converge at all, and a false-calm zone above ~294 where it "converges" to a dry cell and a well delivering zero. Professional water-table models use the Newton–Raphson method to ride through drying gracefully; the solver behind Modules 4 and 5 does the same.</p>
+    </div>
+    <div class="next-cta"><button class="pillbtn primary" data-go="time" type="button">Module 4: Borrowed Water →</button></div>
+  </div>
+</section>
+
+<!-- ================= MODULE 4 ================= -->
+<section class="view" id="view-time">
+  <div class="mhead" style="background:linear-gradient(135deg,var(--s4),#b07500)">
+    <div class="kicker">Module 4 of 5</div>
+    <h1>Borrowed Water</h1>
+    <p>Steady state is a convenient fiction — real aquifers take years to get there, and the journey is paid for out of storage. This module turns time on: the well starts at day zero against the natural water table, and you watch where each day's water actually comes from.</p>
+  </div>
+
+  <div class="section">
+    <div class="kicker">The bank account</div>
+    <h2>Specific yield</h2>
+    <p>When the water table drops, the sediment above it doesn't empty completely — capillary forces keep some water behind. The fraction that actually drains is the <strong>specific yield</strong> <var>S<sub>y</sub></var> (≈ 0.10–0.25 for sands). It converts water-table movement into volume:</p>
+    <div class="eq"><var>V</var>&nbsp;=&nbsp;<var>S<sub>y</sub></var> · <var>A</var> · Δ<var>h</var><span class="tag">water released from storage when the table drops Δh over area A</span></div>
+
+    <div class="checkpoint" data-cp="time-q1">
+      <div class="cp-tag">✏ Checkpoint · calculate by hand</div>
+      <p class="qprompt">One model cell is 100 m × 100 m and S<sub>y</sub> = 0.15. How many m³ of water are released if the water table under that one cell drops by 1 m?</p>
+      <div class="numrow">
+        <input type="number" id="cp-time-q1" step="any" inputmode="decimal" aria-label="Storage released">
+        <span class="unit">m³</span>
+        <button class="pillbtn primary" data-check="time-q1" type="button">Check</button>
+      </div>
+      <div class="feedback" id="fb-time-q1"></div>
+      <details class="worked"><summary>Show the worked solution</summary>
+        <div class="wbody">V = 0.15 × 100 × 100 × 1 = <strong>1500 m³</strong>. At 500 m³/d, the well can run three whole days on a 1 m drop under a single cell — which is why pumping looks free at first.</div>
+      </details>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Run the model</div>
+    <h2>Ten years in twelve seconds</h2>
+    <p>Press Run: the solver computes 100 growing time steps across 10 years, then plays them back. The chart splits every day's pumping into its two possible sources.</p>
+    <div class="widget">
+      <div class="widget-title"><span class="wicon" style="background:var(--s4)">▶</span> Transient unconfined aquifer · Newton-style solver</div>
+      <div class="controls">
+        <div class="ctrl"><label>Pumping rate · <span class="val" id="v-rate4">500</span> m³/d</label>
+          <input type="range" id="rate4" min="100" max="500" step="25" value="500"></div>
+        <div class="ctrl"><label>Specific yield S<sub>y</sub> · <span class="val" id="v-sy4">0.15</span></label>
+          <input type="range" id="sy4" min="0.05" max="0.30" step="0.01" value="0.15"></div>
+        <div class="ctrl" style="justify-content:flex-end"><div class="numrow">
+          <button class="pillbtn primary" id="run4" type="button">Run 10 years</button>
+          <button class="pillbtn" id="play4" type="button" disabled>❚❚</button></div></div>
+      </div>
+      <div class="controls"><div class="ctrl" style="max-width:none; flex:1 1 100%"><label>Time · <span class="val" id="v-time4">—</span></label>
+        <input type="range" id="time4" min="0" max="99" step="1" value="0" disabled></div></div>
+      <div class="canvas-holder"><canvas id="cv-m4-map" aria-label="Plan view head map through time"></canvas></div>
+      <div class="gradbar" id="grad-m4"></div><div class="gradlabels"><span>0 m</span><span>head</span><span>10 m</span></div>
+      <div class="canvas-holder"><canvas id="cv-m4-chart" aria-label="Sources of pumped water through time on a log time axis"></canvas></div>
+      <div class="legend"><span class="key"><span class="linekey" style="background:var(--s4)"></span> delivered by well</span><span class="key"><span class="linekey" style="background:var(--s2)"></span> from storage</span><span class="key"><span class="linekey" style="background:var(--s1)"></span> captured from boundaries</span></div>
+      <div class="readout">
+        <div class="stat-tile"><div class="lab">Day</div><div class="num" id="n-m4-day">—</div><div class="sub">since pumping began</div></div>
+        <div class="stat-tile"><div class="lab">Well delivering</div><div class="num" id="n-m4-del">—</div><div class="sub">m³/d</div></div>
+        <div class="stat-tile"><div class="lab">Coming from storage</div><div class="num" id="n-m4-stor">—</div><div class="sub">% of pumping</div></div>
+        <div class="stat-tile"><div class="lab">Head at well cell</div><div class="num" id="n-m4-h">—</div><div class="sub">m</div></div>
+      </div>
+    </div>
+    <div class="callout" style="border-left-color:var(--s4); background:var(--warn-bg)">
+      <p><strong>The lesson in the crossover.</strong> Early on, storage supplies almost everything — the boundaries haven't felt the well yet. Over months to years the cone reaches them and capture takes over; at true steady state, storage's share is zero. At 500 m³/d something else happens too: near year 3 the water table reaches the aquifer bottom at the well and physics forces the rate down toward ~400 m³/d — the model version of a well that "can't make its rate" anymore. Overpumping is invisible exactly as long as storage is picking up the bill.</p>
+    </div>
+
+    <div class="checkpoint" data-cp="time-q2">
+      <div class="cp-tag">🔮 Checkpoint · predict, then test</div>
+      <p class="qprompt">If you cut S<sub>y</sub> from 0.15 to 0.05 (a finer-grained aquifer) and rerun, the day the well first fails to make its full rate will…</p>
+      <div class="opts" data-mc="time-q2">
+        <button class="opt" type="button" data-opt="a"><span class="marker">A</span><span>Come much sooner — a smaller bank account runs out faster</span></button>
+        <button class="opt" type="button" data-opt="b"><span class="marker">B</span><span>Come later — less storage means less water to lose</span></button>
+        <button class="opt" type="button" data-opt="c"><span class="marker">C</span><span>Not change — the steady state is the same either way</span></button>
+      </div>
+      <div class="feedback" id="fb-time-q2"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Beyond this page</div>
+    <h2>The professional version</h2>
+    <div class="callout aqua">
+      <p>In MODFLOW, turning on time means declaring a <em>transient stress period</em> and supplying storage properties through the <em>STO package</em> — S<sub>y</sub> becomes an input alongside K, and it is the parameter a modeler calibrates against observed drawdown. Water-table transients also need the Newton–Raphson formulation, which turns wells down smoothly instead of crashing as cells approach dry. The MODFLOW 6.8.0 run of this model delivers the full 500 m³/d until day ~1064, then reduces to 403 m³/d by year 10 — the same curve your run traces.</p>
+    </div>
+    <div class="next-cta"><button class="pillbtn primary" data-go="stream" type="button">Module 5: The Stream Pays →</button></div>
+  </div>
+</section>
+
+<!-- ================= MODULE 5 ================= -->
+<section class="view" id="view-stream">
+  <div class="mhead" style="background:linear-gradient(135deg,var(--s7),#332980)">
+    <div class="kicker">Module 5 of 5</div>
+    <h1>The Stream Pays</h1>
+    <p>A stream crosses the aquifer 300 m east of the well. It talks to the groundwater through its bed — both directions. This is the module where "sustainable yield" stops being a number and becomes a question: sustained at whose expense?</p>
+  </div>
+
+  <div class="section">
+    <div class="kicker">A boundary with a mind of its own</div>
+    <h2>Head-dependent exchange</h2>
+    <p>MODFLOW's river (RIV) boundary exchanges water at a rate proportional to the head difference across the streambed:</p>
+    <div class="eq"><var>Q</var><sub>stream→aquifer</sub>&nbsp;=&nbsp;<var>C</var> · (stage − <var>h</var>)<span class="tag">positive = losing stream (water leaks into the aquifer); negative = gaining</span></div>
+    <p>The <strong>conductance</strong> <var>C</var> bundles the streambed's geometry and permeability. For one model cell's worth of stream:</p>
+    <div class="eq"><var>C</var>&nbsp;=&nbsp;<var>K</var><sub>bed</sub> · <var>L</var> · <var>W</var> / <var>b</var><sub>bed</sub><span class="tag">bed conductivity × reach length × width ÷ bed thickness</span></div>
+    <p>If the water table ever drops below the streambed bottom the stream <em>disconnects</em>: leakage caps at C · (stage − bottom) no matter how much deeper the aquifer is pumped.</p>
+
+    <div class="checkpoint" data-cp="stream-q1">
+      <div class="cp-tag">✏ Checkpoint · calculate by hand</div>
+      <p class="qprompt">Our stream: bed conductivity 0.1 m/d, reach length through one cell 100 m, width 10 m, bed thickness 0.5 m. Compute the conductance per cell.</p>
+      <div class="numrow">
+        <input type="number" id="cp-stream-q1" step="any" inputmode="decimal" aria-label="Streambed conductance">
+        <span class="unit">m²/d</span>
+        <button class="pillbtn primary" data-check="stream-q1" type="button">Check</button>
+      </div>
+      <div class="feedback" id="fb-stream-q1"></div>
+      <details class="worked"><summary>Show the worked solution</summary>
+        <div class="wbody">C = 0.1 × 100 × 10 / 0.5 = <strong>200 m²/d</strong> per cell.</div>
+      </details>
+    </div>
+
+    <div class="checkpoint" data-cp="stream-q2">
+      <div class="cp-tag">✏ Checkpoint · calculate by hand</div>
+      <p class="qprompt">Before pumping, the model's water table at the stream is 5.064 m and the stream stage is 5.0 m. How much water does ONE stream cell gain from the aquifer, in m³/d? (Give the magnitude.)</p>
+      <div class="numrow">
+        <input type="number" id="cp-stream-q2" step="any" inputmode="decimal" aria-label="Natural gain per stream cell">
+        <span class="unit">m³/d</span>
+        <button class="pillbtn primary" data-check="stream-q2" type="button">Check</button>
+      </div>
+      <div class="feedback" id="fb-stream-q2"></div>
+      <details class="worked"><summary>Show the worked solution</summary>
+        <div class="wbody">Q = C·(stage − h) = 200 × (5.0 − 5.064) = <strong>−12.9 m³/d</strong> — negative in MODFLOW's sign convention, meaning the aquifer discharges ~12.9 m³/d into each stream cell. Times 11 cells ≈ 142 m³/d of baseflow. That is the number the well is about to start stealing.</div>
+      </details>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Run the model</div>
+    <h2>Watch the flip</h2>
+    <p>Press Run. The chart tracks the stream–aquifer exchange on a log time axis — the way stream-depletion curves are always plotted — while the map shows the cone reaching the stream.</p>
+    <div class="widget">
+      <div class="widget-title"><span class="wicon" style="background:var(--s7)">▶</span> Transient aquifer + stream, well 300 m away</div>
+      <div class="controls">
+        <div class="ctrl"><label>Pumping rate · <span class="val" id="v-rate5">500</span> m³/d</label>
+          <input type="range" id="rate5" min="0" max="500" step="25" value="500"></div>
+        <div class="ctrl" style="justify-content:flex-end"><div class="numrow">
+          <button class="pillbtn primary" id="run5" type="button">Run 10 years</button>
+          <button class="pillbtn" id="play5" type="button" disabled>❚❚</button></div></div>
+      </div>
+      <div class="controls"><div class="ctrl" style="max-width:none; flex:1 1 100%"><label>Time · <span class="val" id="v-time5">—</span></label>
+        <input type="range" id="time5" min="0" max="99" step="1" value="0" disabled></div></div>
+      <div class="canvas-holder"><canvas id="cv-m5-map" aria-label="Plan view head map with stream and well"></canvas></div>
+      <div class="gradbar" id="grad-m5"></div><div class="gradlabels"><span>0 m</span><span>head</span><span>10 m</span></div>
+      <div class="canvas-holder"><canvas id="cv-m5-chart" aria-label="Stream aquifer exchange through time on log axis"></canvas></div>
+      <div class="legend"><span class="key"><span class="linekey" style="background:var(--s7)"></span> stream leakage to aquifer</span><span class="key"><span class="linekey" style="background:var(--s4)"></span> well pumping</span><span class="mini">below zero = stream gaining · above = losing</span></div>
+      <div class="readout">
+        <div class="stat-tile"><div class="lab">Stream flips on day</div><div class="num" id="n-m5-flip">—</div><div class="sub">gaining → losing</div></div>
+        <div class="stat-tile"><div class="lab">Exchange now</div><div class="num" id="n-m5-ex">—</div><div class="sub" id="n-m5-exsub">m³/d</div></div>
+        <div class="stat-tile"><div class="lab">Well delivering</div><div class="num" id="n-m5-del">—</div><div class="sub">m³/d</div></div>
+        <div class="stat-tile"><div class="lab">Streamflow depletion</div><div class="num" id="n-m5-depl">—</div><div class="sub">m³/d vs. natural</div></div>
+      </div>
+    </div>
+    <div class="callout violet">
+      <p><strong>Three acts.</strong> (1) For weeks the exchange barely moves — the well is living on storage and the stream hasn't noticed. (2) Near day 140 the curve crosses zero: the whole reach flips from gaining to losing. (3) It levels off with the stream donating ~217 m³/d and the well finally making its full 500 — the stream's support is precisely what makes the "unsustainable" rate of Module 3 sustainable. Total depletion ≈ 142 lost baseflow + 217 induced leakage ≈ <strong>359 m³/d, 72% of the pumping</strong>, invoiced to whoever is downstream.</p>
+    </div>
+
+    <div class="checkpoint" data-cp="stream-q3">
+      <div class="cp-tag">🔮 Checkpoint · the big one</div>
+      <p class="qprompt">A regulator asks: "The well is 300 m from the stream — is the stream affected?" Based on this model, the honest answer is:</p>
+      <div class="opts" data-mc="stream-q3">
+        <button class="opt" type="button" data-opt="a"><span class="marker">A</span><span>No — the well never touches the stream, and the water table stays above the streambed</span></button>
+        <button class="opt" type="button" data-opt="b"><span class="marker">B</span><span>Yes, but only slightly — the stream loses about as much as one stream cell used to gain</span></button>
+        <button class="opt" type="button" data-opt="c"><span class="marker">C</span><span>Yes, profoundly and with a delay — within months the reach flips to losing, and at equilibrium ~72% of the pumping is streamflow depletion</span></button>
+      </div>
+      <div class="feedback" id="fb-stream-q3"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="kicker">Beyond this page</div>
+    <h2>The professional version — and where you go next</h2>
+    <div class="callout aqua">
+      <p>In MODFLOW the stream is the <em>RIV (river) package</em>, and its inputs are exactly the three numbers you computed by hand: stage, conductance, and bed bottom. MODFLOW 6.8.0 numbers for this model: natural gain 141.6 m³/d, flip at <strong>day 142</strong>, equilibrium leakage 216.6 m³/d — check them against your tiles.</p>
+      <p><strong>Where modelers go from here:</strong> a streamflow-routing package that tracks the river's own discharge shrinking reach by reach; moving the well and watching the flip day scale with distance²; recharge, seasons, more layers. Each is one more package on the five-model backbone you just climbed.</p>
+    </div>
+    <div class="next-cta"><button class="pillbtn" data-go="home" type="button">← Back to all modules</button></div>
+  </div>
+</section>
+
+<div class="footer-note">
+  Evaristo Critical Zone Hydrology Lab · University of Georgia.
+  The in-page solver is a finite-difference engine (harmonic-mean and upstream-weighted conductances, implicit well flow reduction, RIV with disconnection) verified against MODFLOW 6.8.0 runs of the same models; load-time self-test results are in the browser console.
+  Checkpoints are self-assessment only — nothing is recorded, and progress resets on reload.
+</div>
+</div>
+<script>
+(function(){
+"use strict";
+/* =====================================================================
+   MODFLOW From Zero — solver + widgets
+   The solver is a line-for-line port of a Python prototype verified
+   against MODFLOW 6.8.0 runs of the same five models (see selfTest()).
+   ===================================================================== */
+const $  = (sel, root) => (root||document).querySelector(sel);
+const $$ = (sel, root) => Array.from((root||document).querySelectorAll(sel));
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const fmt = (v, dp) => Number(v).toLocaleString('en-US', {minimumFractionDigits:dp??0, maximumFractionDigits:dp??2});
+
+/* ---------------- theme ---------------- */
+const REDRAWS = [];
+const C = {};
+const C_TOKENS = {
+  s1:'--s1', s2:'--s2', s3:'--s3', s4:'--s4', s7:'--s7',
+  ink:'--ink', ink2:'--ink-2', muted:'--muted', grid:'--grid', axis:'--axis',
+  surface:'--surface', good:'--good', crit:'--crit', dry:'--dry', page:'--page',
+  seq100:'--seq100', seq200:'--seq200', seq300:'--seq300', seq400:'--seq400',
+  seq500:'--seq500', seq600:'--seq600', seq700:'--seq700'
+};
+function syncThemeColors(){
+  const cs = getComputedStyle(document.documentElement);
+  for (const k in C_TOKENS){ const v = cs.getPropertyValue(C_TOKENS[k]).trim(); if (v) C[k] = v; }
+  C.seq = [C.seq100, C.seq200, C.seq300, C.seq400, C.seq500, C.seq600, C.seq700];
+}
+function isDark(){
+  const t = document.documentElement.getAttribute('data-theme');
+  if (t) return t === 'dark';
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function syncThemeBtn(){
+  const b = $('#btn-theme'); if (!b) return;
+  const dark = isDark();
+  b.textContent = dark ? '☀ Light' : '☾ Dark';
+  b.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+}
+function repaintAll(){ syncThemeColors(); for (const fn of REDRAWS){ try{ fn(); }catch(e){} } }
+$('#btn-theme').addEventListener('click', () => {
+  document.documentElement.setAttribute('data-theme', isDark() ? 'light' : 'dark');
+  syncThemeBtn(); repaintAll();
+});
+if (window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { syncThemeBtn(); repaintAll(); });
+}
+syncThemeColors(); syncThemeBtn();
+
+/* =====================================================================
+   SOLVER — finite-difference groundwater engine
+   ===================================================================== */
+const G = { NR:11, NC:21, DX:100, TOP:10, BOT:0, WELLR:5, WELLC:10,
+            RAMP:0.02, SCOL:13, CRIV:200, STAGE:5, RBOT:4 };
+
+function solveSteady(cfg){
+  // cfg: {nr,nc,dy,K,confined,east,qwell,stream,weighting,hInit}
+  const nr = cfg.nr ?? G.NR, nc = cfg.nc ?? G.NC;
+  const dy = cfg.dy ?? G.DX, dx = G.DX;
+  const K = cfg.K ?? 10, TOP = G.TOP, BOT = G.BOT;
+  const confined = !!cfg.confined, east = cfg.east ?? 0;
+  const qwell = cfg.qwell ?? 0, stream = !!cfg.stream;
+  const upstream = cfg.weighting === 'upstream';
+  const N = nr*nc, idx = (r,c) => r*nc + c;
+  const fixed = new Array(N).fill(NaN);
+  for (let r=0; r<nr; r++){ fixed[idx(r,0)] = 10; fixed[idx(r,nc-1)] = east; }
+  const h = new Float64Array(N);
+  for (let i=0; i<N; i++) h[i] = isNaN(fixed[i]) ? (cfg.hInit ? cfg.hInit[i] : TOP) : fixed[i];
+  const wi = idx(G.WELLR, G.WELLC);
+  const thick = hh => confined ? (TOP-BOT) : clamp(hh-BOT, 0, TOP-BOT);
+  const cx = new Float64Array(nr*(nc-1)), cy = new Float64Array((nr-1)*nc);
+  const diag = new Float64Array(N), rhs = new Float64Array(N), hn = new Float64Array(N);
+  const dt = cfg.dt, hOld = cfg.hOld, sy = cfg.sy ?? 0.15, ss = 1e-5;
+  let wscale = 1, wsPrev = cfg.wsPrev ?? 1, converged = false;
+
+  for (let outer=0; outer<400; outer++){
+    for (let r=0; r<nr; r++) for (let c=0; c<nc-1; c++){
+      const t1 = K*thick(h[idx(r,c)]), t2 = K*thick(h[idx(r,c+1)]);
+      let t;
+      if (upstream) t = h[idx(r,c)] >= h[idx(r,c+1)] ? t1 : t2;
+      else t = (t1+t2) > 0 ? 2*t1*t2/(t1+t2) : 0;
+      cx[r*(nc-1)+c] = t*dy/dx;
+    }
+    for (let r=0; r<nr-1; r++) for (let c=0; c<nc; c++){
+      const t1 = K*thick(h[idx(r,c)]), t2 = K*thick(h[idx(r+1,c)]);
+      let t;
+      if (upstream) t = h[idx(r,c)] >= h[idx(r+1,c)] ? t1 : t2;
+      else t = (t1+t2) > 0 ? 2*t1*t2/(t1+t2) : 0;
+      cy[r*nc+c] = t*dx/dy;
+    }
+    diag.fill(0); rhs.fill(0);
+    for (let r=0; r<nr; r++) for (let c=0; c<nc-1; c++){
+      const v = cx[r*(nc-1)+c]; diag[idx(r,c)] += v; diag[idx(r,c+1)] += v;
+    }
+    for (let r=0; r<nr-1; r++) for (let c=0; c<nc; c++){
+      const v = cy[r*nc+c]; diag[idx(r,c)] += v; diag[idx(r+1,c)] += v;
+    }
+    if (stream) for (let r=0; r<nr; r++){
+      const i = idx(r, G.SCOL);
+      if (h[i] > G.RBOT){ diag[i] += G.CRIV; rhs[i] += G.CRIV*G.STAGE; }
+      else rhs[i] += G.CRIV*(G.STAGE - G.RBOT);
+    }
+    wscale = 1;
+    if (qwell !== 0){
+      const st = Math.max(h[wi]-BOT, 0);
+      wscale = Math.min(1, st/G.RAMP);
+      if (st >= G.RAMP) rhs[wi] += qwell;
+      else { diag[wi] += -qwell/G.RAMP; rhs[wi] += -qwell/G.RAMP*BOT; }
+    }
+    if (dt){
+      for (let i=0; i<N; i++){
+        const stor = (sy + ss*clamp(h[i]-BOT,0,TOP)) * dx*dy/dt;
+        diag[i] += stor; rhs[i] += stor*hOld[i];
+      }
+    }
+    hn.set(h);
+    for (let sweep=0; sweep<3000; sweep++){
+      let hmax = 0;
+      for (let r=0; r<nr; r++) for (let c=0; c<nc; c++){
+        const i = idx(r,c);
+        if (!isNaN(fixed[i])) continue;
+        let s = rhs[i];
+        if (c>0)    s += cx[r*(nc-1)+c-1]*hn[i-1];
+        if (c<nc-1) s += cx[r*(nc-1)+c]*hn[i+1];
+        if (r>0)    s += cy[(r-1)*nc+c]*hn[i-nc];
+        if (r<nr-1) s += cy[r*nc+c]*hn[i+nc];
+        const d = diag[i];
+        let nu = d>0 ? s/d : hn[i];
+        nu = hn[i] + 1.7*(nu-hn[i]);
+        const df = Math.abs(nu-hn[i]); if (df>hmax) hmax = df;
+        hn[i] = nu;
+      }
+      if (hmax < 1e-9) break;
+    }
+    let change = 0;
+    for (let i=0; i<N; i++){ const df = Math.abs(hn[i]-h[i]); if (df>change) change = df; }
+    for (let i=0; i<N; i++){
+      h[i] = h[i] + 0.7*(hn[i]-h[i]);
+      if (!confined && isNaN(fixed[i]) === false){} // fixed cells stay
+      if (!confined && isNaN(fixed[i])) h[i] = Math.max(h[i], BOT);
+    }
+    const scaleChange = Math.abs(wscale - wsPrev); wsPrev = wscale;
+    if (change < 1e-7 && scaleChange < 1e-4 && outer > 2){ converged = true; break; }
+  }
+  return Object.assign({h, converged, wscale, nr, nc}, budget(h, cfg));
+}
+
+function budget(h, cfg){
+  const nr = cfg.nr ?? G.NR, nc = cfg.nc ?? G.NC;
+  const dy = cfg.dy ?? G.DX, dx = G.DX;
+  const K = cfg.K ?? 10, confined = !!cfg.confined;
+  const upstream = cfg.weighting === 'upstream';
+  const idx = (r,c) => r*nc + c;
+  const thick = hh => confined ? (G.TOP-G.BOT) : clamp(hh-G.BOT, 0, G.TOP-G.BOT);
+  let qWest = 0, qEast = 0, qRiv = 0;
+  for (let r=0; r<nr; r++){
+    let t1 = K*thick(h[idx(r,0)]), t2 = K*thick(h[idx(r,1)]);
+    let tw = upstream ? (h[idx(r,0)]>=h[idx(r,1)]?t1:t2) : ((t1+t2)>0 ? 2*t1*t2/(t1+t2) : 0);
+    qWest += tw*dy/dx * (h[idx(r,0)] - h[idx(r,1)]);
+    t1 = K*thick(h[idx(r,nc-2)]); t2 = K*thick(h[idx(r,nc-1)]);
+    let te = upstream ? (h[idx(r,nc-2)]>=h[idx(r,nc-1)]?t1:t2) : ((t1+t2)>0 ? 2*t1*t2/(t1+t2) : 0);
+    qEast += te*dy/dx * (h[idx(r,nc-2)] - h[idx(r,nc-1)]);
+  }
+  if (cfg.stream) for (let r=0; r<nr; r++){
+    qRiv += G.CRIV*(G.STAGE - Math.max(h[idx(r,G.SCOL)], G.RBOT));
+  }
+  const wi = idx(G.WELLR, G.WELLC);
+  const st = Math.max(h[wi]-G.BOT, 0);
+  const ws = Math.min(1, st/G.RAMP);
+  const qWell = (cfg.qwell ?? 0) * ws;
+  return {qWest, qEast, qRiv, qWell, hWell: h[wi]};
+}
+
+/* transient: 100 growing steps over 10 years, from the natural steady state */
+function transientPlan(cfg){
+  const nstp = 100, perlen = 3650, ts = 1.08;
+  const dt0 = perlen*(ts-1)/(Math.pow(ts,nstp)-1);
+  const nat = solveSteady(Object.assign({}, cfg, {qwell:0}));
+  return {nstp, ts, dt0, state:{ h:nat.h, t:0, dt:dt0, step:0, wsPrev:1 },
+          frames:[Float64Array.from(nat.h)], times:[0],
+          series:[Object.assign({t:0}, budget(nat.h, Object.assign({}, cfg, {qwell:0})))]};
+}
+function transientStep(cfg, plan){
+  const s = plan.state;
+  const hOld = Float64Array.from(s.h);
+  const res = solveSteady(Object.assign({}, cfg, {hInit:s.h, dt:s.dt, hOld, wsPrev:s.wsPrev}));
+  s.h = res.h; s.wsPrev = res.wscale; s.t += s.dt; s.dt *= plan.ts; s.step++;
+  plan.frames.push(Float64Array.from(res.h));
+  plan.times.push(s.t);
+  plan.series.push(Object.assign({t:s.t}, budget(res.h, cfg)));
+  return s.step >= plan.nstp;
+}
+
+/* ---------------- self-test against MODFLOW 6.8.0 reference runs ------- */
+function selfTest(){
+  const T = [];
+  const near = (a,b,tol) => Math.abs(a-b) <= tol;
+  let r = solveSteady({nr:1, nc:21, dy:1, K:10, confined:true, east:0});
+  T.push(['M1 head cell 11 = 5.0', near(r.h[10], 5.0, 1e-5), r.h[10]]);
+  T.push(['M1 Q = 0.5 m3/d', near(r.qWest, 0.5, 1e-5), r.qWest]);
+  r = solveSteady({confined:true, east:0, qwell:-500});
+  T.push(['M2 well head 0.9931', near(r.hWell, 0.9931, 0.005), r.hWell]);
+  T.push(['M2 CHD west 800.0', near(r.qWest, 800, 1), r.qWest]);
+  r = solveSteady({confined:false, east:2, qwell:-200, weighting:'harmonic'});
+  T.push(['M3 (-200) well head 4.454', near(r.hWell, 4.454, 0.03), r.hWell]);
+  r = solveSteady({confined:false, east:2, qwell:-500, weighting:'harmonic'});
+  T.push(['M3 (-500) well starves (~0)', Math.abs(r.qWell) < 5, r.qWell]);
+  r = solveSteady({confined:false, east:2, stream:true, weighting:'upstream'});
+  T.push(['M5 natural exchange -141.6', near(r.qRiv, -141.6, 1.5), r.qRiv]);
+  r = solveSteady({confined:false, east:2, stream:true, qwell:-500, weighting:'upstream'});
+  T.push(['M5 pumped exchange +216.7', near(r.qRiv, 216.7, 2), r.qRiv]);
+  T.push(['M5 well delivers full 500', near(Math.abs(r.qWell), 500, 1), r.qWell]);
+  const all = T.every(t => t[1]);
+  console.groupCollapsed('%cMODFLOW From Zero · solver self-test vs MODFLOW 6.8.0: ' +
+    (all ? 'ALL ' + T.length + ' PASS' : 'FAILURES'), 'font-weight:bold');
+  T.forEach(t => console.log((t[1] ? 'PASS  ' : 'FAIL  ') + t[0] + '  (got ' + t[2].toFixed(4) + ')'));
+  console.groupEnd();
+}
+
+/* =====================================================================
+   CANVAS helpers
+   ===================================================================== */
+function sizeCanvas(cv, aspect){
+  const w = cv.parentElement.clientWidth || 600;
+  const hpx = Math.round(w*aspect);
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(w*dpr); cv.height = Math.round(hpx*dpr);
+  cv.style.height = hpx + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx, w, h:hpx};
+}
+function hexLerp(a, b, t){
+  const pa = parseInt(a.slice(1),16), pb = parseInt(b.slice(1),16);
+  const c = i => Math.round(((pa>>i)&255) + (((pb>>i)&255)-((pa>>i)&255))*t);
+  return 'rgb(' + c(16) + ',' + c(8) + ',' + c(0) + ')';
+}
+function headColor(hv){
+  const t = clamp(hv/10, 0, 1)*(C.seq.length-1);
+  const i = Math.min(Math.floor(t), C.seq.length-2);
+  return hexLerp(C.seq[i], C.seq[i+1], t-i);
+}
+function paintGradbar(id){
+  const el = $(id); if (!el) return;
+  el.style.background = 'linear-gradient(90deg,' + C.seq.join(',') + ')';
+}
+
+/* map: plan view of the grid */
+function drawMap(cv, tip, h, opts){
+  const {ctx, w} = sizeCanvas(cv, 11/21*0.92 + 0.06);
+  const nr = G.NR, nc = G.NC;
+  const pad = {l:8, r:8, t:8, b:8};
+  const cw = (w-pad.l-pad.r)/nc, ch2 = cw*0.92;
+  const H = pad.t + nr*ch2 + pad.b;
+  ctx.clearRect(0,0,w,cv.height);
+  for (let r=0; r<nr; r++) for (let c=0; c<nc; c++){
+    const hv = h[r*nc+c];
+    ctx.fillStyle = (hv <= G.BOT+1e-4 && c>0 && c<nc-1) ? C.dry : headColor(hv);
+    ctx.fillRect(pad.l+c*cw, pad.t+r*ch2, cw, ch2);
+  }
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let c=0; c<=nc; c++){ ctx.beginPath(); ctx.moveTo(pad.l+c*cw, pad.t); ctx.lineTo(pad.l+c*cw, pad.t+nr*ch2); ctx.stroke(); }
+  for (let r=0; r<=nr; r++){ ctx.beginPath(); ctx.moveTo(pad.l, pad.t+r*ch2); ctx.lineTo(pad.l+nc*cw, pad.t+r*ch2); ctx.stroke(); }
+  ctx.strokeStyle = C.axis; ctx.lineWidth = 2.5;
+  ctx.strokeRect(pad.l, pad.t, cw, nr*ch2);
+  ctx.strokeRect(pad.l+(nc-1)*cw, pad.t, cw, nr*ch2);
+  if (opts && opts.stream){
+    const x = pad.l + (G.SCOL+0.5)*cw;
+    ctx.strokeStyle = C.s7; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t+nr*ch2); ctx.stroke();
+  }
+  if (opts && opts.well){
+    const x = pad.l + (G.WELLC+0.5)*cw, y = pad.t + (G.WELLR+0.5)*ch2;
+    ctx.beginPath(); ctx.arc(x, y, Math.max(4, cw*0.18), 0, Math.PI*2);
+    ctx.fillStyle = C.surface; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
+  }
+  if (tip){
+    cv.onmousemove = ev => {
+      const rect = cv.getBoundingClientRect();
+      const mx = ev.clientX-rect.left, my = ev.clientY-rect.top;
+      const c = Math.floor((mx-pad.l)/cw), r = Math.floor((my-pad.t)/ch2);
+      if (r>=0 && r<nr && c>=0 && c<nc){
+        const hv = h[r*nc+c];
+        tip.textContent = 'row ' + (r+1) + ', col ' + (c+1) + ' · h = ' +
+          (hv <= G.BOT+1e-4 && c>0 && c<nc-1 ? 'dry' : fmt(hv,2) + ' m');
+        tip.style.left = mx + 'px'; tip.style.top = my + 'px'; tip.style.opacity = 1;
+      } else tip.style.opacity = 0;
+    };
+    cv.onmouseleave = () => { tip.style.opacity = 0; };
+  }
+}
+
+/* profile chart along the well row */
+function drawProfile(cv, lines, opts){
+  const {ctx, w, h:H} = sizeCanvas(cv, 0.34);
+  const pad = {l:44, r:14, t:12, b:26};
+  const pw = w-pad.l-pad.r, ph = H-pad.t-pad.b;
+  const ymin = -0.6, ymax = 11.2;
+  const X = x => pad.l + x/2100*pw;
+  const Y = y => pad.t + (ymax-y)/(ymax-ymin)*ph;
+  ctx.clearRect(0,0,w,H);
+  ctx.font = '11px system-ui,sans-serif';
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1; ctx.fillStyle = C.muted;
+  for (let g=0; g<=10; g+=2){
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(g)); ctx.lineTo(w-pad.r, Y(g)); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.fillText(g + ' m', pad.l-6, Y(g)+4);
+  }
+  ctx.textAlign = 'center';
+  for (let x=0; x<=2100; x+=500) ctx.fillText(x, X(x), H-8);
+  ctx.strokeStyle = C.axis; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(pad.l, Y(10)); ctx.lineTo(w-pad.r, Y(10)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(pad.l, Y(0)); ctx.lineTo(w-pad.r, Y(0)); ctx.stroke();
+  if (opts && opts.wellLine){
+    ctx.strokeStyle = C.muted; ctx.setLineDash([3,3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(X(1050), Y(0)); ctx.lineTo(X(1050), Y(10.6)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.muted; ctx.fillText('well', X(1050), Y(10.6)-4);
+  }
+  if (opts && opts.stage){
+    ctx.fillStyle = C.s7;
+    const sx = X(1350), sy = Y(G.STAGE);
+    ctx.beginPath(); ctx.moveTo(sx-6, sy-8); ctx.lineTo(sx+6, sy-8); ctx.lineTo(sx, sy); ctx.closePath(); ctx.fill();
+    ctx.textAlign = 'left'; ctx.fillText('stream stage', sx+8, sy-6); ctx.textAlign = 'center';
+  }
+  for (const ln of lines){
+    ctx.strokeStyle = ln.color; ctx.lineWidth = ln.width || 2;
+    if (ln.dash) ctx.setLineDash(ln.dash);
+    ctx.beginPath();
+    for (let c=0; c<G.NC; c++){
+      const x = X(c*100+50), y = Y(clamp(ln.y[c], ymin, ymax));
+      c ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+}
+
+/* time-series chart, log-x */
+function drawSeries(cv, times, seriesList, opts){
+  const {ctx, w, h:H} = sizeCanvas(cv, 0.36);
+  const pad = {l:52, r:14, t:12, b:30};
+  const pw = w-pad.l-pad.r, ph = H-pad.t-pad.b;
+  const tmin = 0.1, tmax = 4000;
+  const ymin = opts.ymin, ymax = opts.ymax;
+  const X = t => pad.l + (Math.log10(Math.max(t,tmin))-Math.log10(tmin))/(Math.log10(tmax)-Math.log10(tmin))*pw;
+  const Y = v => pad.t + (ymax-v)/(ymax-ymin)*ph;
+  ctx.clearRect(0,0,w,H);
+  ctx.font = '11px system-ui,sans-serif';
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1; ctx.fillStyle = C.muted; ctx.textAlign = 'center';
+  for (const t of [0.1,1,10,100,1000]){
+    ctx.beginPath(); ctx.moveTo(X(t), pad.t); ctx.lineTo(X(t), H-pad.b); ctx.stroke();
+    ctx.fillText(t >= 1 ? String(t) : '0.1', X(t), H-10);
+  }
+  ctx.fillText('days since pumping began (log scale)', pad.l+pw/2, H+2-2);
+  ctx.textAlign = 'right';
+  const step = (ymax-ymin) > 600 ? 200 : 100;
+  for (let v=Math.ceil(ymin/step)*step; v<=ymax; v+=step){
+    ctx.strokeStyle = C.grid;
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(w-pad.r, Y(v)); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.fillText(fmt(v,0), pad.l-6, Y(v)+4);
+  }
+  if (ymin < 0){
+    ctx.strokeStyle = C.axis; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(0)); ctx.lineTo(w-pad.r, Y(0)); ctx.stroke();
+  }
+  const upto = opts.upto ?? times.length-1;
+  for (const s of seriesList){
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2;
+    ctx.beginPath();
+    let started = false;
+    for (let i=0; i<=upto; i++){
+      const x = X(Math.max(times[i], tmin)), y = Y(clamp(s.v[i], ymin, ymax));
+      started ? ctx.lineTo(x,y) : ctx.moveTo(x,y); started = true;
+    }
+    ctx.stroke();
+    if (upto >= 0){
+      ctx.fillStyle = s.color;
+      ctx.beginPath(); ctx.arc(X(Math.max(times[upto],tmin)), Y(clamp(s.v[upto],ymin,ymax)), 4, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  if (opts.flipDay && opts.flipDay <= times[upto]){
+    ctx.strokeStyle = C.crit; ctx.setLineDash([4,3]); ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(X(opts.flipDay), pad.t); ctx.lineTo(X(opts.flipDay), H-pad.b); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.crit; ctx.textAlign = 'left';
+    ctx.fillText('flip · day ' + fmt(opts.flipDay,0), X(opts.flipDay)+5, pad.t+12);
+  }
+}
+
+/* =====================================================================
+   CHECKPOINTS
+   ===================================================================== */
+const state = { cp:{} };
+const MODULES = {
+  strip:{title:'Module 1 · An Aquifer in a Straight Line', accent:'var(--s1)'},
+  well:{title:'Module 2 · Drop In a Well', accent:'var(--s2)'},
+  table:{title:'Module 3 · The Water Table Fights Back', accent:'var(--s3)'},
+  time:{title:'Module 4 · Borrowed Water', accent:'var(--s4)'},
+  stream:{title:'Module 5 · The Stream Pays', accent:'var(--s7)'}
+};
+const CP_NUM = {
+  'strip-q1':{ans:0.5, tol:0.02, unit:'m³/d',
+    ok:'Q = 10 × 10 × 1 × 10/2000 = 0.5 m³/d. Now watch the model return exactly this.',
+    no:'Work in order: K·b·W gives 100 m³/d per unit gradient; the gradient is 10 m over 2000 m = 0.005.'},
+  'strip-q2':{ans:5.0, tol:0.05, unit:'m',
+    ok:'Halfway between 10 and 0 — the confined profile is a straight line.',
+    no:'Cell 11 sits 1000 m into the 2000 m between boundary cell centres. Interpolate linearly between 10 and 0.'},
+  'well-q1':{ans:100, tol:1, unit:'m²/d',
+    ok:'T = 10 × 10 = 100 m²/d. One number now describes the whole layer.',
+    no:'Just multiply: K (m/d) times thickness (m).'},
+  'well-q2':{ans:550, tol:5, unit:'m³/d',
+    ok:'550 m³/d. Set the pumping rate to zero in the widget below and find this in both boundary tiles.',
+    no:'Same formula as Module 1, with W = 1100 m instead of 1 m.'},
+  'table-q1':{ans:7.211, tol:0.06, unit:'m',
+    ok:'√52 ≈ 7.21 m. The model computes 7.22 — the tiny gap is the 100 m grid resolution.',
+    no:'Compute h² first: 100 − 96 × (1000/2000) = 52. Then take the square root.'},
+  'time-q1':{ans:1500, tol:10, unit:'m³',
+    ok:'1500 m³ — three days of pumping at 500 m³/d from one metre of drawdown under a single cell.',
+    no:'V = Sy × area × drop = 0.15 × (100 × 100) × 1.'},
+  'stream-q1':{ans:200, tol:2, unit:'m²/d',
+    ok:'C = 0.1 × 100 × 10 / 0.5 = 200 m²/d per cell — the conductance a river boundary asks for.',
+    no:'Multiply Kbed by the bed area (length × width), then divide by bed thickness.'},
+  'stream-q2':{ans:12.9, tol:0.8, unit:'m³/d', abs:true,
+    ok:'≈12.9 m³/d per cell, ≈142 m³/d for the reach — the stream’s natural baseflow from this aquifer.',
+    no:'Q = C × (stage − h) = 200 × (5.0 − 5.064). The magnitude is what we asked for.'}
+};
+const CP_MC = {
+  'strip-q3':{correct:'b',
+    ok:'The boundaries pin both ends; with uniform K the interior can only interpolate. K sets how much water moves, not where the head sits. Try it on the slider.',
+    no:'Try it: double K and watch the head tiles. Flow doubles; heads do not move. The profile is set by the boundaries.'},
+  'well-q3':{correct:'b',
+    ok:'Steady state has no storage term — every m³ the well takes is a m³ of rearranged boundary flow. That rearrangement is called capture.',
+    no:'At steady state, storage is by definition unchanging. Look at how the two boundary tiles shift as you raise the rate: their changes sum exactly to the pumping.'},
+  'table-q2':{correct:'b',
+    ok:'Exactly — T = K·h ties the aquifer’s ability to deliver water to the very water table the well is lowering. Confined T never changes; unconfined T participates in its own destruction.',
+    no:'Watch the delivered tile as you approach the cliff: the aquifer thins at the well, T drops, and the failure feeds itself. That feedback is the answer.'},
+  'time-q2':{correct:'a',
+    ok:'Right — less storage per metre of drawdown means the cone deepens and spreads faster, and the bottom arrives sooner. Run it and check.',
+    no:'Run it both ways and watch the day the delivered curve breaks below the requested rate. A smaller Sy is a smaller bank account.'},
+  'stream-q3':{correct:'c',
+    ok:'This is the textbook answer in miniature: depletion is delayed, then large. Distance buys time, not immunity — the flip day scales with distance², but the equilibrium bill barely changes.',
+    no:'Look at the flip-day tile and the depletion tile after a full run at 500 m³/d. The delay is real; so is the 72%.'}
+};
+function cpDone(id){ if (!state.cp[id]){ state.cp[id] = true; renderProgress(); } }
+function wireCheckpoints(){
+  $$('[data-check]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-check');
+      const cfgN = CP_NUM[id]; if (!cfgN) return;
+      const inp = $('#cp-' + id); const fb = $('#fb-' + id);
+      let v = parseFloat(inp.value);
+      if (isNaN(v)){ fb.className = 'feedback show no'; fb.innerHTML = '<div class="fb-head">Enter a number first</div>'; return; }
+      if (cfgN.abs) v = Math.abs(v);
+      const right = Math.abs(v - cfgN.ans) <= cfgN.tol;
+      fb.className = 'feedback show ' + (right ? 'ok' : 'no');
+      fb.innerHTML = '<div class="fb-head">' + (right ? '✓ Correct' : '✗ Not yet') + '</div>' + (right ? cfgN.ok : cfgN.no);
+      if (right) cpDone(id);
+    });
+  });
+  $$('[data-mc]').forEach(group => {
+    const id = group.getAttribute('data-mc');
+    const cfg = CP_MC[id]; if (!cfg) return;
+    $$('.opt', group).forEach(opt => {
+      opt.addEventListener('click', () => {
+        const pick = opt.getAttribute('data-opt');
+        const fb = $('#fb-' + id);
+        $$('.opt', group).forEach(o => { o.classList.remove('reveal-wrong'); o.removeAttribute('aria-pressed'); });
+        if (pick === cfg.correct){
+          opt.classList.add('reveal-correct');
+          $$('.opt', group).forEach(o => o.disabled = true);
+          fb.className = 'feedback show ok';
+          fb.innerHTML = '<div class="fb-head">✓ Correct</div>' + cfg.ok;
+          cpDone(id);
+        } else {
+          opt.classList.add('reveal-wrong');
+          fb.className = 'feedback show no';
+          fb.innerHTML = '<div class="fb-head">✗ Try again</div>' + cfg.no;
+        }
+      });
+    });
+  });
+}
+function cpStats(mod){
+  const ids = Object.keys(CP_NUM).concat(Object.keys(CP_MC)).filter(id => id.startsWith(mod + '-'));
+  const done = ids.filter(id => state.cp[id]).length;
+  return {done, total: ids.length};
+}
+function renderProgress(){
+  for (const mod in MODULES){
+    const holder = $('[data-progress="' + mod + '"]'); if (!holder) continue;
+    const cs = cpStats(mod);
+    const frac = cs.total ? cs.done/cs.total : 0;
+    const pct = Math.round(frac*100);
+    const r = 13, circ = 2*Math.PI*r;
+    holder.innerHTML =
+      '<svg class="pring" viewBox="0 0 34 34" aria-hidden="true">' +
+      '<circle class="track" cx="17" cy="17" r="' + r + '" fill="none" stroke-width="3.5"></circle>' +
+      '<circle class="fill" cx="17" cy="17" r="' + r + '" fill="none" style="stroke:' + MODULES[mod].accent + '" stroke-width="3.5" ' +
+      'stroke-dasharray="' + circ.toFixed(1) + '" stroke-dashoffset="' + (circ*(1-frac)).toFixed(1) + '" transform="rotate(-90 17 17)"></circle>' +
+      '<text x="17" y="20.5" text-anchor="middle">' + pct + '</text></svg>' +
+      '<span class="stat">' + cs.done + '/' + cs.total + ' checkpoints<br>work by hand, then verify</span>';
+  }
+}
+
+/* =====================================================================
+   NAVIGATION
+   ===================================================================== */
+const WIDGET_INIT = {};
+const INIT_WIDGETS = {};
+function showView(id){
+  $$('.view').forEach(v => v.classList.remove('active'));
+  const view = $('#view-' + id);
+  if (view) view.classList.add('active');
+  const home = id === 'home';
+  $('#nav-home').hidden = home;
+  $('#crumb').textContent = home ? 'MODFLOW From Zero' : MODULES[id].title;
+  window.scrollTo({top:0, behavior:'auto'});
+  if (!home && !WIDGET_INIT[id]){
+    WIDGET_INIT[id] = true;
+    try{ INIT_WIDGETS[id](); }catch(e){ console.error('widget init failed for ' + id, e); }
+  }
+  renderProgress();
+}
+$('#nav-home').addEventListener('click', () => showView('home'));
+$$('[data-go]').forEach(b => b.addEventListener('click', () => showView(b.getAttribute('data-go'))));
+
+/* =====================================================================
+   MODULE 1 widget
+   ===================================================================== */
+INIT_WIDGETS.strip = function(){
+  const cv = $('#cv-m1'), tip = $('#tip-m1');
+  const kIn = $('#k1'), eIn = $('#e1');
+  function current(){ return {K:+kIn.value, east:+eIn.value}; }
+  function draw(){
+    const p = current();
+    $('#v-k1').textContent = p.K; $('#v-e1').textContent = fmt(p.east,1);
+    const r = solveSteady({nr:1, nc:21, dy:1, K:p.K, confined:true, east:p.east});
+    const {ctx, w, h:H} = sizeCanvas(cv, 0.42);
+    const pad = {l:44, r:14, t:10, b:26};
+    const pw = w-pad.l-pad.r;
+    const cw = pw/21, stripH = Math.min(40, H*0.2);
+    ctx.clearRect(0,0,w,H);
+    for (let c=0; c<21; c++){
+      ctx.fillStyle = headColor(r.h[c]);
+      ctx.fillRect(pad.l+c*cw, pad.t, cw, stripH);
+      ctx.strokeStyle = C.grid; ctx.strokeRect(pad.l+c*cw, pad.t, cw, stripH);
+    }
+    ctx.strokeStyle = C.axis; ctx.lineWidth = 2.5;
+    ctx.strokeRect(pad.l, pad.t, cw, stripH);
+    ctx.strokeRect(pad.l+20*cw, pad.t, cw, stripH);
+    const gy0 = pad.t + stripH + 12, gh = H - gy0 - pad.b;
+    const Y = v => gy0 + (10-v)/10*gh;
+    ctx.font = '11px system-ui,sans-serif';
+    ctx.strokeStyle = C.grid; ctx.fillStyle = C.muted; ctx.textAlign = 'right';
+    for (let g=0; g<=10; g+=2){
+      ctx.beginPath(); ctx.moveTo(pad.l, Y(g)); ctx.lineTo(w-pad.r, Y(g)); ctx.stroke();
+      ctx.fillText(g + ' m', pad.l-6, Y(g)+4);
+    }
+    ctx.textAlign = 'center';
+    for (let x=0; x<=2000; x+=500) ctx.fillText(x + ' m', pad.l + (x/2100)*pw + cw/2, H-8);
+    ctx.strokeStyle = C.s1; ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    for (let c=0; c<21; c++){
+      const x = pad.l + (c+0.5)*cw, y = Y(r.h[c]);
+      c ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = C.s1;
+    for (let c=0; c<21; c++){ ctx.beginPath(); ctx.arc(pad.l+(c+0.5)*cw, Y(r.h[c]), 3, 0, Math.PI*2); ctx.fill(); }
+    cv.onmousemove = ev => {
+      const rect = cv.getBoundingClientRect();
+      const mx = ev.clientX-rect.left;
+      const c = Math.floor((mx-pad.l)/cw);
+      if (c>=0 && c<21){
+        tip.textContent = 'cell ' + (c+1) + ' · h = ' + fmt(r.h[c],3) + ' m';
+        tip.style.left = mx + 'px'; tip.style.top = (ev.clientY-rect.top) + 'px'; tip.style.opacity = 1;
+      } else tip.style.opacity = 0;
+    };
+    cv.onmouseleave = () => { tip.style.opacity = 0; };
+    $('#n-m1-q').textContent = fmt(r.qWest, 3);
+    $('#n-m1-h11').textContent = fmt(r.h[10], 3);
+    $('#n-m1-err').textContent = fmt(Math.abs(r.qWest - r.qEast), 6);
+    const lesson = p.K === 10 && p.east === 0;
+    $('#t-m1-q').classList.toggle('hl', lesson && Math.abs(r.qWest-0.5) < 1e-4);
+    $('#t-m1-h11').classList.toggle('hl', lesson && Math.abs(r.h[10]-5) < 1e-4);
+  }
+  kIn.addEventListener('input', draw);
+  eIn.addEventListener('input', draw);
+  $('#reset1').addEventListener('click', () => { kIn.value = 10; eIn.value = 0; draw(); });
+  REDRAWS.push(draw);
+  draw();
+};
+
+/* =====================================================================
+   MODULE 2 widget
+   ===================================================================== */
+INIT_WIDGETS.well = function(){
+  const rateIn = $('#rate2');
+  function draw(){
+    const rate = +rateIn.value;
+    $('#v-rate2').textContent = fmt(rate,0);
+    const r = solveSteady({confined:true, east:0, qwell:-rate});
+    drawMap($('#cv-m2-map'), $('#tip-m2'), r.h, {well:true});
+    paintGradbar('#grad-m2');
+    const row = [];
+    for (let c=0; c<G.NC; c++) row.push(r.h[G.WELLR*G.NC+c]);
+    const nat = [];
+    for (let c=0; c<G.NC; c++) nat.push(10 - 0.5*c);
+    drawProfile($('#cv-m2-prof'), [
+      {y:nat, color:C.muted, dash:[4,3], width:1.5},
+      {y:row, color:C.s2, width:2.2}
+    ], {wellLine:true});
+    $('#n-m2-win').textContent = fmt(r.qWest, 1);
+    $('#n-m2-wout').textContent = fmt(-r.qEast, 1);
+    $('#n-m2-well').textContent = fmt(r.qWell, 1);
+    $('#n-m2-hwell').textContent = fmt(r.hWell, 3);
+  }
+  rateIn.addEventListener('input', draw);
+  REDRAWS.push(draw);
+  draw();
+};
+
+/* =====================================================================
+   MODULE 3 widget
+   ===================================================================== */
+INIT_WIDGETS.table = function(){
+  const rateIn = $('#rate3'), rateN = $('#rate3n');
+  const dup = [];
+  for (let c=0; c<G.NC; c++){
+    const x = c*100;  // distance from west boundary cell centre
+    dup.push(Math.sqrt(Math.max(100 - 96*x/2000, 0)));
+  }
+  function draw(){
+    const rate = clamp(+rateN.value || 0, 0, 400);
+    rateIn.value = rate; rateN.value = rate;
+    $('#v-rate3').textContent = fmt(rate,0);
+    const r = solveSteady({confined:false, east:2, qwell:-rate, weighting:'harmonic'});
+    const row = [];
+    for (let c=0; c<G.NC; c++) row.push(r.h[G.WELLR*G.NC+c]);
+    drawProfile($('#cv-m3-prof'), [
+      {y:dup, color:C.muted, dash:[4,3], width:1.5},
+      {y:row, color:C.s3, width:2.2}
+    ], {wellLine:true});
+    const delivered = Math.abs(r.qWell);
+    const wet = delivered >= rate - 0.5 || rate === 0;
+    $('#n-m3-req').textContent = fmt(rate,0);
+    $('#n-m3-del').textContent = fmt(delivered,1);
+    $('#n-m3-h').textContent = fmt(r.hWell,3);
+    const st = $('#n-m3-status'), ss = $('#n-m3-statussub');
+    if (rate === 0){ st.textContent = 'IDLE'; st.style.color = 'var(--muted)'; ss.textContent = 'no pumping'; }
+    else if (wet){ st.textContent = 'WET · OK'; st.style.color = 'var(--good-text)'; ss.textContent = 'delivering the full rate'; }
+    else { st.textContent = 'STARVED'; st.style.color = 'var(--crit)'; ss.textContent = 'cell nearly dry — well cannot make its rate'; }
+    const ch = $('#chall-m3'), cs = $('#chall-m3-stat');
+    if (wet && rate >= 275 && rate <= 284){
+      ch.classList.add('won');
+      cs.textContent = 'FOUND — ' + rate + ' m³/d. MODFLOW 6’s bisection: 282.5';
+      cpDone('table-chall');
+    }
+  }
+  rateIn.addEventListener('input', () => { rateN.value = rateIn.value; draw(); });
+  rateN.addEventListener('input', draw);
+  REDRAWS.push(draw);
+  draw();
+};
+
+/* =====================================================================
+   Transient runner shared by Modules 4 & 5
+   ===================================================================== */
+function makeTransient(mod, cfgOf, onFrame){
+  const runBtn = $('#run' + mod), playBtn = $('#play' + mod), timeIn = $('#time' + mod);
+  let plan = null, cfg = null, playing = null;
+  function stopPlay(){ if (playing){ clearInterval(playing); playing = null; playBtn.textContent = '▶'; } }
+  function showFrame(i){
+    if (!plan) return;
+    i = clamp(i, 0, plan.frames.length-1);
+    timeIn.value = i;
+    onFrame(plan, i, cfg);
+  }
+  runBtn.addEventListener('click', () => {
+    stopPlay();
+    cfg = cfgOf();
+    plan = transientPlan(cfg);
+    runBtn.disabled = true; playBtn.disabled = true; timeIn.disabled = true;
+    let step = 0;
+    (function chunk(){
+      const t0 = performance.now();
+      let done = false;
+      while (performance.now() - t0 < 40 && !done){ done = transientStep(cfg, plan); step++; }
+      runBtn.textContent = done ? 'Run 10 years' : 'Computing… ' + step + '/100';
+      if (!done) setTimeout(chunk, 0);
+      else {
+        runBtn.disabled = false; playBtn.disabled = false; timeIn.disabled = false;
+        timeIn.max = plan.frames.length-1;
+        showFrame(0);
+        playBtn.textContent = '❚❚';
+        playing = setInterval(() => {
+          const i = +timeIn.value;
+          if (i >= plan.frames.length-1){ stopPlay(); return; }
+          showFrame(i+1);
+        }, 90);
+      }
+    })();
+  });
+  playBtn.addEventListener('click', () => {
+    if (playing){ stopPlay(); return; }
+    if (!plan) return;
+    playBtn.textContent = '❚❚';
+    playing = setInterval(() => {
+      const i = +timeIn.value;
+      if (i >= plan.frames.length-1){ stopPlay(); return; }
+      showFrame(i+1);
+    }, 90);
+  });
+  timeIn.addEventListener('input', () => { stopPlay(); showFrame(+timeIn.value); });
+  REDRAWS.push(() => { if (plan) showFrame(+timeIn.value); });
+  return { get plan(){ return plan; } };
+}
+
+/* ---------------- Module 4 ---------------- */
+INIT_WIDGETS.time = function(){
+  const rateIn = $('#rate4'), syIn = $('#sy4');
+  rateIn.addEventListener('input', () => $('#v-rate4').textContent = rateIn.value);
+  syIn.addEventListener('input', () => $('#v-sy4').textContent = fmt(+syIn.value,2));
+  makeTransient('4',
+    () => ({confined:false, east:2, qwell:-(+rateIn.value), weighting:'upstream', sy:+syIn.value}),
+    (plan, i, cfg) => {
+      drawMap($('#cv-m4-map'), null, plan.frames[i], {well:true});
+      paintGradbar('#grad-m4');
+      const rate = Math.abs(cfg.qwell);
+      const s0 = plan.series[0];
+      const del = plan.series.map(s => Math.abs(s.qWell));
+      const cap = plan.series.map(s => Math.max(0, (s.qWest - s0.qWest) + (s0.qEast - s.qEast)));
+      const stor = del.map((d,j) => Math.max(0, d - cap[j]));
+      drawSeries($('#cv-m4-chart'), plan.times, [
+        {v:del, color:C.s4}, {v:stor, color:C.s2}, {v:cap, color:C.s1}
+      ], {ymin:0, ymax:Math.max(rate*1.1, 120), upto:i});
+      const day = plan.times[i];
+      $('#v-time4').textContent = i === 0 ? 'before pumping' : 'day ' + fmt(day,0);
+      $('#n-m4-day').textContent = fmt(day,0);
+      $('#n-m4-del').textContent = fmt(del[i],1);
+      $('#n-m4-stor').textContent = del[i] > 0.5 ? fmt(100*stor[i]/del[i],0) + '%' : '—';
+      $('#n-m4-h').textContent = fmt(plan.series[i].hWell,2);
+    });
+};
+
+/* ---------------- Module 5 ---------------- */
+INIT_WIDGETS.stream = function(){
+  const rateIn = $('#rate5');
+  rateIn.addEventListener('input', () => $('#v-rate5').textContent = rateIn.value);
+  makeTransient('5',
+    () => ({confined:false, east:2, qwell:-(+rateIn.value), weighting:'upstream', stream:true, sy:0.15}),
+    (plan, i, cfg) => {
+      drawMap($('#cv-m5-map'), null, plan.frames[i], {well:true, stream:true});
+      paintGradbar('#grad-m5');
+      const riv = plan.series.map(s => s.qRiv);
+      const del = plan.series.map(s => Math.abs(s.qWell));
+      let flip = null;
+      for (let j=1; j<plan.series.length; j++){ if (riv[j] > 0){ flip = plan.times[j]; break; } }
+      drawSeries($('#cv-m5-chart'), plan.times, [
+        {v:riv, color:C.s7}, {v:del, color:C.s4}
+      ], {ymin:-220, ymax:560, upto:i, flipDay:flip});
+      const day = plan.times[i];
+      $('#v-time5').textContent = i === 0 ? 'before pumping' : 'day ' + fmt(day,0);
+      $('#n-m5-flip').textContent = flip == null ? 'never' : fmt(flip,0);
+      $('#n-m5-ex').textContent = fmt(Math.abs(riv[i]),1);
+      $('#n-m5-exsub').textContent = riv[i] > 0 ? 'm³/d · stream LOSING' : 'm³/d · stream gaining';
+      $('#n-m5-del').textContent = fmt(del[i],1);
+      $('#n-m5-depl').textContent = fmt(riv[i] - riv[0],1);
+    });
+};
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+wireCheckpoints();
+renderProgress();
+let rsz = null;
+window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(repaintAll, 150); });
+setTimeout(selfTest, 60);
+})();
+</script>
+
+</body>
+</html>
