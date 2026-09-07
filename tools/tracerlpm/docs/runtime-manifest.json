@@ -1,0 +1,53 @@
+{
+  "pyodide": "314.0.6",
+  "python": "3.14.2",
+  "numpy": "2.4.6",
+  "scipy": "1.18.0",
+  "bytes": 30361289,
+  "files": [
+    {
+      "file": "pyodide.mjs",
+      "bytes": 17931,
+      "sha256": "69e3f6ccec3e14b465df60be577ca62f536251406b9a00cce019eac5252a2495",
+      "source": "https://cdn.jsdelivr.net/pyodide/v314.0.6/full/pyodide.mjs"
+    },
+    {
+      "file": "pyodide.asm.mjs",
+      "bytes": 1250344,
+      "sha256": "2ac5eba365ec12839c75c03b39b3be1dd63b798852cc460b014b52238be042f7",
+      "source": "https://cdn.jsdelivr.net/pyodide/v314.0.6/full/pyodide.asm.mjs"
+    },
+    {
+      "file": "pyodide.asm.wasm",
+      "bytes": 9598218,
+      "sha256": "3a0a00dfeaa348ac20f9ef09904233d32d33f644339662d4af368f8a2010f37a",
+      "source": "https://cdn.jsdelivr.net/pyodide/v314.0.6/full/pyodide.asm.wasm"
+    },
+    {
+      "file": "python_stdlib.zip",
+      "bytes": 2545564,
+      "sha256": "80c5be6babfe03297069703410c3c29404dcf2525d2b128746bae5536f94831f",
+      "source": "https://cdn.jsdelivr.net/pyodide/v314.0.6/full/python_stdlib.zip"
+    },
+    {
+      "file": "pyodide-lock.json",
+      "bytes": 704,
+      "sha256": "f36d64e37179ef37481cdacf99b789c161b84477289c76bd0e32c090b922d194",
+      "source": "https://cdn.jsdelivr.net/pyodide/v314.0.6/full/pyodide-lock.json",
+      "upstream_sha256": "3fdaef09e9e365c85e002737720f8d0ab8f278c1c244a2dde6a37663cf488ad4",
+      "modification": "Package catalog reduced to the NumPy and SciPy dependency closure; runtime metadata and retained package entries are unchanged."
+    },
+    {
+      "file": "numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "bytes": 2918760,
+      "sha256": "32959d4137cec8143d75016d029281df3d2e80a232896ed903c2b59e1c44ee9f",
+      "source": "https://cdn.jsdelivr.net/pyodide/v314.0.6/full/numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl"
+    },
+    {
+      "file": "scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "bytes": 14029768,
+      "sha256": "8512aee3e4b36b5a79523628d97d0d34612a366aecbb5b44a08c7ae45dd50d57",
+      "source": "https://cdn.jsdelivr.net/pyodide/v314.0.6/full/scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl"
+    }
+  ]
+}

@@ -1,0 +1,340 @@
+{
+  "runtime": {
+    "python": "3.14.2",
+    "numpy": "2.4.6",
+    "scipy": "1.18.0",
+    "edition": "Browser",
+    "pyodide": "314.0.6"
+  },
+  "source_sha256": {
+    "/app/browser_bridge.py": "cc9eabdd8eb6082c4933211665ffaeadc207e519208fcf10021af816d4a7fbeb",
+    "/app/manifest.json": "428a43daf336dad3a092a8e77679ab15baa3220e2b6d2761beeb4a6a7c186265",
+    "/app/tracerlpm/data/histories.json": "9e62db91d092cc4baefe2dadb24d9cd066c6b15bd4a7ffb10f12595a70aa2919",
+    "/app/tracerlpm/data/README.md": "882aa9e56803d3f0fe2a2541fc31be55c8fabbbeb10985daaf94fa0e3c125fd4",
+    "/app/tracerlpm/data/usgs_examples.json": "bb68c71c97857736008f9b193731941833827a102c56f61f7d91d732a9ac9275",
+    "/app/tracerlpm/engine.py": "1a1d4dca03d6ead9848552303afad78d23356466458e728129ef9d9abd8de32b",
+    "/app/tracerlpm/service.py": "f3b64d3d9c1cba0066289e5d1bc9781fda0f39c620f05e29fb61ce4664501b93",
+    "/app/tracerlpm/__init__.py": "8c84e025b4c68213349b37a9ae2f5430b47aa2e8c68254319d8a0499aef82643"
+  },
+  "cases": [
+    {
+      "name": "all_tracers_PFM",
+      "seconds": 0.010461599999999635,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "all_tracers_EMM",
+      "seconds": 0.048850400000000266,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "all_tracers_EPM",
+      "seconds": 0.04067090000000007,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "all_tracers_PEM",
+      "seconds": 0.03985899999999947,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "all_tracers_DM",
+      "seconds": 0.06289450000000034,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "all_tracers_FPEM",
+      "seconds": 0.03799449999999979,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "all_tracers_FPEM_unbounded",
+      "seconds": 0.03811569999999938,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "all_tracers_GAM",
+      "seconds": 0.043009999999999306,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "all_tracers_CUSTOM",
+      "seconds": 0.006264899999999215,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "binary_tracers_dic_and_inventory",
+      "seconds": 0.31045570000000045,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "original_example_1",
+      "seconds": 0.02371140000000014,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "original_example_2",
+      "seconds": 0.5009667,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "original_example_3",
+      "seconds": 0.3295996999999998,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "default_forward",
+      "seconds": 0.022725800000000164,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "default_fit",
+      "seconds": 3.9739076000000004,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "boundary_0_0_1950",
+      "seconds": 0.007118900000001304,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "boundary_10_0_2026",
+      "seconds": 0.0036626000000014756,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "boundary_9_0_2026",
+      "seconds": 0.002994699999999284,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "boundary_76_0_2026",
+      "seconds": 0.004331000000000131,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "boundary_77_0_2026",
+      "seconds": 0.0031155999999991765,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "boundary_0_10_2026",
+      "seconds": 0.004225899999999456,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "old_age_fit",
+      "seconds": 0.01133679999999913,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "censored_fit",
+      "seconds": 0.011455299999999625,
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "comparison_analytic",
+      "seconds": 6.867561699999999,
+      "pass": true,
+      "diffs": []
+    }
+  ],
+  "checks": [
+    {
+      "name": "reject blank value",
+      "pass": true
+    },
+    {
+      "name": "reject blank sigma",
+      "pass": true
+    },
+    {
+      "name": "reject blank date",
+      "pass": true
+    },
+    {
+      "name": "reject blank mean",
+      "pass": true
+    },
+    {
+      "name": "reject null value",
+      "pass": true
+    },
+    {
+      "name": "reject zero sigma",
+      "pass": true
+    },
+    {
+      "name": "reject negative value",
+      "pass": true
+    },
+    {
+      "name": "reject impossible date",
+      "pass": true
+    },
+    {
+      "name": "reject string false use",
+      "pass": true
+    },
+    {
+      "name": "reject string false binary",
+      "pass": true
+    },
+    {
+      "name": "reject string false fit_shape",
+      "pass": true
+    },
+    {
+      "name": "reject unsupported schema",
+      "pass": true
+    },
+    {
+      "name": "reject no included observations",
+      "pass": true
+    },
+    {
+      "name": "reject wrong history tracer",
+      "pass": true
+    },
+    {
+      "name": "reject unknown history",
+      "pass": true
+    },
+    {
+      "name": "reject blank helium rate",
+      "pass": true
+    },
+    {
+      "name": "reject blank water lag",
+      "pass": true
+    },
+    {
+      "name": "reject null project note",
+      "pass": true
+    },
+    {
+      "name": "reject null model",
+      "pass": true
+    },
+    {
+      "name": "reject null custom histories",
+      "pass": true
+    },
+    {
+      "name": "blank CSV numeric cells rejected",
+      "pass": true
+    },
+    {
+      "name": "ISO leap date and quoted CSV name",
+      "pass": true
+    },
+    {
+      "name": "history invalid duplicate years rejected",
+      "pass": true
+    },
+    {
+      "name": "age import sorting and normalization",
+      "pass": true
+    },
+    {
+      "name": "project save/load roundtrip embeds histories",
+      "pass": true,
+      "detail": {
+        "saved_bytes": 367726,
+        "html_bytes": 8186,
+        "csv_bytes": 415
+      }
+    },
+    {
+      "name": "forecast uses result snapshot after edited project",
+      "pass": true
+    },
+    {
+      "name": "temporary filename traversal confinement and cleanup",
+      "pass": true,
+      "detail": [
+        "/tmp/tmpi9fpta_w/_.._app_tracerlpm_engine.py",
+        "/tmp/tmpyj_ig3_c/_app_browser_bridge.py",
+        "/tmp/tmpx2b_hqsx/C__Windows_x.csv",
+        "/tmp/tmpbbw0fqhz/input.csv",
+        "/tmp/tmpqt1r3w64/a_.._.._x_.csv",
+        "/tmp/tmporw6480t/nested_.._.._x.csv"
+      ]
+    },
+    {
+      "name": "operation fit string false rejected",
+      "pass": true
+    },
+    {
+      "name": "observation boolean concentration rejected",
+      "pass": true
+    },
+    {
+      "name": "numeric strings preserve scientific notation and fit equivalence",
+      "pass": true,
+      "detail": {
+        "fitted_mean": 25.499999999999996,
+        "fitted_shape": 0.10000000000000002,
+        "objective": 2.0195106450128912e-24
+      }
+    },
+    {
+      "name": "save canonicalizes complete numeric typing strings",
+      "pass": true
+    },
+    {
+      "name": "incomplete numeric typing remains invalid on run and is not saved as zero",
+      "pass": true
+    },
+    {
+      "name": "custom atom CDF has exact left/right jumps at non-grid ages",
+      "pass": true,
+      "detail": {
+        "atoms": [
+          {
+            "age": 0,
+            "weight": 0.1
+          },
+          {
+            "age": 7.123,
+            "weight": 0.2
+          },
+          {
+            "age": 55.456,
+            "weight": 0.3
+          },
+          {
+            "age": 100,
+            "weight": 0.4
+          }
+        ],
+        "plot_points": 707,
+        "original_grid_points": 701
+      }
+    }
+  ],
+  "failures": []
+}

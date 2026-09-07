@@ -1,0 +1,227 @@
+{
+  "forward_predictions": {
+    "count": 191,
+    "max_absolute": {
+      "error": 1.8189894035458565e-12,
+      "label": "original_example_3/3H",
+      "native": 1425.2086745310482,
+      "browser": 1425.2086745310464
+    },
+    "max_relative_nonzero": {
+      "error": 7.594335430668698e-15,
+      "label": "default_forward/CFC-11",
+      "native": 224.54928168403077,
+      "browser": 224.54928168403248
+    }
+  },
+  "forward_standardized_residuals": {
+    "count": 191,
+    "max_absolute": {
+      "error": 2.8421709430404007e-13,
+      "label": "default_forward/CFC-11",
+      "native": 0.1500002806717949,
+      "browser": 0.15000028067207913
+    },
+    "max_relative_nonzero": {
+      "error": 5.3988544645810796e-8,
+      "label": "original_example_1/SF6",
+      "native": 4.1128096039955153e-7,
+      "browser": 4.11280982604012e-7
+    }
+  },
+  "forward_age_statistics": {
+    "count": 100,
+    "max_absolute": {
+      "error": 5.684341886080801e-13,
+      "label": "binary_tracers_dic_and_inventory/q95",
+      "native": 517.203139002336,
+      "browser": 517.2031390023366
+    },
+    "max_relative_nonzero": {
+      "error": 1.0990540190930912e-15,
+      "label": "binary_tracers_dic_and_inventory/q95",
+      "native": 517.203139002336,
+      "browser": 517.2031390023366
+    }
+  },
+  "forward_objectives": {
+    "count": 20,
+    "max_absolute": {
+      "error": 6.821210263296962e-12,
+      "label": "all_tracers_EMM/chi2",
+      "native": 2574.886407102078,
+      "browser": 2574.886407102071
+    },
+    "max_relative_nonzero": {
+      "error": 1.2922313573963397e-12,
+      "label": "original_example_2/chi2",
+      "native": 0.010578307756158742,
+      "browser": 0.010578307756145072
+    }
+  },
+  "forward_water_fractions": {
+    "count": 40,
+    "max_absolute": {
+      "error": 1.3877787807814457e-17,
+      "label": "original_example_1/young_fraction",
+      "native": 0.07170831469844369,
+      "browser": 0.0717083146984437
+    },
+    "max_relative_nonzero": {
+      "error": 1.9353108305745264e-16,
+      "label": "original_example_1/young_fraction",
+      "native": 0.07170831469844369,
+      "browser": 0.0717083146984437
+    }
+  },
+  "forecast_normalized": {
+    "count": 805,
+    "max_absolute": {
+      "error": 2.8990143619012088e-12,
+      "label": "SF6 / starting value/157",
+      "native": 192.0442960509545,
+      "browser": 192.0442960509574
+    },
+    "max_relative_nonzero": {
+      "error": 1.5221789099657076e-14,
+      "label": "3H / starting value/141",
+      "native": 62.08349310149246,
+      "browser": 62.08349310149151
+    }
+  },
+  "forecast_absolute": {
+    "count": 644,
+    "max_absolute": {
+      "error": 4.547473508864641e-12,
+      "label": "CFC-12 / starting value/77",
+      "native": 509.868498609216,
+      "browser": 509.8684986092205
+    },
+    "max_relative_nonzero": {
+      "error": 1.575474091736788e-14,
+      "label": "SF6 / starting value/95",
+      "native": 9.471052256094477,
+      "browser": 9.471052256094328
+    }
+  },
+  "fitted_predictions": {
+    "count": 9,
+    "max_absolute": {
+      "error": 1.6484591469634324e-11,
+      "label": "default_fit/CFC-12",
+      "native": 442.9758854512083,
+      "browser": 442.97588545122477
+    },
+    "max_relative_nonzero": {
+      "error": 8.299676844849326e-14,
+      "label": "default_fit/SF6",
+      "native": 2.8626141922287904,
+      "browser": 2.862614192229028
+    }
+  },
+  "fitted_standardized_residuals": {
+    "count": 9,
+    "max_absolute": {
+      "error": 1.5839274336570952e-12,
+      "label": "default_fit/SF6",
+      "native": 0.16082794819193502,
+      "browser": 0.16082794819351895
+    },
+    "max_relative_nonzero": {
+      "error": 0.003129890453834116,
+      "label": "comparison_analytic/39Ar",
+      "native": 1.816147232602816e-11,
+      "browser": 1.821831574488897e-11
+    }
+  },
+  "fitted_age_statistics": {
+    "count": 20,
+    "max_absolute": {
+      "error": 2.9487523534044158e-12,
+      "label": "default_fit/q95",
+      "native": 50.22928493181544,
+      "browser": 50.229284931812494
+    },
+    "max_relative_nonzero": {
+      "error": 5.87058397786719e-14,
+      "label": "default_fit/q95",
+      "native": 50.22928493181544,
+      "browser": 50.229284931812494
+    }
+  },
+  "fitted_objectives": {
+    "count": 4,
+    "max_absolute": {
+      "error": 6.084022174945858e-14,
+      "label": "default_fit/chi2",
+      "native": 0.17101459634321403,
+      "browser": 0.1710145963431532
+    },
+    "max_relative_nonzero": {
+      "error": 0.0011134661350450086,
+      "label": "comparison_analytic/chi2",
+      "native": 5.563400096817913e-20,
+      "browser": 5.5572054392144e-20
+    }
+  },
+  "fitted_water_fractions": {
+    "count": 8,
+    "max_absolute": {
+      "error": 4.6629367034256575e-15,
+      "label": "default_fit/pre1950_fraction",
+      "native": 0.015440821992136144,
+      "browser": 0.015440821992131482
+    },
+    "max_relative_nonzero": {
+      "error": 3.019875953365983e-13,
+      "label": "default_fit/pre1950_fraction",
+      "native": 0.015440821992136144,
+      "browser": 0.015440821992131482
+    }
+  },
+  "comparison_mean": {
+    "count": 5,
+    "max_absolute": {
+      "error": 3.268496584496461e-11,
+      "label": "DM",
+      "native": 100.00026653967147,
+      "browser": 100.00026653963879
+    },
+    "max_relative_nonzero": {
+      "error": 3.268487872679623e-13,
+      "label": "DM",
+      "native": 100.00026653967147,
+      "browser": 100.00026653963879
+    }
+  },
+  "comparison_objective": {
+    "count": 5,
+    "max_absolute": {
+      "error": 7.815970093361102e-14,
+      "label": "PFM",
+      "native": 12.108125489756198,
+      "browser": 12.108125489756276
+    },
+    "max_relative_nonzero": {
+      "error": 0.00008066972952847957,
+      "label": "EMM",
+      "native": 5.536629200257357e-20,
+      "browser": 5.536182561877273e-20
+    }
+  },
+  "comparison_aic": {
+    "count": 5,
+    "max_absolute": {
+      "error": 7.815970093361102e-14,
+      "label": "PFM",
+      "native": 14.108125489756198,
+      "browser": 14.108125489756276
+    },
+    "max_relative_nonzero": {
+      "error": 5.540048604640084e-15,
+      "label": "PFM",
+      "native": 14.108125489756198,
+      "browser": 14.108125489756276
+    }
+  }
+}
