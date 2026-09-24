@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rainproof Street</title>
+<meta name="description" content="A block-design game about storing rain in green cities: Amsterdam and Atlanta.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  --paper:#EDF1EF; --surface:#FAFBFA; --surface-2:#E3E9E6; --ink:#15242A; --ink-2:#4A5B60; --line:#C3CECB;
+  --water:#1C6788; --water-2:#8EC1D8; --salt:#C23B53; --green:#4C7731; --clay:#9C4F2A; --sand:#B8862E;
+  --roof:#A5553A; --asphalt:#3E4649; --walk:#C7CBC4; --plaza:#D9C592; --lawn:#7FA35A; --heat:#E4572E;
+  --ok:#2E7D4F; --warn:#B7791F; --bad:#B8322F; --focus:#1C6788; --star:#C98A12;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif; --f-body:"Source Serif 4",Georgia,"Times New Roman",serif; --f-mono:"IBM Plex Mono",ui-monospace,"Courier New",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D171B; --surface:#14232A; --surface-2:#1B2E35; --ink:#E2EBE9; --ink-2:#A6B8B6; --line:#2C4148;
+    --water:#5CAACD; --water-2:#2B5C72; --salt:#E76F86; --green:#8FBC5E; --clay:#D07B52; --sand:#D9B25E;
+    --roof:#B8664A; --asphalt:#2A3134; --walk:#6F7772; --plaza:#9C8A5A; --lawn:#5E8540; --heat:#F07A52;
+    --ok:#6CC08F; --warn:#E0A94A; --bad:#EE7B73; --focus:#8CCBE6; --star:#E8B04A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D171B; --surface:#14232A; --surface-2:#1B2E35; --ink:#E2EBE9; --ink-2:#A6B8B6; --line:#2C4148;
+  --water:#5CAACD; --water-2:#2B5C72; --salt:#E76F86; --green:#8FBC5E; --clay:#D07B52; --sand:#D9B25E;
+  --roof:#B8664A; --asphalt:#2A3134; --walk:#6F7772; --plaza:#9C8A5A; --lawn:#5E8540; --heat:#F07A52;
+  --ok:#6CC08F; --warn:#E0A94A; --bad:#EE7B73; --focus:#8CCBE6; --star:#E8B04A;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--paper)}
+body{margin:0;color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:18px;padding-block:24px 60px}
+h1,h2,h3,.btn,.tool,.lbl,.meter,.card h3,.tag{font-family:var(--f-display)}
+h1{font-stretch:115%;font-weight:800;font-size:clamp(2rem,5vw,3.2rem);line-height:1;margin:0 0 .3em;letter-spacing:-.01em}
+h2{font-stretch:108%;font-weight:750;font-size:1.35rem;margin:0 0 .5em}
+p{margin:0 0 .8em;max-width:70ch}
+.muted{color:var(--ink-2)} .small{font-size:.86rem}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+button{font:inherit}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.intro{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;align-items:end;margin-bottom:18px}
+@media (max-width:820px){.intro{grid-template-columns:1fr}}
+.cityswitch{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-size:.85rem;font-weight:650;border:1.5px solid var(--ink);background:var(--surface);color:var(--ink);padding:7px 12px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.btn.primary{background:var(--water);border-color:var(--water);color:#fff;font-size:1rem;padding:10px 18px}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.steps{display:flex;gap:18px;flex-wrap:wrap;font-size:.9rem;color:var(--ink-2);margin:6px 0 14px}
+.steps b{font-family:var(--f-display);color:var(--ink)}
+
+.game{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:900px){.game{grid-template-columns:1fr}}
+.board{background:var(--surface);border:1.5px solid var(--ink);padding:14px}
+.meters{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.meter{font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:8px}
+.bar{width:140px;height:10px;background:var(--surface-2);border:1px solid var(--line);position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--water);display:block}
+.bar.low i{background:var(--bad)}
+.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;position:relative}
+.tile{aspect-ratio:1;border:0;padding:0;position:relative;cursor:pointer;overflow:hidden;min-width:0}
+.tile[data-b="R"]{background:var(--roof)} .tile[data-b="W"]{background:var(--walk)} .tile[data-b="S"]{background:var(--asphalt)}
+.tile[data-b="P"]{background:var(--plaza)} .tile[data-b="G"]{background:var(--lawn)}
+.tile[data-b="S"]::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px dashed rgba(255,255,255,.28)}
+.tile[data-b="R"]::before{content:"";position:absolute;inset:18% 10% auto 10%;height:0;border-top:2px solid rgba(0,0,0,.18)}
+.tile svg{position:absolute;inset:8%;width:84%;height:84%}
+.tile .wet{position:absolute;inset:0;background:var(--water);opacity:0;transition:opacity .5s;pointer-events:none}
+.tile .hot{position:absolute;inset:0;background:var(--heat);opacity:0;transition:opacity .5s;pointer-events:none}
+.tile .fill{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--water);opacity:.75;transition:height .6s;pointer-events:none}
+.tile:hover{outline:2px solid var(--ink);outline-offset:-2px;z-index:1}
+.tile.bad-drop{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.rain{position:absolute;inset:0;pointer-events:none;opacity:0;background:repeating-linear-gradient(105deg,transparent 0 9px,rgba(28,103,136,.5) 9px 10px);background-size:40px 40px;transition:opacity .3s}
+.rain.on{opacity:1;animation:fall .5s linear infinite}
+@keyframes fall{from{background-position:0 0}to{background-position:-10px 40px}}
+.rowlabels{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:.78rem;font-family:var(--f-display);color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;display:inline-block;border:1px solid var(--line)}
+.msg{min-height:1.5em;margin-top:8px;font-size:.9rem;font-family:var(--f-display);font-weight:600}
+.msg.err{color:var(--bad)} .msg.ok{color:var(--ok)}
+.maplabel{font-family:var(--f-display);font-size:.82rem;font-weight:700;margin:0 0 8px;color:var(--ink-2);letter-spacing:.06em;text-transform:uppercase}
+
+.tools{background:var(--surface);border:1.5px solid var(--ink);padding:12px}
+.tools h2{font-size:1rem;margin-bottom:8px}
+.tool{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);padding:6px 8px;margin-bottom:6px;cursor:pointer;color:var(--ink)}
+.tool:hover{border-color:var(--ink-2)}
+.tool[aria-pressed="true"]{border:2px solid var(--water);background:var(--surface-2)}
+.tool .ic{width:34px;height:34px;display:block}
+.tool .nm{font-weight:700;font-size:.9rem;line-height:1.15}
+.tool .ds{display:block;font-family:var(--f-body);font-weight:400;font-size:.78rem;color:var(--ink-2);line-height:1.3}
+.tool .cs{font-family:var(--f-mono);font-size:.85rem;font-weight:600;white-space:nowrap}
+.tag{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+
+.run{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:22px 0 12px}
+.score{font-family:var(--f-display);font-weight:750;font-size:1.25rem}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:980px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.cards{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:6px}
+.card.done{border-color:var(--ink)}
+.card h3{font-size:1rem;margin:0;line-height:1.2}
+.card .sub{font-size:.8rem;color:var(--ink-2);line-height:1.3}
+.stars{font-size:1.35rem;letter-spacing:2px;color:var(--star);font-family:var(--f-mono)}
+.stars .off{color:var(--line)}
+.card .res{font-size:.88rem;line-height:1.4}
+.card .res b{font-family:var(--f-mono);font-weight:600}
+.card .btn{align-self:flex-start;font-size:.75rem;padding:4px 8px;margin-top:auto}
+.debrief{margin-top:16px;background:var(--surface-2);padding:14px 16px}
+.debrief ul{margin:.3em 0 0;padding-left:1.1em}
+.debrief li{margin-bottom:.4em;max-width:80ch}
+details{margin-top:22px;background:var(--surface);border:1px solid var(--line);padding:10px 14px}
+summary{font-family:var(--f-display);font-weight:700;cursor:pointer}
+table.hood{border-collapse:collapse;width:100%;font-size:.86rem;min-width:620px}
+table.hood td,table.hood th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.hood th{font-family:var(--f-display);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.scroll-x{overflow-x:auto}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="intro">
+    <div>
+      <h1>Rainproof Street</h1>
+      <p>You manage one city block: 48 tiles of 10 × 10 m. Rebuild it with a limited budget, then run a year of weather. Keep the streets dry, the sewer from overflowing, the summer bearable and, in Amsterdam, the wooden piles under the houses wet.</p>
+    </div>
+    <div>
+      <p class="tag" id="cityLbl">Choose a city</p>
+      <div class="cityswitch" role="group" aria-labelledby="cityLbl">
+        <button class="btn" type="button" data-city="ams" aria-pressed="true">Amsterdam street</button>
+        <button class="btn" type="button" data-city="atl" aria-pressed="false">Atlanta street</button>
+      </div>
+      <p class="small muted" id="cityNote" style="margin-top:8px"></p>
+    </div>
+  </div>
+  <div class="steps"><span><b>1.</b> Pick a measure on the right.</span><span><b>2.</b> Click tiles to build (click again to remove).</span><span><b>3.</b> Run the year and read the report.</span></div>
+
+  <div class="game">
+    <section class="board" aria-label="City block">
+      <div class="meters">
+        <span class="meter">Budget <span class="bar" id="budgetBar"><i></i></span> <span class="mono" id="budgetTxt"></span></span>
+        <span class="meter">Walkable sidewalk <span class="mono" id="walkTxt"></span></span>
+        <button class="btn" type="button" id="clearBtn" style="margin-left:auto;font-size:.75rem;padding:4px 8px">Clear block</button>
+      </div>
+      <p class="maplabel" id="mapLabel">Your block · top view</p>
+      <div class="grid" id="grid"><div class="rain" id="rain"></div></div>
+      <div class="legend" id="legend"></div>
+      <div class="msg" id="msg" aria-live="polite"></div>
+    </section>
+    <aside class="tools" aria-label="Measures">
+      <h2>Measures</h2>
+      <div id="toolList" role="group" aria-label="Choose a measure"></div>
+    </aside>
+  </div>
+
+  <div class="run">
+    <button class="btn primary" type="button" id="runBtn">Run the year</button>
+    <span class="score" id="scoreTxt" aria-live="polite"></span>
+  </div>
+  <div class="cards" id="cards"></div>
+  <div class="debrief" id="debrief" hidden></div>
+
+  <details>
+    <summary>Under the hood: every number in this game and where it comes from</summary>
+    <div class="scroll-x" style="margin-top:10px">
+      <table class="hood">
+        <thead><tr><th>Item</th><th>Value in the game</th><th>Basis</th></tr></thead>
+        <tbody>
+          <tr><td>Blue-green roof</td><td>stores 60 mm</td><td>Average capacity of Amsterdam's "polder roof" (Waternet Rainproof field trip, 2023)</td></tr>
+          <tr><td>Green roof</td><td>stores 30 mm</td><td>Green-roof value of 30 L/m² in Amsterdam's stormwater ordinance (2021)</td></tr>
+          <tr><td>Rain barrels</td><td>200 L per 100 m² roof = 2 mm</td><td>Typical garden barrel size (assumption)</td></tr>
+          <tr><td>Permeable pavers</td><td>soak up 30 mm/h</td><td>Waternet Rainproof field trip</td></tr>
+          <tr><td>Lawn or depaved garden</td><td>soaks up 20 mm/h</td><td>Waternet Rainproof field trip</td></tr>
+          <tr><td>Green strip</td><td>35 cm deep + 20 mm/h; takes runoff</td><td>Water-retaining green strip, Waternet Rainproof field trip</td></tr>
+          <tr><td>Rain garden (wadi)</td><td>35 cm deep + 200 mm/h; takes runoff</td><td>Harkstraat wadi, Waternet Rainproof field trip</td></tr>
+          <tr><td>Infiltration crates</td><td>300 mm of storage under the tile; takes runoff; soaks away later</td><td>Assumption (about 0.3 m of crates), after Amsterdam's crates under streets and tram tracks</td></tr>
+          <tr><td>Water square</td><td>300 mm basin; takes runoff; drains to the sewer after the storm</td><td>Assumption</td></tr>
+          <tr><td>Street tree</td><td>tree pit holds 30 mm</td><td>Assumption</td></tr>
+          <tr><td>Runoff routing</td><td>runoff flows to the nearest measure that takes runoff, up to 2 tiles away</td><td>Game rule</td></tr>
+          <tr><td>Amsterdam sewer</td><td>accepts 20 mm/h from paved area; stores 7 mm and pumps 0.7 mm/h to the treatment plant; the rest of what it accepts overflows to the canal</td><td>Dutch bui 08 design storm (~20 mm, ~2-yr); RIONED reference combined system</td></tr>
+          <tr><td>Atlanta storm drains</td><td>separate system to a creek; accepts 54.4 mm/h</td><td>Georgia Stormwater Management Manual: pipes sized for 10- to 25-year storms; NOAA Atlas 14 10-yr hour for downtown Atlanta = 2.14 in</td></tr>
+          <tr><td>Street flooding</td><td>water the pipes cannot take collects in low spots (800 m², a quarter of streets and sidewalks)</td><td>Game rule. Up to 5 cm: puddles; 5–15 cm: flooded street; over 15 cm: water over doorsteps</td></tr>
+          <tr><td>Groundwater after a storm (Amsterdam)</td><td>starts at NAP −0.45 m; rises by infiltrated volume ÷ (0.15 × 4,800 m²); crawl spaces flood above NAP −0.10 m</td><td>Starting level from monitoring well F06157 (Lekstraat); storage coefficient and crawl-space level are illustrative</td></tr>
+          <tr><td>Dry summer (Amsterdam)</td><td>groundwater falls 0.30 m; each infiltrating measure adds back 0.03 m; each tree takes 0.02 m. Pile tops sit at NAP −0.50 to −0.80 m</td><td>Pile-top levels from Waternet (Lekstraat); the summer drop matches the well's dry-spell readings (≈ −0.70 m); the per-measure effects are illustrative</td></tr>
+          <tr><td>Heat points</td><td>tree 3; green or blue-green roof 2; green strip or rain garden 2; lawn or garden 1.5; water square 1; pavers 0.5</td><td>Illustrative ranking: shade plus evaporation beats evaporation alone</td></tr>
+          <tr><td>Stream health (Atlanta)</td><td>share of rain leaving the block as runoff: ≤10% like natural cover</td><td>U.S. EPA: about 10% runoff under natural cover versus 55% at 75–100% impervious</td></tr>
+          <tr><td>Storms</td><td>Amsterdam 20, 40, 60 mm in 1 h; Atlanta 25.4, 38.6, 82.6 mm in 1 h</td><td>bui 08; 28 July 2014 local peak hour; Dutch stress-test 1-in-100 hour; Atlanta first-inch rule; NOAA Atlas 14 2-yr and 100-yr hours</td></tr>
+          <tr><td>Costs</td><td>1 to 6 coins</td><td>Relative and illustrative, not real prices</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted" style="margin-top:10px">This is a teaching model. It balances water volumes exactly (every millimetre ends up soaked in, stored, in the pipes, or on the street), but the routing, groundwater and heat rules are deliberately simple.</p>
+  </details>
+</main>
+
+<script>
+/* Rainproof Street: water-balance engine (units: mm, m, m3, h) */
+const TILE = 100;            // m2 per tile (10 m x 10 m)
+const ROWS = 6, COLS = 8;
+const SY = 0.15;             // effective storage coefficient (drainable porosity) for the groundwater rise (illustrative)
+const LOWSPOT = 800;         // m2 where street water collects (25% of streets and sidewalks)
+
+const M = {
+  barrel:     {name:"Rain barrels",       on:"R",   cost:1, keep:2,  cool:0,   fate:"held"},
+  greenroof:  {name:"Green roof",         on:"R",   cost:3, keep:30, cool:2,   fate:"held"},
+  bluegreen:  {name:"Blue-green roof",    on:"R",   cost:5, keep:60, cool:2,   fate:"held"},
+  pavers:     {name:"Permeable pavers",   on:"WSP", cost:3, inf:30,  cool:0.5, fate:"inf", recharge:true},
+  depave:     {name:"Depave to garden",   on:"WP",  cost:2, inf:20,  cool:1.5, fate:"inf", recharge:true, unwalk:true},
+  tree:       {name:"Street tree",        on:"W",   cost:2, keep:30, cool:3,   fate:"held", thirsty:true},
+  strip:      {name:"Green strip",        on:"WGP", cost:3, recv:true, depth:350, inf:20,  cool:2, fate:"inf", recharge:true, unwalk:true},
+  raingarden: {name:"Rain garden",        on:"WGP", cost:4, recv:true, depth:350, inf:200, cool:2, fate:"inf", recharge:true, unwalk:true},
+  crates:     {name:"Infiltration crates",on:"SP",  cost:6, recv:true, depth:300, inf:0,   cool:0, fate:"inf", recharge:true},
+  square:     {name:"Water square",       on:"P",   cost:5, recv:true, depth:300, inf:0,   cool:1, fate:"held"}
+};
+
+const CITIES = {
+  ams: {
+    name:"Amsterdam", layout:["RRRRRRRR","WWWWWWWW","SSSSSSSS","SSSSSSSS","WWWWWWWW","RRRPPGGR"],
+    pipe:20, combined:true, store:7, pump:0.7, piles:true, gw0:-0.45, heat:[8,15,24], budget:50,
+    events:[
+      {kind:"cso",    P:20, D:1},
+      {kind:"flood",  P:40, D:1},
+      {kind:"flood",  P:60, D:1},
+      {kind:"summer"}
+    ]
+  },
+  atl: {
+    name:"Atlanta", layout:["RGRGRGRG","WWWWWWWW","SSSSSSSS","SSSSSSSS","WWWWWWWW","PPPPRRRR"],
+    pipe:54.4, combined:false, piles:false, heat:[12,20,30], budget:50,
+    events:[
+      {kind:"onsite", P:25.4, D:1},
+      {kind:"stream", P:38.6, D:1},
+      {kind:"flood",  P:82.6, D:1},
+      {kind:"heat"}
+    ]
+  }
+};
+
+function makeGrid(cityKey){
+  const L = CITIES[cityKey].layout, g = [];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) g.push({base:L[r][c], m:null});
+  return g;
+}
+function pavedArea(cityKey){
+  return CITIES[cityKey].layout.join("").split("").filter(b=>b!=="G").length*TILE;
+}
+
+function simulate(grid, cityKey, P, D){
+  const city = CITIES[cityKey];
+  const n = grid.length, gen = new Array(n).fill(0), spare = new Array(n).fill(0), fate = new Array(n).fill(null);
+  let inf=0, held=0;
+  const v = mm => mm*TILE/1000;
+  grid.forEach((t,i)=>{
+    const m = t.m ? M[t.m] : null;
+    if(m && m.recv){
+      const cap = m.depth + m.inf*D, own = Math.min(P, cap);
+      if(m.fate==="inf") inf += v(own); else held += v(own);
+      gen[i] = v(P-own); spare[i] = v(cap-own); fate[i] = m.fate;
+    } else if(m && m.keep){
+      const k = Math.min(P, m.keep); held += v(k); gen[i] = v(P-k);
+    } else if(m && m.inf){
+      const k = Math.min(P, m.inf*D); inf += v(k); gen[i] = v(P-k);
+    } else if(t.base==="G"){
+      const k = Math.min(P, 20*D); inf += v(k); gen[i] = v(P-k);
+    } else {
+      gen[i] = v(P);
+    }
+  });
+  // route runoff to receivers within 2 tiles, nearest first
+  const inflow = new Array(n).fill(0);
+  for(let i=0;i<n;i++){
+    if(gen[i]<=0) continue;
+    const r0=Math.floor(i/COLS), c0=i%COLS, cand=[];
+    for(let j=0;j<n;j++){
+      if(spare[j]<=0 || j===i) continue;
+      const d=Math.max(Math.abs(Math.floor(j/COLS)-r0), Math.abs(j%COLS-c0));
+      if(d<=2) cand.push([d,j]);
+    }
+    cand.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+    for(const [,j] of cand){
+      if(gen[i]<=0) break;
+      const take=Math.min(gen[i], spare[j]);
+      gen[i]-=take; spare[j]-=take; inflow[j]+=take;
+      if(fate[j]==="inf") inf+=take; else held+=take;
+    }
+  }
+  const rem = gen.reduce((a,b)=>a+b,0);
+  const Ap = pavedArea(cityKey);
+  const pipeCap = Ap*city.pipe*D/1000;
+  const toSewer = Math.min(rem, pipeCap), flood = rem - toSewer;
+  let toPlant = toSewer, cso = 0;
+  if(city.combined){ toPlant = Math.min(toSewer, Ap*(city.store + city.pump*D)/1000); cso = toSewer - toPlant; }
+  const total = v(P)*n;
+  const out = {P, total, inf, held, toSewer, toPlant, cso, flood,
+    floodCm: flood/LOWSPOT*100,
+    onsite: (inf+held)/total, runoffFrac: (toSewer+flood)/total, inflow};
+  if(city.piles) out.gwPeak = city.gw0 + inf/(SY*n*TILE);
+  return out;
+}
+
+function summer(grid, cityKey){
+  const city=CITIES[cityKey];
+  let cool=0, rech=0, trees=0;
+  grid.forEach(t=>{ const m=t.m?M[t.m]:null; if(m){ cool+=m.cool; if(m.recharge) rech++; if(m.thirsty) trees++; } else if(t.base==="G") cool+=1.5; });
+  const res={cool, rech, trees};
+  if(city.piles){ res.gw = Math.max(-1.2, Math.min(-0.25, city.gw0 - 0.30 + 0.03*rech - 0.02*trees)); }
+  return res;
+}
+
+function starsFor(kind, r, cityKey){
+  const city=CITIES[cityKey];
+  if(kind==="cso") return r.cso<=0.5?3:r.cso<=15?2:r.cso<=30?1:0;
+  if(kind==="flood"){ let s = r.floodCm<=1?3:r.floodCm<=5?2:r.floodCm<=15?1:0; if(city.piles && r.gwPeak>-0.10) s=Math.max(0,s-1); return s; }
+  if(kind==="onsite") return r.onsite>=0.995?3:r.onsite>=0.75?2:r.onsite>=0.5?1:0;
+  if(kind==="stream") return r.runoffFrac<=0.10?3:r.runoffFrac<=0.30?2:r.runoffFrac<=0.55?1:0;
+  if(kind==="heat"){ const h=city.heat; return r.cool>=h[2]?3:r.cool>=h[1]?2:r.cool>=h[0]?1:0; }
+  if(kind==="gw") return r.gw>=-0.50?3:r.gw>=-0.65?2:r.gw>=-0.80?1:0;
+  return 0;
+}
+
+
+(function(){
+"use strict";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const fmt=(v,d=0)=>Number(v).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const nap=v=>"NAP "+(v>=0?"+":"−")+fmt(Math.abs(v),2)+" m";
+const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const wait = ms => new Promise(r=>setTimeout(r, reduce?0:ms));
+
+const ICON = {
+  barrel:'<rect x="13" y="8" width="14" height="24" rx="3" fill="#2F5E3A"/><rect x="13" y="13" width="14" height="2" fill="#1B3822"/><rect x="13" y="25" width="14" height="2" fill="#1B3822"/><rect x="19" y="4" width="2" height="5" fill="#444"/>',
+  greenroof:'<rect x="2" y="2" width="36" height="36" fill="#6E9E48"/><path d="M7 27l3-7 3 7M17 27l3-8 3 8M27 27l3-7 3 7" stroke="#2F5E1F" stroke-width="2" fill="none"/>',
+  bluegreen:'<rect x="2" y="2" width="36" height="20" fill="#6E9E48"/><path d="M7 17l3-6 3 6M17 17l3-7 3 7M27 17l3-6 3 6" stroke="#2F5E1F" stroke-width="2" fill="none"/><rect x="2" y="22" width="36" height="16" fill="#2F7FA6"/><path d="M5 30q4-3 8 0t8 0t8 0t8 0" stroke="#CDEAF5" stroke-width="1.6" fill="none"/>',
+  pavers:'<rect x="2" y="2" width="36" height="36" fill="#9AA3A0"/><g fill="#C9CEC8"><rect x="4" y="4" width="14" height="7"/><rect x="21" y="4" width="15" height="7"/><rect x="4" y="14" width="7" height="7"/><rect x="14" y="14" width="14" height="7"/><rect x="31" y="14" width="5" height="7"/><rect x="4" y="24" width="14" height="7"/><rect x="21" y="24" width="15" height="7"/></g><g fill="#2F7FA6"><circle cx="19.5" cy="12.5" r="1.3"/><circle cx="12.5" cy="22.5" r="1.3"/><circle cx="29.5" cy="22.5" r="1.3"/><circle cx="19.5" cy="32.5" r="1.3"/></g>',
+  depave:'<rect x="2" y="2" width="36" height="36" fill="#7FA35A"/><g fill="#F2D35B"><circle cx="11" cy="12" r="2.5"/><circle cx="28" cy="18" r="2.5"/><circle cx="16" cy="29" r="2.5"/></g><g fill="#D8657A"><circle cx="24" cy="9" r="2"/><circle cx="31" cy="30" r="2"/></g>',
+  tree:'<circle cx="20" cy="20" r="15" fill="#3F7A2E"/><circle cx="15" cy="16" r="6" fill="#5C9A43"/><circle cx="25" cy="23" r="5" fill="#2F6322"/>',
+  strip:'<rect x="2" y="2" width="36" height="36" fill="#6E9E48"/><rect x="2" y="16" width="36" height="8" fill="#2F7FA6"/><path d="M4 20h32" stroke="#CDEAF5" stroke-width="1.2" stroke-dasharray="3 3"/>',
+  raingarden:'<rect x="2" y="2" width="36" height="36" fill="#6E9E48"/><ellipse cx="20" cy="21" rx="14" ry="11" fill="#2F7FA6"/><ellipse cx="20" cy="21" rx="9" ry="6" fill="#4F9CC0"/><path d="M8 9l2-5 2 5M28 36l2-5 2 5" stroke="#2F5E1F" stroke-width="2" fill="none"/>',
+  crates:'<rect x="2" y="2" width="36" height="36" fill="none" stroke="#7FC3E2" stroke-width="2" stroke-dasharray="4 3"/><g fill="none" stroke="#7FC3E2" stroke-width="1.5"><rect x="8" y="8" width="11" height="11"/><rect x="21" y="8" width="11" height="11"/><rect x="8" y="21" width="11" height="11"/><rect x="21" y="21" width="11" height="11"/></g>',
+  square:'<rect x="2" y="2" width="36" height="36" fill="#C9B47E"/><rect x="7" y="7" width="26" height="26" fill="#A89464"/><rect x="11" y="11" width="18" height="18" fill="#2F7FA6"/><path d="M13 20q3.5-3 7 0t7 0" stroke="#CDEAF5" stroke-width="1.5" fill="none"/>',
+  remove:'<path d="M10 10l20 20M30 10L10 30" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>'
+};
+const DESC = {
+  barrel:"Stores 2 mm per roof tile. Cheap and small.",
+  greenroof:"Stores 30 mm on the roof. Cools.",
+  bluegreen:"Stores 60 mm in crates under the plants. Cools.",
+  pavers:"Street or sidewalk soaks up 30 mm/h. Recharges groundwater.",
+  depave:"Sidewalk or plaza becomes garden: soaks 20 mm/h. Cools.",
+  tree:"Shade and evaporation cool best. Drinks groundwater in summer.",
+  strip:"Sunken 35 cm, soaks 20 mm/h. Takes runoff from 2 tiles around.",
+  raingarden:"Sunken 35 cm, soaks 200 mm/h. Takes runoff from 2 tiles around.",
+  crates:"300 mm of storage under the street. Takes runoff. Soaks away later.",
+  square:"Plaza that floods on purpose: 300 mm basin. Takes runoff."
+};
+const BASE = {R:"Roof", W:"Sidewalk", S:"Street", P:"Plaza", G:"Lawn"};
+const ONNAME = {R:"roofs", W:"sidewalks", S:"streets", P:"plazas and parking", G:"lawns"};
+const ORDER = ["barrel","greenroof","bluegreen","pavers","depave","tree","strip","raingarden","crates","square"];
+const WALKMAX = 4;
+const CITYNOTE = {
+  ams:"A street modelled on the Lekstraat in Amsterdam's Rivierenbuurt: brick houses on wooden piles and a shallow water table. The game gives it a combined sewer, as in many older Amsterdam districts, so heavy rain can overflow into the canal.",
+  atl:"An in-town Atlanta street with yards and a parking lot. Storm drains are separate and empty into a creek; the water table is deep, so there are no pile foundations to protect."
+};
+const EVTXT = {
+  ams:[
+    {t:"Ordinary downpour", s:"20 mm in 1 hour · about once every 2 years, the Dutch sewer test storm"},
+    {t:"Cloudburst of 28 July 2014", s:"40 mm in 1 hour · the peak hour in parts of Amsterdam that morning"},
+    {t:"Rainproof test", s:"60 mm in 1 hour · about a 1-in-100-year hour in the Netherlands"},
+    {t:"Dry, hot summer", s:"A long drought with heat waves, like 2026"}
+  ],
+  atl:[
+    {t:"Atlanta's first inch", s:"25.4 mm (1.0 in) in 1 hour · the rain Atlanta asks new sites to manage on site"},
+    {t:"2-year storm", s:"38.6 mm (1.52 in) in 1 hour · NOAA Atlas 14, downtown Atlanta"},
+    {t:"100-year storm", s:"82.6 mm (3.25 in) in 1 hour · NOAA Atlas 14, downtown Atlanta"},
+    {t:"Summer heat wave", s:"Long, humid Georgia summer days"}
+  ]
+};
+
+let city="ams", grid=makeGrid(city), tool="raingarden", results=null, running=false;
+
+/* ---------- build UI ---------- */
+const gridEl=$("#grid"), rainEl=$("#rain");
+function svg(inner){ return '<svg viewBox="0 0 40 40" aria-hidden="true" focusable="false">'+inner+'</svg>'; }
+function buildTools(){
+  const list=$("#toolList"); list.innerHTML="";
+  ORDER.concat(["remove"]).forEach(id=>{
+    const b=document.createElement("button"); b.type="button"; b.className="tool"; b.dataset.tool=id;
+    const m=M[id];
+    const onTxt = m ? "On "+m.on.split("").map(c=>ONNAME[c]).join(", ") : "Click a built tile to remove it and get your coins back";
+    b.innerHTML='<span class="ic">'+svg(ICON[id])+'</span><span><span class="nm"></span><span class="ds"></span></span><span class="cs"></span>';
+    b.querySelector(".nm").textContent = m ? m.name : "Remove";
+    b.querySelector(".ds").textContent = m ? DESC[id]+" "+onTxt+"." : onTxt+".";
+    b.querySelector(".cs").textContent = m ? m.cost+" ¢" : "";
+    b.setAttribute("aria-pressed", String(id===tool));
+    b.addEventListener("click",()=>{ tool=id; $$(".tool").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.tool===id))); say(""); });
+    list.appendChild(b);
+  });
+}
+function buildGrid(){
+  $$(".tile",gridEl).forEach(t=>t.remove());
+  grid.forEach((t,i)=>{
+    const b=document.createElement("button"); b.type="button"; b.className="tile"; b.dataset.i=i;
+    b.innerHTML='<span class="fill"></span><span class="wet"></span><span class="hot"></span>';
+    b.addEventListener("click",()=>clickTile(i,b));
+    gridEl.insertBefore(b, rainEl);
+  });
+  renderTiles();
+}
+function renderTiles(){
+  $$(".tile",gridEl).forEach(b=>{
+    const i=+b.dataset.i, t=grid[i];
+    b.dataset.b=t.base;
+    const old=b.querySelector("svg"); if(old) old.remove();
+    if(t.m) b.insertAdjacentHTML("afterbegin", svg(ICON[t.m]));
+    const r=Math.floor(i/COLS)+1, c=i%COLS+1;
+    b.setAttribute("aria-label","Row "+r+", column "+c+": "+BASE[t.base]+(t.m?" with "+M[t.m].name.toLowerCase():""));
+    b.title = BASE[t.base]+(t.m?" · "+M[t.m].name:"");
+  });
+  const spent=grid.reduce((a,t)=>a+(t.m?M[t.m].cost:0),0), budget=CITIES[city].budget, left=budget-spent;
+  $("#budgetTxt").textContent=left+" of "+budget+" ¢ left";
+  const bar=$("#budgetBar"); bar.querySelector("i").style.width=(left/budget*100)+"%"; bar.classList.toggle("low", left<=5);
+  const walkTotal=grid.filter(t=>t.base==="W").length, lost=grid.filter(t=>t.base==="W"&&t.m&&M[t.m].unwalk).length;
+  $("#walkTxt").textContent=(walkTotal-lost)+" of "+walkTotal+" tiles";
+  const leg=$("#legend"); leg.innerHTML="";
+  const bases=Array.from(new Set(CITIES[city].layout.join("").split("")));
+  bases.forEach(b=>{ const s=document.createElement("span"); s.innerHTML='<i style="background:var(--'+({R:"roof",W:"walk",S:"asphalt",P:"plaza",G:"lawn"})[b]+')"></i>'; s.appendChild(document.createTextNode(b==="P"&&city==="atl"?"Parking lot":BASE[b])); leg.appendChild(s); });
+}
+function say(t,cls){ const m=$("#msg"); m.textContent=t; m.className="msg"+(cls?" "+cls:""); }
+function spentNow(){ return grid.reduce((a,t)=>a+(t.m?M[t.m].cost:0),0); }
+
+function clickTile(i,b){
+  if(running) return;
+  const t=grid[i];
+  if(tool==="remove" || t.m===tool){
+    if(!t.m){ say("Nothing built here yet."); return; }
+    say(M[t.m].name+" removed. "+M[t.m].cost+" ¢ returned.","ok"); t.m=null; changed(); return;
+  }
+  const m=M[tool];
+  if(!m.on.includes(t.base)){ bump(b); say(m.name+" can go on "+m.on.split("").map(c=>ONNAME[c]).join(", ")+", not on "+ONNAME[t.base]+".","err"); return; }
+  if(t.base==="W" && m.unwalk && !(t.m && M[t.m].unwalk)){
+    const lost=grid.filter(x=>x.base==="W"&&x.m&&M[x.m].unwalk).length;
+    if(lost>=WALKMAX){ bump(b); say("People need room to walk: at most "+WALKMAX+" sidewalk tiles can become gardens or strips. Trees and pavers keep a sidewalk walkable.","err"); return; }
+  }
+  const newSpent=spentNow()-(t.m?M[t.m].cost:0)+m.cost;
+  if(newSpent>CITIES[city].budget){ bump(b); say("Not enough budget for "+m.name.toLowerCase()+" ("+m.cost+" ¢). Remove something or pick a cheaper measure.","err"); return; }
+  t.m=tool; say(m.name+" built.","ok"); changed();
+}
+function bump(b){ b.classList.remove("bad-drop"); void b.offsetWidth; b.classList.add("bad-drop"); }
+function changed(){ renderTiles(); clearMap(); if(results){ results=null; renderCards(); $("#scoreTxt").textContent="Block changed. Run the year again."; $("#debrief").hidden=true; } }
+
+/* ---------- map overlays ---------- */
+function clearMap(){ $$(".tile",gridEl).forEach(b=>{ b.querySelector(".wet").style.opacity=0; b.querySelector(".hot").style.opacity=0; b.querySelector(".fill").style.height="0"; }); $("#mapLabel").textContent="Your block · top view"; }
+function showRain(r, label, D){
+  clearMap();
+  const tiles=$$(".tile",gridEl);
+  grid.forEach((t,i)=>{
+    const m=t.m?M[t.m]:null, b=tiles[i];
+    if(m && m.recv){ const capV=(m.depth+m.inf*D)*0.1, ownV=Math.min(r.P, m.depth+m.inf*D)*0.1; const f=Math.min(1,(ownV+r.inflow[i])/capV); b.querySelector(".fill").style.height=(f*100)+"%"; }
+  });
+  const cm=r.floodCm;
+  if(cm>0.05){
+    grid.forEach((t,i)=>{ const row=Math.floor(i/COLS); const m=t.m?M[t.m]:null; if((t.base==="S"||t.base==="W") && !(m&&m.recv)){ const low=row===3; tiles[i].querySelector(".wet").style.opacity = low ? Math.min(.85,.25+cm/20) : (cm>5?Math.min(.55,cm/40):0); } });
+  }
+  $("#mapLabel").textContent=label+" · blue shows where the water is";
+}
+function showHeat(s,label){
+  clearMap();
+  const tiles=$$(".tile",gridEl);
+  grid.forEach((t,i)=>{ const m=t.m?M[t.m]:null; const cool = m? m.cool : (t.base==="G"?1.5:0); tiles[i].querySelector(".hot").style.opacity = Math.max(0, .55 - cool*0.17); });
+  $("#mapLabel").textContent=label+" · orange shows hot surfaces";
+}
+
+/* ---------- run ---------- */
+function floodWord(cm){ return cm<=1?"dry":cm<=5?"puddles":cm<=15?"flooded street":"water over doorsteps"; }
+function starStr(n){ return '<span aria-hidden="true">'+"★".repeat(n)+'<span class="off">'+"★".repeat(3-n)+'</span></span><span class="sr">'+n+' of 3 stars</span>'; }
+function evaluate(){
+  const c=CITIES[city], out=[];
+  c.events.forEach((e,k)=>{
+    if(e.kind==="summer"){ const s=summer(grid,city); out.push({e,k,s,stars:[starsFor("gw",s,city),starsFor("heat",s,city)]}); }
+    else if(e.kind==="heat"){ const s=summer(grid,city); out.push({e,k,s,stars:[starsFor("heat",s,city)]}); }
+    else { const r=simulate(grid,city,e.P,e.D); out.push({e,k,r,stars:[starsFor(e.kind,r,city)]}); }
+  });
+  return out;
+}
+function cardHTML(x){
+  const tx=EVTXT[city][x.k]; let h='<h3>'+tx.t+'</h3><div class="sub">'+tx.s+'</div>';
+  if(!x) return h;
+  const e=x.e, r=x.r, s=x.s;
+  if(e.kind==="summer"){
+    const g=s.gw; const exposed = g<-0.80?"all pile tops exposed": g<-0.50?"some pile tops exposed":"all pile tops wet";
+    h+='<div class="stars">'+starStr(x.stars[0])+'</div><div class="res">Piles: groundwater falls to <b>'+nap(g)+'</b>, '+exposed+'.</div>';
+    h+='<div class="stars">'+starStr(x.stars[1])+'</div><div class="res">Heat: <b>'+fmt(s.cool,1)+'</b> cooling points.</div>';
+  } else if(e.kind==="heat"){
+    h+='<div class="stars">'+starStr(x.stars[0])+'</div><div class="res">Heat: <b>'+fmt(s.cool,1)+'</b> cooling points (3 stars at '+CITIES[city].heat[2]+').</div>';
+  } else {
+    h+='<div class="stars">'+starStr(x.stars[0])+'</div><div class="res">';
+    h+='Kept on the block: <b>'+fmt(r.inf+r.held,0)+'</b> of '+fmt(r.total,0)+' m³<br>';
+    if(CITIES[city].combined){ h+='Into the sewer: <b>'+fmt(r.toSewer,0)+'</b> m³<br>Overflow to canal: <b>'+fmt(r.cso,0)+'</b> m³<br>'; }
+    else { h+='To the creek: <b>'+fmt(r.toSewer,0)+'</b> m³ ('+fmt(r.runoffFrac*100,0)+'% of the rain)<br>'; }
+    h+='Street low spots: <b>'+fmt(r.floodCm,1)+' cm</b>, '+floodWord(r.floodCm);
+    if(r.gwPeak!==undefined){ h+='<br>Groundwater peak: <b>'+nap(r.gwPeak)+'</b>'+(r.gwPeak>-0.10?', crawl spaces flooded':''); }
+    h+='</div>';
+  }
+  h+='<button class="btn" type="button" data-show="'+x.k+'">Show on block</button>';
+  return h;
+}
+function renderCards(done){
+  const cards=$("#cards"); cards.innerHTML="";
+  EVTXT[city].forEach((tx,k)=>{
+    const d=document.createElement("div"); d.className="card"+(done&&done[k]?" done":"");
+    if(done && done[k]) d.innerHTML=cardHTML(done[k]);
+    else d.innerHTML='<h3>'+tx.t+'</h3><div class="sub">'+tx.s+'</div><div class="stars">'+starStr(0).replace(/★/g,"☆")+'</div><div class="res muted">Not run yet.</div>';
+    cards.appendChild(d);
+  });
+  $$("[data-show]",cards).forEach(b=>b.addEventListener("click",()=>showEvent(+b.dataset.show)));
+}
+function showEvent(k){
+  if(!results) return; const x=results[k], tx=EVTXT[city][k];
+  if(x.r) showRain(x.r, tx.t, x.e.D); else showHeat(x.s, tx.t);
+}
+async function run(){
+  if(running) return; running=true; $("#runBtn").disabled=true; say("");
+  const res=evaluate(), done=[];
+  renderCards(done); $("#scoreTxt").textContent="Weather incoming…";
+  for(const x of res){
+    if(x.r){ rainEl.classList.add("on"); clearMap(); await wait(900); rainEl.classList.remove("on"); showRain(x.r, EVTXT[city][x.k].t, x.e.D); }
+    else { showHeat(x.s, EVTXT[city][x.k].t); }
+    done[x.k]=x; renderCards(done); await wait(900);
+  }
+  results=res;
+  const got=res.reduce((a,x)=>a+x.stars.reduce((p,q)=>p+q,0),0), max=res.reduce((a,x)=>a+3*x.stars.length,0);
+  const f=got/max, verdict = f>=0.87?"Rainproof":f>=0.6?"Mostly dry":f>=0.3?"Soggy":"Under water";
+  $("#scoreTxt").textContent=verdict+": "+got+" of "+max+" stars · "+(CITIES[city].budget-spentNow())+" ¢ unspent";
+  debrief(res);
+  running=false; $("#runBtn").disabled=false;
+}
+function debrief(res){
+  const tips=[], c=CITIES[city];
+  res.forEach(x=>{
+    const e=x.e, r=x.r;
+    if(e.kind==="cso" && r.cso>0.5) tips.push("An ordinary downpour pushed "+fmt(r.cso,0)+" m³ of rain mixed with sewage into the canal. A combined sewer can store only about 7 mm, so catch runoff before it reaches the pipes: rain gardens or green strips within two tiles of roofs and streets.");
+    if(e.kind==="flood" && r.floodCm>1) tips.push(EVTXT[city][x.k].t+": "+fmt(r.flood,0)+" m³ could not enter the pipes, leaving "+fmt(r.floodCm,0)+" cm in the low spots. Streets and sidewalks make up two-thirds of the block, so roofs alone cannot fix this; give the street somewhere to drain.");
+    if(e.kind==="flood" && r.gwPeak!==undefined && r.gwPeak>-0.10) tips.push("You soaked so much water into the ground that groundwater rose to "+nap(r.gwPeak)+" and flooded crawl spaces. In a high-groundwater street (think De Mirandabad, 13 mm/h), store some water above ground instead: blue-green roofs or a water square.");
+    if(e.kind==="onsite" && r.onsite<0.995) tips.push("Atlanta's rule asks you to manage the first inch on site. You kept "+fmt(r.onsite*100,0)+"%. Rain gardens beside the roofs and parking lot capture it most cheaply.");
+    if(e.kind==="stream" && r.runoffFrac>0.10) tips.push(fmt(r.runoffFrac*100,0)+"% of the 2-year storm ran off to the creek; natural cover sends about 10%. Every cubic metre you soak in is one the creek does not have to carry in a flash.");
+    if(x.s && c.piles && x.s.gw<-0.50) tips.push("In the dry summer, groundwater fell to "+nap(x.s.gw)+", below the highest pile tops (NAP −0.50 m). Measures that let rain soak in keep the piles wet; each tree drinks a little of that water, so pair trees with infiltration.");
+    if(x.s && starsFor("heat",x.s,city)<3) tips.push("The block still bakes: "+fmt(x.s.cool,1)+" cooling points. Trees give shade and evaporation together; green roofs and planted strips help too.");
+  });
+  if(!tips.length) tips.push("A fully rainproof block. Now try the other city with the same budget and see which of your choices still work.");
+  const box=$("#debrief"); box.innerHTML='<h2>What the hydrologist would say</h2><ul></ul>';
+  const ul=box.querySelector("ul"); tips.slice(0,5).forEach(t=>{ const li=document.createElement("li"); li.textContent=t; ul.appendChild(li); });
+  box.hidden=false;
+}
+
+/* ---------- city switch & init ---------- */
+function setCity(k){
+  if(running) return; city=k; grid=makeGrid(city); results=null;
+  $$("[data-city]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.city===k)));
+  $("#cityNote").textContent=CITYNOTE[k];
+  buildGrid(); renderCards(); $("#scoreTxt").textContent=""; $("#debrief").hidden=true; say("");
+}
+$$("[data-city]").forEach(b=>b.addEventListener("click",()=>setCity(b.dataset.city)));
+$("#runBtn").addEventListener("click",run);
+$("#clearBtn").addEventListener("click",()=>{ if(running) return; grid.forEach(t=>t.m=null); say("Block cleared.","ok"); changed(); });
+buildTools(); setCity("ams");
+})();
+</script>
+</body>
+</html>

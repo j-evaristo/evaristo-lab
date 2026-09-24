@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Amsterdam Water Explorer</title>
+<meta name="description" content="An interactive field trip through Amsterdam's water system, with check-your-understanding questions and a bridge to Atlanta.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  --paper:#EDF1EF; --surface:#FAFBFA; --surface-2:#E3E9E6; --ink:#15242A; --ink-2:#4A5B60; --line:#C3CECB;
+  --water:#1C6788; --water-2:#8EC1D8; --water-3:#D6E9F1;
+  --sand:#B8862E; --sand-2:#EAD7A4; --peat:#6A4A33; --clay:#9C4F2A;
+  --salt:#C23B53; --salt-2:#F2C6CF; --green:#4C7731; --green-2:#CFE0BF;
+  --ok:#2E7D4F; --warn:#B7791F; --bad:#B8322F;
+  --focus:#1C6788;
+  --f-display:"Archivo", "Arial Narrow", Arial, sans-serif;
+  --f-body:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "Courier New", monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D171B; --surface:#14232A; --surface-2:#1B2E35; --ink:#E2EBE9; --ink-2:#A6B8B6; --line:#2C4148;
+    --water:#5CAACD; --water-2:#2B5C72; --water-3:#16323D;
+    --sand:#D9B25E; --sand-2:#4F4222; --peat:#B78C6B; --clay:#D07B52;
+    --salt:#E76F86; --salt-2:#4E2330; --green:#8FBC5E; --green-2:#26391C;
+    --ok:#6CC08F; --warn:#E0A94A; --bad:#EE7B73; --focus:#8CCBE6;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D171B; --surface:#14232A; --surface-2:#1B2E35; --ink:#E2EBE9; --ink-2:#A6B8B6; --line:#2C4148;
+  --water:#5CAACD; --water-2:#2B5C72; --water-3:#16323D;
+  --sand:#D9B25E; --sand-2:#4F4222; --peat:#B78C6B; --clay:#D07B52;
+  --salt:#E76F86; --salt-2:#4E2330; --green:#8FBC5E; --green-2:#26391C;
+  --ok:#6CC08F; --warn:#E0A94A; --bad:#EE7B73; --focus:#8CCBE6;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--paper)}
+body{margin:0;color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:0 64px}
+h1,h2,h3,.eyebrow,.btn,.chip,.gauge-label,.num,.label{font-family:var(--f-display)}
+h1{font-stretch:112%;font-weight:800;font-size:clamp(2rem,5.4vw,3.6rem);line-height:1.02;letter-spacing:-.01em;margin:0 0 .4em;text-wrap:balance}
+h2{font-stretch:108%;font-weight:750;font-size:clamp(1.45rem,3.2vw,2.1rem);line-height:1.12;margin:0 0 .5em;text-wrap:balance}
+h3{font-stretch:100%;font-weight:700;font-size:1.08rem;margin:0 0 .35em;line-height:1.25}
+p{margin:0 0 .9em;max-width:68ch}
+a{color:var(--water)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.eyebrow{font-size:.78rem;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:var(--water);margin:0 0 .6em}
+.lede{font-size:1.2rem;line-height:1.55;color:var(--ink)}
+.muted{color:var(--ink-2)}
+.small{font-size:.88rem}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* top bar with staff gauge */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1040px;margin:0 auto;padding:8px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:750;font-stretch:110%;font-size:.95rem;white-space:nowrap}
+.gauge{display:flex;align-items:center;gap:10px;margin-left:auto}
+.gauge-track{display:flex;border:1.5px solid var(--ink);height:18px}
+.gauge-track span{width:14px;height:100%;border-right:1px solid var(--line);background:var(--surface)}
+.gauge-track span:last-child{border-right:0}
+.gauge-track span.on{background:var(--water)}
+.gauge-track span.miss{background:repeating-linear-gradient(135deg,var(--salt-2) 0 3px,var(--surface) 3px 6px)}
+.gauge-label{font-size:.8rem;font-weight:600;color:var(--ink-2);white-space:nowrap}
+nav.stops{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.chip{font-size:.74rem;font-weight:600;letter-spacing:.04em;text-decoration:none;color:var(--ink-2);border:1px solid var(--line);padding:2px 9px;border-radius:999px;background:var(--surface)}
+.chip:hover{color:var(--ink);border-color:var(--ink-2)}
+
+/* hero */
+.hero{padding-block:44px 22px;display:grid;grid-template-columns:1.25fr 1fr;gap:34px;align-items:center}
+.hero svg{width:100%;height:auto;max-width:100%}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-block:10px 8px}
+.how div{background:var(--surface);border:1px solid var(--line);padding:12px 14px}
+.how b{font-family:var(--f-display);display:block;font-size:.95rem}
+@media (max-width:700px){.how{grid-template-columns:1fr}}
+
+/* stops */
+section.stop{padding-block:46px 10px;border-top:1px solid var(--line)}
+.stop-head{display:flex;gap:16px;align-items:baseline}
+.stop-no{font-family:var(--f-mono);font-size:.85rem;color:var(--ink-2);white-space:nowrap}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-block:8px 18px}
+.fact{background:var(--surface);border:1px solid var(--line);padding:12px 14px}
+.fact .num{font-size:1.55rem;font-weight:600;color:var(--water);display:block;line-height:1.1}
+.fact span.t{font-size:.86rem;color:var(--ink-2);display:block;margin-top:4px;line-height:1.35}
+.lab{background:var(--surface);border:1.5px solid var(--ink);padding:16px;margin-block:10px 20px}
+.lab-title{font-family:var(--f-display);font-weight:700;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin:0 0 10px}
+.lab svg{width:100%;height:auto;display:block;background:var(--surface)}
+.ctrl{display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center;margin-top:12px}
+.ctrl label{font-family:var(--f-display);font-size:.88rem;font-weight:600}
+.ctrl output{font-family:var(--f-mono);font-size:.9rem;min-width:7ch;text-align:right}
+input[type=range]{width:100%;accent-color:var(--water)}
+select{font:inherit;font-size:.9rem;padding:4px 6px;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btn{font-size:.82rem;font-weight:600;border:1.5px solid var(--ink);background:var(--surface);color:var(--ink);padding:5px 11px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.readout{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;font-size:.95rem}
+.readout .big{font-family:var(--f-mono);font-size:1.25rem;font-weight:600}
+.status{display:inline-block;font-family:var(--f-display);font-weight:700;font-size:.85rem;padding:3px 10px;border:1.5px solid currentColor}
+.status.ok{color:var(--ok)} .status.warn{color:var(--warn)} .status.bad{color:var(--bad)} .status.wet{color:var(--water)}
+.note{font-size:.85rem;color:var(--ink-2);margin-top:8px}
+.ga{background:var(--surface-2);padding:14px 16px;margin-block:8px 18px}
+.ga h3{color:var(--clay)}
+.ga .tag{font-family:var(--f-display);font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--clay)}
+
+/* svg text */
+svg text{font-family:var(--f-display);fill:var(--ink)}
+svg .t-sm{font-size:11px} svg .t-xs{font-size:9.5px} svg .t-md{font-size:13px;font-weight:600}
+svg .t-mute{fill:var(--ink-2)}
+svg .t-inv{fill:var(--surface)}
+
+/* quiz */
+.quiz{border:1.5px solid var(--water);background:var(--surface);padding:16px 18px;margin-block:14px 22px}
+.quiz .qhead{font-family:var(--f-display);font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--water);margin-bottom:6px}
+.quiz .qtext{font-weight:600;margin-bottom:10px}
+.quiz ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.quiz button.opt{width:100%;text-align:left;font:inherit;font-size:.97rem;color:var(--ink);background:var(--paper);border:1px solid var(--line);padding:9px 12px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.quiz button.opt:hover:not([disabled]){border-color:var(--water)}
+.quiz button.opt .key{font-family:var(--f-mono);font-weight:600;color:var(--ink-2)}
+.quiz button.opt[disabled]{cursor:default}
+.quiz button.opt.right{border:2px solid var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--surface))}
+.quiz button.opt.wrong{border:2px solid var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
+.quiz .expl{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:.95rem}
+.quiz .expl b.v-ok{color:var(--ok)} .quiz .expl b.v-bad{color:var(--bad)}
+
+table.cmp{border-collapse:collapse;width:100%;font-size:.93rem;min-width:560px}
+table.cmp th,table.cmp td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+table.cmp th{font-family:var(--f-display);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.scroll-x{overflow-x:auto}
+.finale{background:var(--ink);color:var(--surface);padding:26px 24px;margin-top:30px}
+.finale h2{color:var(--surface)}
+.finale p,.finale li{color:var(--surface)}
+.finale .num{color:var(--water-2)}
+.finale ol{padding-left:1.2em}
+.finale li{margin-bottom:.6em;max-width:70ch}
+.sources{font-size:.84rem;color:var(--ink-2)}
+.sources li{margin-bottom:.35em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <span class="brand">Amsterdam Water Explorer</span>
+    <div class="gauge" aria-live="polite">
+      <div class="gauge-track" id="gaugeTrack" aria-hidden="true"></div>
+      <span class="gauge-label" id="gaugeLabel">0 of 13 correct</span>
+    </div>
+    <nav class="stops" aria-label="Stops">
+      <a class="chip" href="#stop1">1 Below the sea</a>
+      <a class="chip" href="#stop2">2 Dune water</a>
+      <a class="chip" href="#stop3">3 Wooden piles</a>
+      <a class="chip" href="#stop4">4 Rain and sewers</a>
+      <a class="chip" href="#stop5">5 Rainproof</a>
+      <a class="chip" href="#stop6">6 Heat and trees</a>
+      <a class="chip" href="#stop7">7 Atlanta</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <p class="eyebrow">Green cities, seen through water</p>
+      <h1>The city that must keep its feet wet</h1>
+      <p class="lede">Amsterdam lies largely below sea level behind dikes and pumps. You would expect its water managers to worry mainly about floods. They do. Yet thousands of the city's buildings stand on wooden piles that last for centuries only while they stay under water. Too much water floods basements. Too little lets the piles rot.</p>
+      <p>This summer (2026) made the paradox vivid: the Netherlands, the country famous for keeping water out, declared a <em>threatened water shortage</em> on 1 July and an <em>actual water shortage</em> on 16 July, as a drought approached the record set in 1976. A green city has to handle floods and droughts in the same streets, often in the same year.</p>
+    </div>
+    <svg viewBox="0 0 420 300" role="img" aria-labelledby="heroT heroD">
+      <title id="heroT">A canal house on wooden piles</title>
+      <desc id="heroD">Cross-section of a canal house whose wooden piles must stay below the groundwater table. Rain above, groundwater below, a canal to the right.</desc>
+      <rect x="0" y="0" width="420" height="300" fill="var(--surface)"/>
+      <rect x="0" y="150" width="420" height="150" fill="var(--sand-2)"/>
+      <rect x="0" y="232" width="420" height="68" fill="var(--peat)" opacity=".35"/>
+      <rect x="0" y="178" width="420" height="122" fill="var(--water-2)" opacity=".55"/>
+      <line x1="0" y1="178" x2="420" y2="178" stroke="var(--water)" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="238" y="173" class="t-xs">groundwater</text>
+      <rect x="318" y="140" width="102" height="160" fill="var(--water)" opacity=".85"/>
+      <text x="326" y="160" class="t-xs t-inv">canal</text>
+      <g fill="var(--peat)">
+        <rect x="70" y="170" width="7" height="125"/><rect x="100" y="170" width="7" height="125"/><rect x="130" y="170" width="7" height="125"/><rect x="160" y="170" width="7" height="125"/><rect x="190" y="170" width="7" height="125"/><rect x="220" y="170" width="7" height="125"/>
+      </g>
+      <rect x="62" y="163" width="172" height="10" fill="var(--ink-2)"/>
+      <path d="M70 163 V60 L100 30 L130 12 L160 30 L190 60 H226 V163 Z" fill="var(--clay)" opacity=".9"/>
+      <g fill="var(--surface)" opacity=".9"><rect x="92" y="70" width="22" height="30"/><rect x="138" y="70" width="22" height="30"/><rect x="184" y="70" width="22" height="30"/><rect x="92" y="115" width="22" height="30"/><rect x="138" y="115" width="22" height="30"/><rect x="184" y="115" width="22" height="30"/></g>
+      <g stroke="var(--water)" stroke-width="2" stroke-linecap="round">
+        <line x1="260" y1="20" x2="252" y2="40"/><line x1="290" y1="10" x2="282" y2="30"/><line x1="320" y1="26" x2="312" y2="46"/><line x1="350" y1="12" x2="342" y2="32"/><line x1="380" y1="30" x2="372" y2="50"/><line x1="275" y1="60" x2="267" y2="80"/><line x1="335" y1="68" x2="327" y2="88"/><line x1="395" y1="72" x2="387" y2="92"/>
+      </g>
+      <text x="10" y="292" class="t-sm">pile tops must stay below the water table</text>
+    </svg>
+  </div>
+
+  <div class="how">
+    <div><b>7 stops</b><span class="muted small">Each stop mixes a short read, a hands-on model, and real numbers from Amsterdam.</span></div>
+    <div><b>13 check questions</b><span class="muted small">Answer to see the correct choice and why. Your answers fill the staff gauge at the top.</span></div>
+    <div><b>Bridge to Georgia</b><span class="muted small">Every stop ends by asking what the same physics means for Atlanta or the Georgia coast.</span></div>
+  </div>
+
+  <!-- STOP 1 -->
+  <section class="stop" id="stop1">
+    <div class="stop-head"><span class="stop-no">Stop 1 of 7</span></div>
+    <h2>A country that pumps itself dry to stay afloat</h2>
+    <div class="cols">
+      <div>
+        <p>About a thousand years ago, people began digging ditches to drain the peat bogs of Holland so they could farm. Drained peat does two things: it compacts, and it rots as air reaches it. The land sank. Farmers dug deeper ditches, and the land sank again. Over a millennium, this loop lowered the Dutch coastal plain by about 1.9 m on average.</p>
+        <p>Windmills, then steam and electric pumping stations, kept the new low land (a <em>polder</em>) dry by lifting water, step by step, into canals and rivers. The deepest polder in Amsterdam's own water district lies 6.7 m below the national reference level, NAP, which sits close to mean sea level.</p>
+        <p>Here is the catch. Water always flows from high to low pressure, so the lower you pump a polder, the harder the surrounding groundwater pushes up from below. The Dutch call this upwelling <em>kwel</em> (seepage). In some deep polders it drags up old, brackish seawater left behind when the sea covered the land thousands of years ago.</p>
+      </div>
+      <div>
+        <div class="facts">
+          <div class="fact"><span class="num">26%</span><span class="t">of the Netherlands lies below NAP; 59% is susceptible to flooding from sea or rivers</span></div>
+          <div class="fact"><span class="num">1.9 m</span><span class="t">average lowering of the coastal plain after ~1,000 years of peat drainage</span></div>
+          <div class="fact"><span class="num">NAP −6.7 m</span><span class="t">lowest surface-water level in the Amstel, Gooi en Vecht water district</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab" aria-labelledby="lab1t">
+      <p class="lab-title" id="lab1t">Model 1 · Seepage into a polder</p>
+      <svg id="seepSvg" viewBox="0 0 640 290" role="img" aria-label="Cross-section of a polder between two lakes, with upward seepage arrows whose length grows as the polder is pumped lower."></svg>
+      <div class="ctrl">
+        <label for="seepDh">Polder lowered below outside water</label>
+        <input type="range" id="seepDh" min="0" max="6.7" step="0.1" value="2">
+        <output id="seepDhOut" for="seepDh">2.0 m</output>
+        <label for="seepC">Clay and peat cover</label>
+        <select id="seepC">
+          <option value="100">thin, sandy (resistance 100 days)</option>
+          <option value="1000" selected>clay and peat (1,000 days)</option>
+          <option value="10000">thick clay (10,000 days)</option>
+        </select>
+        <span></span>
+      </div>
+      <div class="readout" id="seepOut" aria-live="polite"></div>
+      <p class="note">Darcy's law for flow through a resisting layer: seepage q = Δh / c, where Δh is the head difference and c the hydraulic resistance of the cover (its thickness divided by its permeability). The three resistances are illustrative round numbers; real Dutch cover layers range more widely. The salt dome is a qualitative sketch.</p>
+    </div>
+
+    <div class="quiz" data-q="q1"></div>
+    <div class="quiz" data-q="q2"></div>
+  </section>
+
+  <!-- STOP 2 -->
+  <section class="stop" id="stop2">
+    <div class="stop-head"><span class="stop-no">Stop 2 of 7</span></div>
+    <h2>Drinking the Rhine, filtered through a beach</h2>
+    <div class="cols">
+      <div>
+        <p>In the mid-1800s Amsterdam drank from canals that doubled as open sewers, and cholera followed. On 12 December 1853, clean water from the coastal dunes first flowed to a tap at the city's Haarlemmerpoort. Rain that soaks into dune sand forms a <em>freshwater lens</em>: a body of fresh groundwater floating on the denser seawater beneath.</p>
+        <p>Success bred trouble. As the city grew, pumping thinned the lens. Why so fast? Because the lens obeys a lever with a 40-to-1 ratio. Two Dutch engineers, Drabbe and Badon Ghijben (1889), and the German Herzberg (1901) worked it out while planning wells for Amsterdam and the German coast: for every metre the water table stands above sea level, fresh water extends about 40 m below it.</p>
+        <p>Since 1957 Amsterdam has refilled the dunes with pre-treated river water taken from the Lek canal near Nieuwegein, which is fed by the Lek, a branch of the Rhine. The water spends two to three months in the sand before it is pumped out and treated further at Leiduin. The dunes now supply about two-thirds of Amsterdam's drinking water, roughly 70 million m³ a year.</p>
+      </div>
+      <div>
+        <div class="facts">
+          <div class="fact"><span class="num">1853</span><span class="t">first dune water reaches Amsterdam</span></div>
+          <div class="fact"><span class="num">1957</span><span class="t">river-water infiltration into the dunes begins</span></div>
+          <div class="fact"><span class="num">~70 Mm³/yr</span><span class="t">treated at Leiduin, about 2/3 of the city's drinking water</span></div>
+          <div class="fact"><span class="num">1.4 M+</span><span class="t">people supplied with drinking water (2025)</span></div>
+        </div>
+        <p class="small muted">Why the dunes? They filter out bacteria, viruses and organic contaminants, even out swings in water quality and temperature, and store a buffer for days when the river intake has to close. They also defend the coast, shelter nature, and attract visitors: four jobs that do not always agree.</p>
+      </div>
+    </div>
+
+    <div class="lab" aria-labelledby="lab2t">
+      <p class="lab-title" id="lab2t">Model 2 · The 1-to-40 freshwater lens</p>
+      <svg id="lensSvg" viewBox="0 0 640 300" role="img" aria-label="Cross-section of a freshwater lens beneath coastal dunes; the salt-water interface lies 40 times deeper than the water table is high, and rises when a well pumps."></svg>
+      <div class="ctrl">
+        <label for="lensH">Water table above sea level</label>
+        <input type="range" id="lensH" min="0.5" max="4" step="0.1" value="3">
+        <output id="lensHOut" for="lensH">3.0 m</output>
+        <label for="lensS">Drawdown from pumping</label>
+        <input type="range" id="lensS" min="0" max="2" step="0.1" value="0">
+        <output id="lensSOut" for="lensS">0.0 m</output>
+      </div>
+      <div class="readout" id="lensOut" aria-live="polite"></div>
+      <p class="note">Ghijben–Herzberg: fresh water (≈1,000 kg/m³) floats on seawater (≈1,025 kg/m³). Pressure balance gives an interface depth z ≈ 1,000/25 × h = 40 h. This assumes a sharp interface and no flow; real interfaces are mixing zones and respond over years. Heights above sea level are drawn 10 times taller than depths so you can see them.</p>
+    </div>
+
+    <div class="ga">
+      <span class="tag">Georgia connection</span>
+      <h3>Same lever, Savannah edition</h3>
+      <p>Coastal Georgia draws much of its water from the Upper Floridan aquifer. Heavy pumping around Savannah lowered the aquifer's freshwater pressure so far that groundwater flow reversed, and seawater began entering the aquifer beneath Port Royal Sound. Hilton Head Island's utility has lost at least six of its twelve Upper Floridan wells since 2000 and has run a reverse-osmosis plant since 2009. Georgia responded with a coastal "Red Zone" (Chatham and southern Effingham counties), where most permit limits were cut by 22% for 2025. The geometry differs from a dune lens (a confined aquifer, not a floating lens), but the rule is the same: lower the freshwater pressure and salt water moves in.</p>
+    </div>
+
+    <div class="quiz" data-q="q3"></div>
+    <div class="quiz" data-q="q4"></div>
+    <p>Amsterdam's demand is expected to grow from about 95 million m³ a year (2023) to roughly 122 million by 2050, so the city is testing new sources. Since 2024 a pilot plant has turned brackish seepage from the deep Horstermeer polder into drinking water by reverse osmosis. That solves two problems at once, since the salty seepage also harms nature in the polder. But salt never disappears; it only moves.</p>
+    <div class="quiz" data-q="q13"></div>
+  </section>
+
+  <!-- STOP 3 -->
+  <section class="stop" id="stop3">
+    <div class="stop-head"><span class="stop-no">Stop 3 of 7</span></div>
+    <h2>A city on a buried forest</h2>
+    <div class="cols">
+      <div>
+        <p>Amsterdam's soft peat and clay cannot carry a brick house, so builders drove wooden piles down to a firm sand layer. The Royal Palace on Dam Square, built from 1648, stands on 13,659 of them. Under water, the wood lasts for centuries because wood-rotting fungi need three things: moisture, food and oxygen. Groundwater keeps the oxygen out.</p>
+        <p>So the city manages groundwater within a narrow window. If groundwater rises too high, crawl spaces and cellars flood and walls grow mould. If it falls below the pile tops, air reaches the wood, fungi go to work, and houses crack and tilt. Since 2008, Dutch municipalities have had a legal duty of care for groundwater in public space (property owners remain responsible for their own plots). Amsterdam reads groundwater by hand at roughly 2,500 locations six times a year, supported by hundreds of automatic loggers. Its records begin in 1870.</p>
+        <p>Drought threatens more than piles. On 26 August 2003, after a hot, dry summer, a dried-out peat levee at Wilnis, south of Amsterdam, slid sideways and flooded a neighbourhood; 1,500 to 2,000 residents were evacuated. In July 2026 the national water agency named that failure again as the kind of risk a drought brings.</p>
+      </div>
+      <div>
+        <div class="lab" aria-labelledby="lab3t" style="margin-top:0">
+          <p class="lab-title" id="lab3t">Model 3 · The groundwater window</p>
+          <svg id="gwSvg" viewBox="0 0 420 330" role="img" aria-label="Cross-section of a house on wooden piles with an adjustable groundwater level; bands mark the pile tops and the crawl-space floor."></svg>
+          <div class="ctrl">
+            <label for="gwLvl">Groundwater level</label>
+            <input type="range" id="gwLvl" min="-1.2" max="0.3" step="0.01" value="-0.45">
+            <output id="gwLvlOut" for="gwLvl">NAP −0.45 m</output>
+          </div>
+          <div class="btnrow" role="group" aria-label="Measured levels">
+            <button class="btn" type="button" data-gw="-0.20">Wettest readings (−0.20)</button>
+            <button class="btn" type="button" data-gw="-0.45">Typical (−0.45)</button>
+            <button class="btn" type="button" data-gw="-0.70">Dry spells (−0.70)</button>
+            <button class="btn" type="button" data-gw="-0.96">1993 low (−0.96)</button>
+          </div>
+          <div class="readout" id="gwOut" aria-live="polite"></div>
+          <p class="note">Pile-top levels (NAP −0.50 to −0.80 m) and the measured range come from Waternet's field-trip materials for the Lekstraat in Amsterdam (monitoring well F06157, hand readings since the early 1990s). The street surface (≈ NAP +0.40 m) is taken from the same record; the crawl-space floor (NAP −0.10 m) is an illustrative assumption.</p>
+        </div>
+      </div>
+    </div>
+    <div class="quiz" data-q="q5"></div>
+    <div class="quiz" data-q="q6"></div>
+  </section>
+
+  <!-- STOP 4 -->
+  <section class="stop" id="stop4">
+    <div class="stop-head"><span class="stop-no">Stop 4 of 7</span></div>
+    <h2>When rain meets pavement</h2>
+    <div class="cols">
+      <div>
+        <p>On a forested or grassy surface, most rain soaks in or returns to the air. Pave the ground and the budget flips: in the U.S. EPA's classic comparison, runoff rises from about 10% of rainfall under natural cover to about 55% where 75–100% of the ground is sealed, while deep infiltration drops from 25% to 5%.</p>
+        <p>Runoff goes into pipes. Dutch sewers have traditionally been designed around a test storm of about 20 mm in one hour ("bui 08"), which falls roughly once every two years. Many older districts in Amsterdam, like downtown Atlanta, have <em>combined</em> sewers that carry rainwater and wastewater in one pipe. A typical Dutch combined system can store only about 7 mm of rain and pumps about 0.7 mm per hour to the treatment plant. Beyond that, the mixture spills into canals or creeks: a combined sewer overflow.</p>
+        <p>Amsterdam's last canal houses in the city centre were connected to the sewer only in 1987; the last houseboats followed in 2017.</p>
+      </div>
+      <div>
+        <div class="lab" style="margin-top:0" aria-labelledby="labEpa">
+          <p class="lab-title" id="labEpa">Where the rain goes (U.S. EPA)</p>
+          <svg id="epaSvg" viewBox="0 0 420 250" role="img" aria-label="Stacked bars for four levels of impervious cover showing evapotranspiration, runoff, shallow and deep infiltration percentages."></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab" aria-labelledby="lab4t">
+      <p class="lab-title" id="lab4t">Model 4 · One hour of rain on a one-hectare city block</p>
+      <div class="btnrow" role="group" aria-label="Storm presets" id="stormBtns">
+        <button class="btn" type="button" data-p="20">Dutch sewer test storm · 20 mm</button>
+        <button class="btn" type="button" data-p="40">Amsterdam, 28 July 2014 · 40 mm</button>
+        <button class="btn" type="button" data-p="60">Amsterdam 1-in-100 · 60 mm</button>
+        <button class="btn" type="button" data-p="38.6">Atlanta 2-year · 38.6 mm</button>
+        <button class="btn" type="button" data-p="82.6">Atlanta 100-year · 82.6 mm</button>
+      </div>
+      <div class="ctrl">
+        <label for="rainP">Rain in one hour</label>
+        <input type="range" id="rainP" min="0" max="100" step="0.1" value="60">
+        <output id="rainPOut" for="rainP">60 mm</output>
+        <label for="pavedF">Share of the block that is paved or roofed</label>
+        <input type="range" id="pavedF" min="0" max="100" step="1" value="80">
+        <output id="pavedFOut" for="pavedF">80%</output>
+      </div>
+      <svg id="sewerSvg" viewBox="0 0 640 120" role="img" aria-label="Horizontal bar dividing the storm water into soaked into gardens, carried to the treatment plant, combined sewer overflow, and street flooding." style="margin-top:12px"></svg>
+      <div class="readout" id="sewerOut" aria-live="polite"></div>
+      <p class="note">Assumptions: gardens soak up to 20 mm/h; paved surfaces send all rain to a combined sewer that stores 7 mm, pumps 0.7 mm/h to the treatment plant, and accepts at most 20 mm/h (all per unit of paved area, after the Dutch RIONED reference system and the bui 08 design storm). Water the pipes cannot accept stays on the street. "Amsterdam, 28 July 2014": 50–90 mm fell across the city that morning, with up to 40 mm in one hour in places. Atlanta depths are NOAA Atlas 14 one-hour values for downtown.</p>
+    </div>
+
+    <div class="ga">
+      <span class="tag">Georgia connection</span>
+      <h3>Atlanta's combined sewers</h3>
+      <p>About 10% of Atlanta's sewer collection system, in a roughly 13-square-mile area around downtown, is combined. Overflows into the Chattahoochee's tributaries led to a federal consent decree in 1998, after a lawsuit by the EPA, Georgia EPD, the Upper Chattahoochee Riverkeeper and a downstream resident.</p>
+    </div>
+    <div class="quiz" data-q="q7"></div>
+    <div class="quiz" data-q="q8"></div>
+  </section>
+
+  <!-- STOP 5 -->
+  <section class="stop" id="stop5">
+    <div class="stop-head"><span class="stop-no">Stop 5 of 7</span></div>
+    <h2>Where do you put 60 millimetres in an hour?</h2>
+    <div class="cols">
+      <div>
+        <p>On 2 July 2011 a cloudburst hit Copenhagen. Some places received more than 50 mm in 30 minutes; the Botanical Garden logged 135 mm for the day. Insurers received about 90,000 damage claims worth roughly 5 to 6 billion Danish kroner. Amsterdam took note and launched its <em>Rainproof</em> programme in 2014. Six months later, on 28 July 2014, a morning downpour flooded Amsterdam's streets and tunnels.</p>
+        <p>Pipes cannot solve this alone: a sewer big enough for a once-a-century storm would sit nearly empty for decades. So Amsterdam plans for about 60 mm in one hour (roughly a 1-in-100-year hour in the Netherlands) by making the whole city hold water like a sponge. Since 2021, new buildings and major renovations must store 60 litres per square metre of footprint and release it slowly, at no more than 1 litre per square metre per hour.</p>
+        <p>The KNMI weather service finds that it does not rain more often in the Netherlands, but it rains harder: days with more than 20 mm rose from 3.7 a year (1961–1990) to 4.6 a year (1991–2020).</p>
+      </div>
+      <div>
+        <div class="facts">
+          <div class="fact"><span class="num">60 mm</span><span class="t">storage on a blue-green "polder roof" (average capacity)</span></div>
+          <div class="fact"><span class="num">35 cm · 20 mm/h</span><span class="t">water-retaining green strip: sunk 35 cm below its surroundings, empties within 24 h</span></div>
+          <div class="fact"><span class="num">200 mm/h</span><span class="t">infiltration to groundwater at the Harkstraat wadi (1,050 mm/h with its drains and storm sewer)</span></div>
+          <div class="fact"><span class="num">30 mm/h</span><span class="t">water-permeable pavers</span></div>
+          <div class="fact"><span class="num">13 mm/h</span><span class="t">De Mirandabad: high groundwater, slow infiltration</span></div>
+        </div>
+        <p class="small muted">Values from the Amsterdam Rainproof field trip (Waternet, 2023). Other tools include rain barrels, façade gardens, infiltration crates beneath streets and tram tracks, and playgrounds that double as water squares.</p>
+      </div>
+    </div>
+
+    <div class="lab" aria-labelledby="lab5t">
+      <p class="lab-title" id="lab5t">Model 5 · Size a rain garden (wadi)</p>
+      <div class="btnrow" role="group" aria-label="Soil presets">
+        <button class="btn" type="button" data-f="20">Green strip · 20 mm/h</button>
+        <button class="btn" type="button" data-f="200">Harkstraat wadi · 200 mm/h</button>
+        <button class="btn" type="button" data-f="13">De Mirandabad · 13 mm/h</button>
+      </div>
+      <div class="ctrl">
+        <label for="wA">Paved area draining to it</label>
+        <input type="range" id="wA" min="100" max="5000" step="50" value="1000">
+        <output id="wAOut" for="wA">1,000 m²</output>
+        <label for="wP">Design storm (1 hour)</label>
+        <input type="range" id="wP" min="10" max="100" step="1" value="60">
+        <output id="wPOut" for="wP">60 mm</output>
+        <label for="wD">Depth below street</label>
+        <input type="range" id="wD" min="10" max="60" step="1" value="35">
+        <output id="wDOut" for="wD">35 cm</output>
+        <label for="wF">Soil infiltration rate</label>
+        <input type="range" id="wF" min="5" max="250" step="1" value="20">
+        <output id="wFOut" for="wF">20 mm/h</output>
+      </div>
+      <div class="readout" id="wadiOut" aria-live="polite"></div>
+      <p class="note">During the 1-hour storm each square metre of garden can hold its depth d plus what soaks away (f × 1 h), minus the rain that falls on it directly. Required area W = A·P / (d + f·1 h − P). Emptying time = d / f. Amsterdam's green strips are designed to empty within 24 hours.</p>
+    </div>
+
+    <div class="ga">
+      <span class="tag">Georgia connection</span>
+      <h3>Atlanta's first inch</h3>
+      <p>Since 2013, Atlanta's post-development stormwater ordinance has required nearly all new development and redevelopment to manage the first inch (25.4 mm) of rain on site with green infrastructure. The city also builds parks that flood on purpose: Historic Fourth Ward Park on the BeltLine (opened 2011) replaced a planned underground storage tunnel with a stormwater pond, and the 16-acre Rodney Cook Sr. Park in Vine City (2021), built where homes flooded in 2002, can hold up to about 10 million gallons of stormwater.</p>
+    </div>
+    <div class="quiz" data-q="q9"></div>
+  </section>
+
+  <!-- STOP 6 -->
+  <section class="stop" id="stop6">
+    <div class="stop-head"><span class="stop-no">Stop 6 of 7</span></div>
+    <h2>Trees: air conditioners that drink groundwater</h2>
+    <div class="cols">
+      <div>
+        <p>Brick, asphalt and roofs soak up sunlight by day and release it at night, so cities stay warmer than their surroundings. In Dutch cities this urban heat island averages less than 3 °C over a summer, but the gap widens on hot evenings, and nights matter most for health.</p>
+        <p>Trees cool a street in two ways: shade, and transpiration. Every litre a tree moves from soil to air absorbs about 2.45 megajoules as it evaporates. In May 2019, sap-flow sensors on six Amsterdam elms recorded midday peaks of roughly 2 to 8 litres per hour for five trees and nearly 40 litres per hour for the sixth (MSc thesis, Neart 2020).</p>
+        <p>Now join the stops. Water a tree transpires in a dry summer comes from the same groundwater that keeps the pile tops wet. Green measures interact, so they must be designed together: trees beside infiltrating rain gardens, not trees on a sealed street.</p>
+      </div>
+      <div>
+        <div class="lab" style="margin-top:0" aria-labelledby="lab6t">
+          <p class="lab-title" id="lab6t">Model 6 · A tree as a cooler</p>
+          <div class="ctrl">
+            <label for="sap">Transpiration</label>
+            <input type="range" id="sap" min="0" max="40" step="0.5" value="38">
+            <output id="sapOut" for="sap">38 L/h</output>
+          </div>
+          <svg id="treeSvg" viewBox="0 0 420 150" role="img" aria-label="Bar comparing the tree's evaporative cooling power with a 10.5 kilowatt central air-conditioning unit."></svg>
+          <div class="readout" id="treeOut" aria-live="polite"></div>
+          <p class="note">Cooling power = transpiration (kg/s) × 2.45 MJ/kg. A 3-ton central air conditioner removes about 10.5 kW of heat. This is the energy the evaporation absorbs; how much cooler the street feels also depends on shade, wind and humidity.</p>
+        </div>
+      </div>
+    </div>
+    <div class="quiz" data-q="q10"></div>
+    <div class="quiz" data-q="q11"></div>
+  </section>
+
+  <!-- STOP 7 -->
+  <section class="stop" id="stop7">
+    <div class="stop-head"><span class="stop-no">Stop 7 of 7</span></div>
+    <h2>Same physics, different numbers: Atlanta</h2>
+    <p>Atlanta straddles the Eastern Continental Divide, high in its river basins, on granite and other crystalline rock that holds little usable groundwater. More than 99% of metro Atlanta's water comes from rivers, streams and reservoirs, about 71% from Lake Lanier and the Chattahoochee. The region receives about 50 inches (1,270 mm) of rain a year, and its storms are more intense than Amsterdam's. Compare one-hour rainfall depths:</p>
+    <div class="lab" aria-labelledby="lab7t">
+      <p class="lab-title" id="lab7t">One hour of rain: design and record values (mm)</p>
+      <svg id="cmpSvg" viewBox="0 0 640 330" role="img" aria-label="Horizontal bar chart comparing one-hour rainfall depths for Amsterdam and Atlanta design storms."></svg>
+      <p class="note">Atlanta: NOAA Atlas 14 partial-duration estimates for downtown (2-yr 1.52 in; 10-yr 2.14 in; 25-yr 2.56 in; 100-yr 3.25 in). Netherlands: bui 08 sewer test storm (~20 mm, ~2-yr); Dutch national stress-test standard (60 mm in 1 h ≈ 1-in-100 yr); Amsterdam 28 July 2014 local peak hour (~40 mm).</p>
+    </div>
+    <div class="scroll-x">
+      <table class="cmp">
+        <thead><tr><th>Question</th><th>Amsterdam</th><th>Atlanta</th></tr></thead>
+        <tbody>
+          <tr><td>Where does drinking water come from?</td><td>Rhine water filtered through dunes (~2/3) plus seepage and lake water</td><td>More than 99% surface water; ~71% from Lake Lanier and the Chattahoochee</td></tr>
+          <tr><td>Main groundwater worry</td><td>Keeping a shallow water table inside a narrow window (piles, basements)</td><td>Little usable groundwater in the Piedmont; saltwater intrusion on the coast</td></tr>
+          <tr><td>Storm target</td><td>Store 60 mm in an hour; new buildings hold 60 L/m²</td><td>Manage the first 1.0 inch (25.4 mm) on site</td></tr>
+          <tr><td>Combined sewers</td><td>Many older districts</td><td>About 10% of the system, around downtown</td></tr>
+          <tr><td>Parks that flood on purpose</td><td>Water squares, wadis, green strips</td><td>Historic Fourth Ward Park, Rodney Cook Sr. Park</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="quiz" data-q="q12"></div>
+  </section>
+
+  <section class="finale" aria-labelledby="finT">
+    <h2 id="finT">Your gauge reads <span class="num" id="finScore">0 of 13</span></h2>
+    <p id="finMsg">Answer the check questions to fill it.</p>
+    <p>Amsterdam's lesson is not a list of gadgets. It is that a green city is a water-storage problem in disguise. Every roof, street and tree decides where a raindrop goes, how long it stays, and whose basement, pile or river it reaches. Three questions we cannot yet answer well, for Amsterdam or for Atlanta:</p>
+    <ol>
+      <li>If storms grow more intense while droughts grow longer, should a city store water on the surface, push it into the ground, or both, and who decides for each street?</li>
+      <li>Green infrastructure is judged by how much water it holds. How would you measure what it does to groundwater, stream baseflow and water quality over ten years, rather than during one storm?</li>
+      <li>Amsterdam's integrated water-cycle utility, Waternet, was split into two organisations on 1 January 2026, for governance reasons. Is managing the whole water cycle under one roof the ideal, or is coordination between separate agencies the more robust design?</li>
+    </ol>
+    <div class="btnrow"><button class="btn" type="button" id="resetQuiz" style="background:var(--surface);color:var(--ink)">Reset all answers</button></div>
+  </section>
+
+  <section class="stop" aria-labelledby="srcT">
+    <h2 id="srcT" style="font-size:1.2rem">Sources</h2>
+    <ol class="sources">
+      <li>Waternet guest lecture and Amsterdam Rainproof field-trip materials, Utrecht University, October 2023 (C. Waaijer and I. van Wielink).</li>
+      <li>PBL Netherlands Environmental Assessment Agency (2010). Correction of the IPCC wording on flood risk in the Netherlands (26% below NAP; 59% flood-susceptible). <a href="https://www.pbl.nl/correctie-formulering-over-overstromingsrisico-nederland-in-ipcc-rapport" target="_blank" rel="noopener">pbl.nl</a></li>
+      <li>Erkens, G., van der Meulen, M.J., Middelkoop, H. (2016). Double trouble: subsidence and CO₂ respiration due to 1,000 years of Dutch coastal peatlands cultivation. <em>Hydrogeology Journal</em> 24, 551–568.</li>
+      <li>Post, V.E.A., Houben, G.J., van Engelen, J. (2018). What is the Ghijben–Herzberg principle and who formulated it? <em>Hydrogeology Journal</em> 26(6), 1801–1807.</li>
+      <li>Waternet: history of Amsterdam's drinking water; Amsterdamse Waterleidingduinen; 2025 annual overview; brackish-seepage pilot (2024); demand outlook (2023). <a href="https://www.waternet.nl" target="_blank" rel="noopener">waternet.nl</a></li>
+      <li>Waterschap AGV (2025). Decision to split Waternet as of 1 January 2026. <a href="https://www.agv.nl/nieuws/2025/juli/besluit-definitief-waternet-wordt-opgesplitst/" target="_blank" rel="noopener">agv.nl</a></li>
+      <li>Rijkswaterstaat (1 and 16 July 2026). Drought: national water distribution committee scales up to "threatened", then "actual" water shortage. <a href="https://www.rijkswaterstaat.nl/nieuws/archief/2026/07/droogte-houdt-aan-de-landelijke-coordinatiecommissie-waterverdeling-schaalt-op-naar-dreigend-watertekort" target="_blank" rel="noopener">rijkswaterstaat.nl</a></li>
+      <li>RVO: decay of wooden piles by fungi and bacteria; Stichting RIONED: groundwater duty of care (2008) and reference combined sewer systems. <a href="https://www.rvo.nl/onderwerpen/funderingsproblematiek/wat-het/aantasting-houten-palen-schimmels-bacterien" target="_blank" rel="noopener">rvo.nl</a>, <a href="https://www.riool.net/grondwaterzorg-in-bebouwd-gebied" target="_blank" rel="noopener">riool.net</a></li>
+      <li>Rampsporen: Wilnis dike breach, 26 August 2003; van Baars, Dutch dike breach Wilnis 2003 (ICCHGE). <a href="https://www.rampsporen.nl/?p=1544" target="_blank" rel="noopener">rampsporen.nl</a></li>
+      <li>U.S. EPA / FISRWG (1998): natural versus impervious cover water budgets. <a href="https://cfpub.epa.gov/npstbx/files/HamlinePipe.pdf" target="_blank" rel="noopener">epa.gov</a></li>
+      <li>DMI (2012, 2026): the Copenhagen cloudburst of 2 July 2011; KNMI: "Het regent niet vaker, wel harder"; Weerproof: the Amsterdam cloudburst of 28 July 2014.</li>
+      <li>Amsterdam Hemelwaterverordening (2021): 60 L/m² storage, ≤1 L/m²/h discharge. <a href="https://lokaleregelgeving.overheid.nl/CVDR657490/1" target="_blank" rel="noopener">overheid.nl</a></li>
+      <li>Klimaatadaptatie Nederland: standards for the flooding stress test (60 mm in 1 h ≈ T100).</li>
+      <li>RIVM / Atlas Natuurlijk Kapitaal: urban heat island effect in the Netherlands.</li>
+      <li>Neart, E. (2020). Quantifying transpiration of urban trees in Amsterdam: towards a climate proof city. MSc thesis.</li>
+      <li>NOAA Atlas 14 precipitation-frequency estimates, Atlanta (33.749° N, 84.388° W). <a href="https://hdsc.nws.noaa.gov/pfds/" target="_blank" rel="noopener">noaa.gov</a></li>
+      <li>Clean Water Atlanta: consent decree history and system facts; City of Atlanta stormwater ordinance (2013, updated 2020); Atlanta Regional Commission on Rodney Cook Sr. Park; Metropolitan North Georgia Water Planning District: "Our water story".</li>
+      <li>Hilton Head Public Service District: saltwater intrusion; City of Garden City: Coastal Georgia Red Zone plan.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs){ e.setAttribute(k, attrs[k]); } if(parent) parent.appendChild(e); return e; }
+function txt(parent, x, y, s, cls, anchor){ const t=el("text",{x:x,y:y,class:cls||"t-sm","text-anchor":anchor||"start"},parent); t.textContent=s; return t; }
+const fmt = (v, d=0) => v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const minus = s => String(s).replace("-", "−");
+const nap = v => "NAP " + (v>=0?"+":"−") + fmt(Math.abs(v),2) + " m";
+
+/* ---------------- QUIZ ---------------- */
+const Q = {
+ q1:{stop:1, text:"Roughly how much of the Netherlands lies below mean sea level (NAP)?",
+   opts:["About 10%","About 26%","About 55%","About 75%"], a:1,
+   why:"About 26% of the land lies below NAP. A 2007 IPCC report wrongly said 55%; the Dutch environmental agency corrected it. A larger share, 59%, can flood from the sea or from rivers, because land above sea level can still sit below a river in flood."},
+ q2:{stop:1, text:"A deep polder is pumped 2 m below the surrounding lakes. Where does much of the water its pumps remove come from?",
+   opts:["Groundwater pushed up from below by the higher surrounding water, sometimes brackish","Only rain falling on the polder","Leaking drinking-water pipes","Evaporation from the lakes condensing in the polder"], a:0,
+   why:"Water flows from high to low head. Groundwater under the lakes flows beneath the dikes and wells up into the polder (kwel). In deep polders such as the Horstermeer it can bring up old, brackish seawater. Pumping the polder deeper increases the push (Model 1: q = Δh / c)."},
+ q3:{stop:2, text:"Pumping lowers the water table beneath the dunes by 0.5 m. By the Ghijben–Herzberg rule, about how far does the salt-water interface rise?",
+   opts:["0.5 m","5 m","20 m","200 m"], a:2,
+   why:"Fresh water (≈1,000 kg/m³) floats on seawater (≈1,025 kg/m³), so the interface sits about 1,000/25 = 40 times deeper than the water table is high. Lose 0.5 m of head and salt rises about 0.5 × 40 = 20 m. This is why early 20th-century pumping shrank Amsterdam's dune lens, and why the city began refilling the dunes with river water in 1957."},
+ q4:{stop:2, text:"Why does Amsterdam let pre-treated Rhine water soak through dune sand instead of piping it straight to the treatment plant?",
+   opts:["The dunes add minerals that improve taste","EU law requires all drinking water to pass through dunes","Once through the dunes the water needs no further treatment","The sand filters pathogens and organic contaminants, evens out quality and temperature, and stores a buffer for when the river intake must close"], a:3,
+   why:"These four benefits come straight from Waternet's own list. The water spends two to three months underground and is then treated again at Leiduin, so the last option is false. The dunes are a filter and a reservoir, not a substitute for treatment."},
+ q13:{stop:2, text:"A reverse-osmosis plant takes in 1,000 m³/h of brackish water at 2,550 mg/L and delivers 800 m³/h of fresh water (≈0 mg/L). What is the salt concentration of the 200 m³/h concentrate?",
+   opts:["510 mg/L","2,550 mg/L","5,100 mg/L","12,750 mg/L"], a:3,
+   why:"Salt is conserved: 1,000 × 2,550 = 200 × C, so C = 12,750 mg/L, five times the feed. At 50% recovery the concentrate would be 5,100 mg/L. Higher recovery means less water wasted but a saltier brine that still has to go somewhere. (Example from Waternet's 2023 lecture.)"},
+ q5:{stop:3, text:"Amsterdam's older buildings rest on wooden piles. When are the piles in most danger from fungal rot?",
+   opts:["When groundwater stays high and covers the pile tops","During freezing winters","When groundwater falls below the pile tops and air reaches the wood","When the canals are flushed with fresh water"], a:2,
+   why:"Fungi need moisture, food and oxygen. Wood below the water table lacks oxygen, so fungal decay stalls; expose the pile tops and it accelerates. (Some bacteria degrade wood slowly even under water, which is why inspection still matters.) In Model 3, a real Amsterdam street dips below its highest pile tops during dry spells."},
+ q6:{stop:3, text:"In August 2003 a peat levee at Wilnis slid sideways and flooded a neighbourhood. What triggered it?",
+   opts:["Drought: the peat dried out and became lighter, so it could no longer hold back the canal","A storm surge from the North Sea","A week of heavy rain that saturated the levee","An earthquake caused by gas extraction"], a:0,
+   why:"After a hot, dry summer the peat lost water and weight. A stretch of about 50–60 m slid sideways on 26 August 2003 and 1,500–2,000 people were evacuated. Rijkswaterstaat cited this failure again during the 2026 drought: in the Netherlands, too little water can breach a dike."},
+ q7:{stop:4, text:"A cloudburst drops 60 mm of rain in one hour on a 100 m² roof. How much water runs off the roof?",
+   opts:["60 litres","600 litres","6,000 litres","60,000 litres"], a:2,
+   why:"One millimetre of rain on one square metre is one litre. 60 mm × 100 m² = 6,000 L = 6 m³, about 1,600 U.S. gallons. Amsterdam's 2021 ordinance asks new buildings to store exactly this: 60 L per m² of footprint."},
+ q8:{stop:4, text:"Older parts of Amsterdam and downtown Atlanta have combined sewers. What happens in a big storm?",
+   opts:["Rainwater is separated automatically and sent to the river","Sewage backs up only inside the treatment plant","Nothing; combined sewers are sized for every storm","The pipes fill and a mix of rainwater and untreated sewage overflows into canals or creeks"], a:3,
+   why:"A combined sewer carries both flows in one pipe. A typical Dutch combined system stores only about 7 mm of rain and pumps about 0.7 mm/h to the plant, so even an ordinary downpour can trigger an overflow. Atlanta's overflows led to its 1998 federal consent decree."},
+ q9:{stop:5, text:"A rain garden is 35 cm deep and its soil absorbs 20 mm per hour. Roughly how long does it take to drain after it fills, and does it meet a 24-hour target?",
+   opts:["About 2 hours; yes","About 17.5 hours; yes","About 35 hours; no","About 7 days; no"], a:1,
+   why:"Emptying time = depth / infiltration rate = 350 mm ÷ 20 mm/h = 17.5 h, inside 24 h. Put the same garden on De Mirandabad's soil (13 mm/h, high groundwater) and it needs about 27 h: too slow to be ready for the next storm. Test the soil before you dig."},
+ q10:{stop:6, text:"Street trees cool Amsterdam on hot days. What is the catch on a street built on wooden piles?",
+   opts:["In dry summers, transpiring trees help pull the groundwater down and can expose pile tops","Trees raise the groundwater and flood crawl spaces","Trees make the rainwater salty","There is no catch; trees only add water to the ground"], a:0,
+   why:"Transpiration draws water from the soil, and in a dry summer that includes the shallow groundwater under nearby houses. Waternet's lecture sketch shows exactly this. The answer is not fewer trees but trees designed together with infiltration, so that rain recharges what the trees use."},
+ q11:{stop:6, text:"One Amsterdam elm transpired about 38 litres per hour at midday. Roughly how much heat does that evaporation absorb?",
+   opts:["About 0.3 kW","About 2.6 kW","About 26 kW","About 260 kW"], a:2,
+   why:"38 kg/h × 2.45 MJ/kg = 93 MJ/h; divided by 3,600 s gives about 26 kW, on the order of two or three whole-house central air conditioners (≈10.5 kW each). That is the energy absorbed by evaporation; how much the street cools also depends on shade, wind and humidity."},
+ q12:{stop:7, text:"Amsterdam plans for about 60 mm of rain in one hour, roughly a 1-in-100-year hour there. In downtown Atlanta, a 60 mm (2.4 in) hour is closer to a…",
+   opts:["1-in-1-year storm","1-in-10- to 1-in-25-year storm","1-in-100-year storm","1-in-1,000-year storm"], a:1,
+   why:"NOAA Atlas 14 gives downtown Atlanta 2.14 in (54 mm) for the 10-year hour and 2.56 in (65 mm) for the 25-year hour; the 100-year hour is 3.25 in (83 mm). Atlanta's ordinary 2-year hour (39 mm) is already about twice the Dutch sewer test storm. Same physics, different numbers."}
+};
+const ORDER = ["q1","q2","q3","q4","q13","q5","q6","q7","q8","q9","q10","q11","q12"];
+const state = {};
+const track = $("#gaugeTrack");
+ORDER.forEach(()=>{ const s=document.createElement("span"); track.appendChild(s); });
+
+function renderQuiz(box){
+  const id = box.dataset.q, q = Q[id];
+  const num = ORDER.indexOf(id)+1;
+  box.innerHTML = "";
+  const h = document.createElement("div"); h.className="qhead"; h.textContent = "Check " + num + " of " + ORDER.length; box.appendChild(h);
+  const t = document.createElement("div"); t.className="qtext"; t.id = id+"-t"; t.textContent = q.text; box.appendChild(t);
+  const ol = document.createElement("ol"); ol.setAttribute("aria-labelledby", id+"-t"); box.appendChild(ol);
+  const ex = document.createElement("div"); ex.className="expl"; ex.hidden = true; ex.setAttribute("aria-live","polite");
+  q.opts.forEach((o,i)=>{
+    const li=document.createElement("li"); const b=document.createElement("button");
+    b.type="button"; b.className="opt"; b.innerHTML = '<span class="key">'+"ABCD"[i]+'</span><span></span>'; b.lastChild.textContent = o;
+    b.addEventListener("click", ()=>answer(id, i, box));
+    li.appendChild(b); ol.appendChild(li);
+  });
+  box.appendChild(ex);
+  if(state[id] !== undefined) paint(id, box);
+}
+function answer(id, i, box){ if(state[id]!==undefined) return; state[id]=i; paint(id, box); updateGauge(); }
+function paint(id, box){
+  const q=Q[id], pick=state[id], btns=$$("button.opt", box), ex=$(".expl", box);
+  btns.forEach((b,k)=>{ b.disabled=true; if(k===q.a) b.classList.add("right"); if(k===pick && pick!==q.a) b.classList.add("wrong"); });
+  const ok = pick===q.a;
+  ex.innerHTML = '<b class="'+(ok?"v-ok":"v-bad")+'">'+(ok?"Correct.":"Not quite. The answer is "+"ABCD"[q.a]+".")+'</b> ';
+  ex.appendChild(document.createTextNode(q.why));
+  ex.hidden=false;
+}
+function updateGauge(){
+  const spans = $$("span", track); let right=0, answered=0;
+  ORDER.forEach((id,k)=>{ const s=spans[k]; s.className=""; if(state[id]!==undefined){ answered++; if(state[id]===Q[id].a){ right++; s.className="on"; } else s.className="miss"; } });
+  $("#gaugeLabel").textContent = right+" of "+ORDER.length+" correct" + (answered<ORDER.length ? " · "+answered+" answered" : "");
+  $("#finScore").textContent = right+" of "+ORDER.length;
+  const m = $("#finMsg");
+  if(answered===0) m.textContent="Answer the check questions to fill it.";
+  else if(answered<ORDER.length) m.textContent = (ORDER.length-answered)+" question"+(ORDER.length-answered===1?"":"s")+" still open. Scroll back to the stops to finish.";
+  else if(right>=11) m.textContent="Full gauge. You could brief a city council on this.";
+  else if(right>=8) m.textContent="A solid level. Revisit the red-hatched checks and reread the explanations.";
+  else m.textContent="The gauge is low, which is how Amsterdam's pile tops feel in a drought. Revisit the models, then reset and try again.";
+}
+$$(".quiz").forEach(renderQuiz); updateGauge();
+$("#resetQuiz").addEventListener("click", ()=>{ for(const k in state) delete state[k]; $$(".quiz").forEach(renderQuiz); updateGauge(); });
+
+/* ---------------- MODEL 1: seepage ---------------- */
+(function(){
+  const svg=$("#seepSvg"), dh=$("#seepDh"), cSel=$("#seepC"), out=$("#seepOut"), dho=$("#seepDhOut");
+  const PX=16, Y0=78, AQ=196, BOT=290;
+  function draw(){
+    const d=parseFloat(dh.value), c=parseFloat(cSel.value);
+    dho.textContent = fmt(d,1)+" m";
+    svg.innerHTML="";
+    el("rect",{x:0,y:0,width:640,height:290,fill:"var(--surface)"},svg);
+    const pY = Y0 + d*PX; // polder water level
+    // sand aquifer
+    el("rect",{x:0,y:AQ,width:640,height:BOT-AQ,fill:"var(--sand-2)"},svg);
+    // brackish dome: base at 282, crest rises with d
+    const crest = 282 - Math.min(70, d*10.5);
+    el("path",{d:"M0 286 L140 284 C230 282 250 "+crest+" 320 "+crest+" C390 "+crest+" 410 282 500 284 L640 286 L640 290 L0 290 Z",fill:"var(--salt)",opacity:".75"},svg);
+    txt(svg,320,Math.min(284,crest+14),"old brackish groundwater","t-xs t-inv","middle");
+    // cover layer (clay/peat): lakes area from lake bottom (Y0+30) to AQ; polder from pY+4 to AQ
+    el("rect",{x:0,y:Y0+34,width:176,height:AQ-(Y0+34),fill:"var(--peat)",opacity:".55"},svg);
+    el("rect",{x:464,y:Y0+34,width:176,height:AQ-(Y0+34),fill:"var(--peat)",opacity:".55"},svg);
+    el("rect",{x:204,y:pY+6,width:232,height:Math.max(4,AQ-(pY+6)),fill:"var(--peat)",opacity:".55"},svg);
+    // lakes
+    el("rect",{x:0,y:Y0,width:176,height:34,fill:"var(--water)",opacity:".85"},svg);
+    el("rect",{x:464,y:Y0,width:176,height:34,fill:"var(--water)",opacity:".85"},svg);
+    // dikes
+    el("path",{d:"M176 "+(Y0+34)+" L176 "+(Y0-6)+" L186 "+(Y0-18)+" L196 "+(Y0-18)+" L206 "+(pY+6)+" L206 "+(AQ)+" L176 "+AQ+" Z",fill:"var(--green)",opacity:".9"},svg);
+    el("path",{d:"M464 "+(Y0+34)+" L464 "+(Y0-6)+" L454 "+(Y0-18)+" L444 "+(Y0-18)+" L434 "+(pY+6)+" L434 "+AQ+" L464 "+AQ+" Z",fill:"var(--green)",opacity:".9"},svg);
+    // polder ditch water + land
+    el("rect",{x:206,y:pY,width:228,height:6,fill:"var(--water)",opacity:".8"},svg);
+    el("line",{x1:206,y1:pY-2,x2:434,y2:pY-2,stroke:"var(--green)","stroke-width":4},svg);
+    // head lines
+    el("line",{x1:0,y1:Y0,x2:640,y2:Y0,stroke:"var(--water)","stroke-dasharray":"5 4","stroke-width":1.2},svg);
+    txt(svg,8,Y0-6,"outside water level","t-xs");
+    if(d>0.25){
+      el("line",{x1:520,y1:Y0,x2:520,y2:pY,stroke:"var(--ink)","stroke-width":1},svg);
+      el("line",{x1:514,y1:pY,x2:526,y2:pY,stroke:"var(--ink)","stroke-width":1},svg);
+      txt(svg,530,(Y0+pY)/2+4,"Δh = "+fmt(d,1)+" m","t-md");
+    }
+    txt(svg,320,Math.max(pY-10,Y0-4),"polder","t-md","middle");
+    txt(svg,632,AQ+36,"sand aquifer","t-xs","end");
+    txt(svg,88,(Y0+34+AQ)/2+4,"clay & peat cover","t-xs t-inv","middle");
+    // arrows
+    const q = d/c; // m/day
+    const len = Math.min(56, 6 + Math.sqrt(q*1000)*14);
+    if(d>0.05){
+      for(let x=222;x<=420;x+=28){
+        const y1=AQ-2, y2=Math.max(pY+10, AQ-len);
+        el("line",{x1:x,y1:y1,x2:x,y2:y2,stroke:"var(--water)","stroke-width":2.4},svg);
+        el("path",{d:"M"+(x-4)+" "+(y2+6)+" L"+x+" "+(y2-1)+" L"+(x+4)+" "+(y2+6)+" Z",fill:"var(--water)"},svg);
+      }
+      // flow lines under dikes
+      el("path",{d:"M60 "+(AQ+6)+" C140 "+(AQ+40)+" 200 "+(AQ+30)+" 236 "+(AQ+4),fill:"none",stroke:"var(--water)","stroke-width":1.4,"stroke-dasharray":"4 3"},svg);
+      el("path",{d:"M580 "+(AQ+6)+" C500 "+(AQ+40)+" 440 "+(AQ+30)+" 404 "+(AQ+4),fill:"none",stroke:"var(--water)","stroke-width":1.4,"stroke-dasharray":"4 3"},svg);
+    }
+    const mmd = q*1000, mmy = mmd*365.25, km2 = q*1e6;
+    out.innerHTML = 'Upward seepage <span class="big">'+fmt(mmd, mmd<1?2:1)+' mm/day</span> = '+fmt(mmy,0)+' mm per year. For every square kilometre of polder, the pumps must lift about <span class="big">'+fmt(km2,0)+' m³/day</span> of seepage on top of the rain.';
+  }
+  dh.addEventListener("input",draw); cSel.addEventListener("change",draw); draw();
+})();
+
+/* ---------------- MODEL 2: lens ---------------- */
+(function(){
+  const svg=$("#lensSvg"), hI=$("#lensH"), sI=$("#lensS"), out=$("#lensOut");
+  const SEA=110, X0=110, X1=530, XC=320, HALF=210, UP=10*1.1, DOWN=1.1; // px per m above (x10) and below
+  function draw(){
+    const hc=parseFloat(hI.value), s=Math.min(parseFloat(sI.value), hc-0.05);
+    $("#lensHOut").textContent=fmt(hc,1)+" m"; $("#lensSOut").textContent=fmt(parseFloat(sI.value),1)+" m";
+    svg.innerHTML="";
+    el("rect",{x:0,y:0,width:640,height:300,fill:"var(--surface)"},svg);
+    // seawater body below sea level everywhere
+    el("rect",{x:0,y:SEA,width:640,height:190,fill:"var(--salt)",opacity:".55"},svg);
+    // sea surface left and polder right
+    el("rect",{x:0,y:SEA-2,width:X0,height:4,fill:"var(--water)"},svg);
+    txt(svg,8,SEA-8,"North Sea","t-sm");
+    // dune ridge profile
+    let dune="M"+X0+" "+SEA;
+    for(let x=X0;x<=X1;x+=10){ const u=(x-XC)/HALF; const top=SEA-18-58*Math.max(0,1-u*u)-10*Math.sin(x/17)*Math.max(0,1-u*u); dune+=" L"+x+" "+top.toFixed(1); }
+    dune+=" L"+X1+" "+SEA+" Z";
+    el("path",{d:dune,fill:"var(--sand-2)",stroke:"var(--sand)","stroke-width":1},svg);
+    txt(svg,XC,34,"dunes","t-md","middle");
+    el("rect",{x:X1,y:SEA-4,width:640-X1,height:6,fill:"var(--green)",opacity:".8"},svg);
+    txt(svg,X1+10,SEA-10,"polder","t-sm");
+    // lens
+    const pts=[], ptsI=[];
+    for(let x=X0;x<=X1;x+=4){
+      const u=(x-XC)/HALF; let h=hc*Math.sqrt(Math.max(0,1-u*u));
+      h -= s*Math.exp(-Math.pow((x-XC)/38,2));
+      h = Math.max(0,h);
+      pts.push([x, SEA - h*UP]); ptsI.push([x, SEA + 40*h*DOWN]);
+    }
+    let d="M"+pts[0][0]+" "+pts[0][1];
+    pts.forEach(p=>{ d+=" L"+p[0]+" "+p[1].toFixed(1); });
+    for(let i=ptsI.length-1;i>=0;i--){ d+=" L"+ptsI[i][0]+" "+ptsI[i][1].toFixed(1); }
+    d+=" Z";
+    el("path",{d:d,fill:"var(--water-2)",stroke:"var(--water)","stroke-width":1.5},svg);
+    // water table line
+    let wt="M"+pts[0][0]+" "+pts[0][1]; pts.forEach(p=>{ wt+=" L"+p[0]+" "+p[1].toFixed(1); });
+    el("path",{d:wt,fill:"none",stroke:"var(--water)","stroke-width":2,"stroke-dasharray":"5 3"},svg);
+    el("line",{x1:0,y1:SEA,x2:640,y2:SEA,stroke:"var(--ink-2)","stroke-width":0.8,"stroke-dasharray":"2 3"},svg);
+    txt(svg,8,SEA+14,"sea level","t-xs t-mute");
+    txt(svg,XC,SEA+26,"fresh groundwater","t-md","middle");
+    txt(svg,16,286,"seawater","t-sm t-inv","start");
+    // well
+    if(parseFloat(sI.value)>0){
+      el("rect",{x:XC-3,y:40,width:6,height:SEA+40*(hc-s)*DOWN-60,fill:"var(--ink)"},svg);
+      txt(svg,XC+8,54,"well","t-xs");
+    }
+    // depth scale
+    const sx=600;
+    el("line",{x1:sx,y1:SEA,x2:sx,y2:SEA+160*DOWN,stroke:"var(--ink-2)","stroke-width":1},svg);
+    [40,80,120,160].forEach(m=>{ el("line",{x1:sx-4,y1:SEA+m*DOWN,x2:sx,y2:SEA+m*DOWN,stroke:"var(--ink-2)"},svg); txt(svg,sx-6,SEA+m*DOWN+4,(m?"−":"")+m+" m","t-xs t-mute","end"); });
+    const zc = 40*(hc-s), znat=40*hc;
+    el("line",{x1:XC-40,y1:SEA+zc*DOWN,x2:XC+40,y2:SEA+zc*DOWN,stroke:"var(--salt)","stroke-width":2},svg);
+    out.innerHTML = 'Water table at the centre: <span class="big">'+fmt(hc-s,1)+' m</span> above sea level. Fresh water reaches about <span class="big">'+fmt(zc,0)+' m</span> below sea level ('+fmt(40,0)+' × '+fmt(hc-s,1)+' m).'+(s>0?' Pumping '+fmt(s,1)+' m of drawdown lifted the salt interface about <b>'+fmt(znat-zc,0)+' m</b> beneath the well.':'');
+  }
+  hI.addEventListener("input",draw); sI.addEventListener("input",draw); draw();
+})();
+
+/* ---------------- MODEL 3: groundwater window ---------------- */
+(function(){
+  const svg=$("#gwSvg"), inp=$("#gwLvl"), out=$("#gwOut");
+  const top=0.9, bot=-1.25, H=310, Y=v=> 10 + (top - v)/(top-bot)*H;
+  const tops=[-0.50,-0.58,-0.66,-0.74,-0.80,-0.62,-0.54];
+  function draw(){
+    const g=parseFloat(inp.value);
+    $("#gwLvlOut").textContent=nap(g);
+    svg.innerHTML="";
+    el("rect",{x:0,y:0,width:420,height:330,fill:"var(--surface)"},svg);
+    el("rect",{x:0,y:Y(0.40),width:420,height:330-Y(0.40),fill:"var(--sand-2)"},svg);
+    el("rect",{x:0,y:Y(g),width:340,height:330-Y(g),fill:"var(--water-2)",opacity:".75"},svg);
+    el("line",{x1:0,y1:Y(g),x2:340,y2:Y(g),stroke:"var(--water)","stroke-width":2,"stroke-dasharray":"6 3"},svg);
+    el("rect",{x:342,y:Y(-0.40),width:78,height:330-Y(-0.40),fill:"var(--water)",opacity:".85"},svg);
+    el("rect",{x:336,y:Y(0.40),width:6,height:330-Y(0.40),fill:"var(--ink-2)"},svg);
+    txt(svg,381,Y(-0.40)+15,"canal","t-xs t-inv","middle");
+    txt(svg,381,Y(-0.40)+27,"\u2248 NAP \u22120.40","t-xs t-inv","middle");
+    el("rect",{x:6,y:Y(-0.20),width:9,height:Y(-0.70)-Y(-0.20),fill:"var(--water)",opacity:".45"},svg);
+    txt(svg,4,Y(-0.70)+14,"measured","t-xs t-mute");
+    txt(svg,4,Y(-0.70)+25,"range","t-xs t-mute");
+    el("rect",{x:66,y:Y(0.40)-62,width:180,height:62,fill:"var(--clay)",opacity:".9"},svg);
+    [84,130,176,212].forEach(x=>el("rect",{x:x,y:Y(0.40)-50,width:20,height:30,fill:"var(--surface)",opacity:".85"},svg));
+    txt(svg,70,Y(0.40)+13,"street \u2248 NAP +0.40","t-xs");
+    el("rect",{x:66,y:Y(0.40),width:180,height:Y(-0.10)-Y(0.40),fill:"none",stroke:"var(--ink-2)","stroke-width":1.2,"stroke-dasharray":"3 2"},svg);
+    txt(svg,156,Y(0.10),"crawl space","t-xs","middle");
+    el("rect",{x:62,y:Y(-0.10),width:188,height:Y(-0.45)-Y(-0.10),fill:"var(--ink-2)",opacity:".35"},svg);
+    tops.forEach((t,i)=>{ const x=78+i*25; const exposed = g < t; el("rect",{x:x,y:Y(t),width:10,height:330-Y(t),fill: exposed ? "var(--bad)" : "var(--peat)"},svg); el("rect",{x:x-4,y:Y(t)-4,width:18,height:5,fill:"var(--ink-2)"},svg); });
+    const lab=(v,s)=>{ el("line",{x1:252,y1:Y(v),x2:298,y2:Y(v),stroke:"var(--ink-2)","stroke-width":0.8,"stroke-dasharray":"2 2"},svg); txt(svg,300,Y(v)+3,s,"t-xs t-mute","start"); };
+    lab(-0.10,"\u22120.10"); lab(-0.50,"\u22120.50"); lab(-0.80,"\u22120.80");
+    txt(svg,252,Y(-1.0),"pile tops:","t-xs");
+    txt(svg,252,Y(-1.0)+12,"NAP \u22120.50","t-xs");
+    txt(svg,252,Y(-1.0)+24,"to \u22120.80","t-xs");
+    let cls, msg;
+    if(g > -0.10){ cls="wet"; msg="Too high: water stands in crawl spaces; damp walls and mould follow."; }
+    else if(g >= -0.50){ cls="ok"; msg="Inside the window: every pile top is under water and crawl spaces stay dry."; }
+    else if(g >= -0.80){ const n=tops.filter(t=>g<t).length; cls="warn"; msg=n+" of "+tops.length+" pile tops sit above the water table. Air reaches the wood and fungal rot can start."; }
+    else { cls="bad"; msg="Too low: all pile tops are exposed. Sustained, this is how houses start to sag and crack."; }
+    out.innerHTML = '<span class="status '+cls+'">'+nap(g)+'</span> '+msg+' <span class="muted small">The safe window in this street is only 40 cm tall, and the measured readings (NAP \u22120.20 to \u22120.70 m) cross its lower edge.</span>';
+  }
+  inp.addEventListener("input",draw);
+  $$("[data-gw]").forEach(b=>b.addEventListener("click",()=>{ inp.value=b.dataset.gw; draw(); }));
+  draw();
+})();
+
+/* ---------------- EPA bars ---------------- */
+(function(){
+  const svg=$("#epaSvg");
+  const rows=[["Natural cover",40,10,25,25],["10–20% impervious",38,20,21,21],["35–50% impervious",35,30,20,15],["75–100% impervious",30,55,10,5]];
+  const cols=["var(--green)","var(--salt)","var(--water-2)","var(--water)"], names=["evapotranspiration","runoff","shallow infiltration","deep infiltration"];
+  el("rect",{x:0,y:0,width:420,height:250,fill:"var(--surface)"},svg);
+  const x0=128, W=270;
+  rows.forEach((r,i)=>{
+    const y=14+i*44; txt(svg,x0-8,y+17,r[0],"t-sm","end");
+    let x=x0;
+    for(let k=1;k<=4;k++){ const w=r[k]/100*W; el("rect",{x:x,y:y,width:w,height:26,fill:cols[k-1]},svg); if(r[k]>=9) txt(svg,x+w/2,y+17,r[k]+"%",k===2||k===4?"t-xs t-inv":"t-xs","middle"); x+=w; }
+  });
+  names.forEach((n,k)=>{ const x=10+(k%2)*205, y=200+Math.floor(k/2)*22; el("rect",{x:x,y:y-9,width:12,height:12,fill:cols[k]},svg); txt(svg,x+18,y+1,n,"t-xs"); });
+})();
+
+/* ---------------- MODEL 4: storm vs sewer ---------------- */
+(function(){
+  const svg=$("#sewerSvg"), P=$("#rainP"), F=$("#pavedF"), out=$("#sewerOut");
+  const A=10000, STORE=7, PUMP=0.7, PIPE=20, GARDEN=20;
+  function calc(){
+    const p=parseFloat(P.value), f=parseFloat(F.value)/100;
+    $("#rainPOut").textContent=fmt(p, p%1?1:0)+" mm"; $("#pavedFOut").textContent=fmt(f*100,0)+"%";
+    const Ap=A*f, Ag=A-Ap;
+    const soak = Ag*Math.min(p,GARDEN)/1000;              // m3
+    const gardenExcess = Ag*Math.max(0,p-GARDEN)/1000;     // m3 runs to street
+    const total = A*p/1000;
+    const runoff = Ap*p/1000 + gardenExcess;
+    const pipeCap = Ap*PIPE/1000, toPipe=Math.min(runoff,pipeCap);
+    const plantCap = Ap*(STORE+PUMP)/1000, toPlant=Math.min(toPipe,plantCap);
+    const cso = toPipe-toPlant, flood = runoff-toPipe;
+    const depth = Ap>0 ? flood/Ap*100 : 0; // cm over paved area
+    // bar
+    svg.innerHTML=""; el("rect",{x:0,y:0,width:640,height:120,fill:"var(--surface)"},svg);
+    const parts=[["soaked into gardens",soak,"var(--green)"],["to treatment plant",toPlant,"var(--water)"],["overflow to canal/creek",cso,"var(--salt)"],["left on the streets",flood,"var(--sand)"]];
+    let x=10; const W=620;
+    parts.forEach(pp=>{ const w= total>0 ? pp[1]/total*W : 0; if(w>0){ el("rect",{x:x,y:14,width:w,height:34,fill:pp[2]},svg); if(w>46) txt(svg,x+w/2,36,fmt(pp[1],0)+" m³",pp[2]==="var(--sand)"||pp[2]==="var(--green)"?"t-sm":"t-sm t-inv","middle"); } x+=w; });
+    if(total===0){ txt(svg,320,36,"no rain","t-sm t-mute","middle"); }
+    parts.forEach((pp,k)=>{ const lx=10+k*158; el("rect",{x:lx,y:66,width:12,height:12,fill:pp[2]},svg); txt(svg,lx+17,76,pp[0],"t-xs"); });
+    txt(svg,10,106,"Total rain on the block: "+fmt(total,0)+" m³ ("+fmt(p,1)+" mm × 10,000 m²)","t-xs t-mute");
+    let verdict;
+    if(total===0) verdict="";
+    else if(flood<=0 && cso<=0) verdict='<span class="status ok">Handled</span> The sewer and gardens cope.';
+    else if(Ap<1) verdict='<span class="status warn">Ponding</span> With no pavement there are no pipes here: '+fmt(flood,0)+' m³ ponds on the lawns until it soaks in.';
+    else if(flood<=0) verdict='<span class="status warn">Overflow</span> Streets stay dry, but '+fmt(cso,0)+' m³ of diluted sewage spills into the canal or creek.';
+    else verdict='<span class="status bad">Flooding</span> '+fmt(flood,0)+' m³ cannot enter the pipes. Spread evenly over every paved surface that is '+fmt(depth,1)+' cm deep; in low spots and tunnels it is far deeper. Another '+fmt(cso,0)+' m³ overflows into surface water.';
+    out.innerHTML=verdict;
+  }
+  P.addEventListener("input",()=>{ $$("#stormBtns .btn").forEach(b=>b.setAttribute("aria-pressed","false")); calc(); });
+  F.addEventListener("input",calc);
+  $$("#stormBtns .btn").forEach(b=>b.addEventListener("click",()=>{ $$("#stormBtns .btn").forEach(x=>x.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed","true"); P.value=b.dataset.p; calc(); }));
+  $$("#stormBtns .btn")[2].setAttribute("aria-pressed","true");
+  calc();
+})();
+
+/* ---------------- MODEL 5: wadi sizing ---------------- */
+(function(){
+  const A=$("#wA"), P=$("#wP"), D=$("#wD"), F=$("#wF"), out=$("#wadiOut");
+  function calc(){
+    const a=+A.value, p=+P.value/1000, d=+D.value/100, f=+F.value/1000;
+    $("#wAOut").textContent=fmt(a,0)+" m²"; $("#wPOut").textContent=fmt(+P.value,0)+" mm"; $("#wDOut").textContent=fmt(+D.value,0)+" cm"; $("#wFOut").textContent=fmt(+F.value,0)+" mm/h";
+    const den = d + f*1 - p;
+    const T = d/f; // hours
+    const empt = T<=24 ? '<span class="status ok">Empties in '+fmt(T,1)+' h</span>' : '<span class="status bad">Needs '+fmt(T,1)+' h to empty</span>';
+    if(den<=0){ out.innerHTML='<span class="status bad">Impossible</span> The storm alone overfills a garden this shallow. Dig deeper or choose a faster-draining soil. '+empt; return; }
+    const W = a*p/den;
+    out.innerHTML='Rain garden area needed: <span class="big">'+fmt(W,0)+' m²</span>, or '+fmt(W/a*100,0)+'% of the paved area it serves. '+empt+(T>24?' <span class="muted small">It will still be partly full if the next storm arrives tomorrow.</span>':'');
+  }
+  [A,P,D,F].forEach(i=>i.addEventListener("input",calc));
+  $$("[data-f]").forEach(b=>b.addEventListener("click",()=>{ F.value=b.dataset.f; calc(); }));
+  calc();
+})();
+
+/* ---------------- MODEL 6: tree cooling ---------------- */
+(function(){
+  const S=$("#sap"), svg=$("#treeSvg"), out=$("#treeOut");
+  const LAMBDA=2.45e6, AC=10.5; // J/kg, kW
+  function calc(){
+    const q=+S.value; $("#sapOut").textContent=fmt(q, q%1?1:0)+" L/h";
+    const kW = q*LAMBDA/3600/1000;
+    svg.innerHTML=""; el("rect",{x:0,y:0,width:420,height:150,fill:"var(--surface)"},svg);
+    const max=30, W=300, x0=100;
+    txt(svg,x0-8,40,"this tree","t-sm","end");
+    el("rect",{x:x0,y:24,width:Math.min(W,kW/max*W),height:26,fill:"var(--green)"},svg);
+    txt(svg,x0+Math.min(W,kW/max*W)+6,42,fmt(kW,1)+" kW","t-sm");
+    txt(svg,x0-8,92,"3-ton AC","t-sm","end");
+    el("rect",{x:x0,y:76,width:AC/max*W,height:26,fill:"var(--water)"},svg);
+    txt(svg,x0+AC/max*W+6,94,"10.5 kW","t-sm");
+    [0,10,20,30].forEach(v=>{ const x=x0+v/max*W; el("line",{x1:x,y1:112,x2:x,y2:117,stroke:"var(--ink-2)"},svg); txt(svg,x,130,v+" kW","t-xs t-mute","middle"); });
+    el("line",{x1:x0,y1:112,x2:x0+W,y2:112,stroke:"var(--ink-2)"},svg);
+    out.innerHTML='Evaporating '+fmt(q, q%1?1:0)+' L/h absorbs <span class="big">'+fmt(kW,1)+' kW</span>, about '+fmt(kW/AC,1)+'× a 3-ton central air conditioner.';
+  }
+  S.addEventListener("input",calc); calc();
+})();
+
+/* ---------------- Comparison chart ---------------- */
+(function(){
+  const svg=$("#cmpSvg");
+  const rows=[
+    ["NL sewer test storm (bui 08, ~2-yr)",20,"var(--water)"],
+    ["Amsterdam 28 Jul 2014, local peak hour",40,"var(--water)"],
+    ["NL stress test, ~1-in-100-yr hour",60,"var(--water)"],
+    ["Atlanta 2-yr hour",38.6,"var(--clay)"],
+    ["Atlanta 10-yr hour",54.4,"var(--clay)"],
+    ["Atlanta 25-yr hour",65.0,"var(--clay)"],
+    ["Atlanta 100-yr hour",82.6,"var(--clay)"]
+  ];
+  el("rect",{x:0,y:0,width:640,height:330,fill:"var(--surface)"},svg);
+  const x0=250, W=340, max=90;
+  [0,20,40,60,80].forEach(v=>{ const x=x0+v/max*W; el("line",{x1:x,y1:10,x2:x,y2:300,stroke:"var(--line)","stroke-width":1},svg); txt(svg,x,318,v+" mm","t-xs t-mute","middle"); });
+  el("line",{x1:x0+60/max*W,y1:10,x2:x0+60/max*W,y2:300,stroke:"var(--ink)","stroke-width":1.2,"stroke-dasharray":"4 3"},svg);
+  rows.forEach((r,i)=>{ const y=16+i*40+(i>=3?10:0); txt(svg,x0-10,y+17,r[0],"t-sm","end"); el("rect",{x:x0,y:y,width:r[1]/max*W,height:24,fill:r[2]},svg); txt(svg,x0+r[1]/max*W-6,y+17,fmt(r[1],r[1]%1?1:0),"t-sm t-inv","end"); });
+  txt(svg,x0+60/max*W+4,306,"Amsterdam\u2019s 60 mm target","t-xs");
+})();
+})();
+</script>
+</body>
+</html>
