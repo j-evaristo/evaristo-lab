@@ -206,6 +206,19 @@ img { max-width:100%; display:block; }
 .footer-links a { color:rgba(255,255,255,0.5); font-size:0.78rem; font-weight:500; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; }
 .footer-links a:hover { color:rgba(255,255,255,0.9); }
 
+/* ═══════ NEWS ═══════ */
+.news-list { list-style:none; margin:0; padding:0; }
+.news-item { display:grid; grid-template-columns:6.5rem 5.5rem 1fr; gap:0.35rem 1rem; align-items:baseline; padding:0.85rem 0; border-bottom:1px solid var(--rule-light); }
+.news-item:last-child { border-bottom:none; }
+.news-date { font-family:var(--mono); font-size:0.75rem; color:var(--muted); }
+.news-tag { justify-self:start; font-size:0.65rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:0.15rem 0.5rem; border-radius:4px; background:var(--accent-pale); color:var(--accent); }
+.news-text { font-size:0.9rem; color:#3a3d3b; line-height:1.6; }
+.news-text a { font-weight:600; cursor:pointer; }
+@media (max-width:768px) {
+  .news-item { grid-template-columns:auto 1fr; }
+  .news-text { grid-column:1 / -1; }
+}
+
 /* ═══════ RESPONSIVE ═══════ */
 @media (max-width:768px) {
   .nav-links { display:none; position:fixed; top:62px; left:0; right:0; background:var(--paper); flex-direction:column; padding:1rem; border-bottom:1px solid var(--rule); box-shadow:0 4px 20px rgba(0,0,0,0.08); }
@@ -273,6 +286,11 @@ img { max-width:100%; display:block; }
       <div class="stat"><div class="stat-num">5</div><div class="stat-label">Courses</div></div>
       <div class="stat"><div class="stat-num">4</div><div class="stat-label">Research Themes</div></div>
     </div>
+  </div>
+  <div class="section" style="padding-top:0">
+    <div class="section-head"><h2>News</h2><p>Recent updates from the lab</p></div>
+    <ul class="news-list" id="homeNews"></ul>
+    <p style="text-align:center; margin-top:1.5rem;"><a onclick="showPage('news')" style="font-size:0.85rem; font-weight:600; cursor:pointer;">All news →</a></p>
   </div>
   <div class="section" style="padding-top:0">
     <div class="section-head"><h2>Latest Publications</h2><p>Recent peer-reviewed work from the lab</p></div>
@@ -372,6 +390,23 @@ img { max-width:100%; display:block; }
     <div class="pub-item"><span class="pub-num">7.</span><div><strong>Evaristo, J.</strong> &amp; McDonnell, J.J. "Prevalence and magnitude of groundwater use by vegetation: a global stable isotope meta-analysis". <em>Sci. Rep.</em> 7, 44110 (2017) <a href="https://www.nature.com/articles/srep44110" target="_blank">Link</a> <span class="pub-badge">Open Access</span></div></div>
     <div class="pub-item"><span class="pub-num">3.</span><div><strong>Evaristo, J.</strong>, Jasechko, S., McDonnell, J.J. "Isotopic composition of plant water sources". <em>Nature</em> 536, E3 (2016) <a href="https://www.nature.com/articles/nature18947" target="_blank">Link</a></div></div>
     <div class="pub-item"><span class="pub-num">1.</span><div><strong>Evaristo, J.</strong>, Jasechko, S., McDonnell, J.J. "Global separation of plant transpiration from groundwater and streamflow". <em>Nature</em> 525, 91-94 (2015) <a href="https://www.nature.com/articles/nature14983" target="_blank">Link</a></div></div>
+  </div>
+</div>
+
+<!-- ═══════ NEWS ═══════ -->
+<div class="page" id="page-news">
+  <div class="section">
+    <div class="section-head"><h2>News</h2><p>Updates from the Evaristo Critical Zone Hydrology Lab</p></div>
+    <ul class="news-list">
+      <li class="news-item"><span class="news-date">Nov 2026</span><span class="news-tag">Award</span><span class="news-text">PhD student <a onclick="showPage('people')">Maria Jessica Gabriel</a> received the Robert Luxmoore Soil Physics Award from the Soil Science Society of America at CANVAS 2026.</span></li>
+      <li class="news-item"><span class="news-date">Oct 2026</span><span class="news-tag">Paper</span><span class="news-text">New paper: <a href="https://doi.org/10.1002/hyp.70765" target="_blank">“Forest Disturbance Alters Water Yield but Not Catchment Drainage Behaviour”</a> is out in <em>Hydrological Processes</em>.</span></li>
+      <li class="news-item"><span class="news-date">Oct 2026</span><span class="news-tag">Paper</span><span class="news-text">New paper: <a href="https://doi.org/10.1021/acsestwater.5c01087" target="_blank">“Streamflow Generation across the Diverse Tropics”</a>, a synthesis led by Alan Ziegler with 19 co-authors, is out open access in <em>ACS ES&amp;T Water</em>.</span></li>
+      <li class="news-item"><span class="news-date">Oct 2026</span><span class="news-tag">People</span><span class="news-text"><a onclick="showPage('people')">Lauren Maraya King</a> joined the lab as a Research Assistant. She begins her MS in Spring 2027, studying how subsurface flow paths regulate stream nitrate at Coweeta.</span></li>
+      <li class="news-item"><span class="news-date">Sep 2026</span><span class="news-tag">Teaching</span><span class="news-text">Two interactives for the Green Cities guest lecture, Amsterdam Water Explorer and Rainproof Street, are now on the <a onclick="showPage('teaching')">Teaching</a> page.</span></li>
+      <li class="news-item"><span class="news-date">Aug 2026</span><span class="news-tag">Teaching</span><span class="news-text">Weekly interactive primers for WASR 8000, <a onclick="showPage('teaching')">Rates and Dates: Hydrological Methods and Applications</a>, began going online.</span></li>
+      <li class="news-item"><span class="news-date">Summer 2026</span><span class="news-tag">People</span><span class="news-text"><a onclick="showPage('people')">Maxton Moreland</a> joined the lab as a Summer 2026 Hydrology and Water Resources Intern.</span></li>
+      <li class="news-item"><span class="news-date">Apr 2026</span><span class="news-tag">Service</span><span class="news-text">Jaivime Evaristo joined the Editorial Board of <a href="https://iopscience.iop.org/journal/3033-4942" target="_blank"><em>Environmental Research: Water</em></a>.</span></li>
+    </ul>
   </div>
 </div>
 
@@ -606,6 +641,7 @@ document.querySelectorAll('.person-card, .course-card, .research-block, .pub-ite
   el.style.transition='opacity 0.5s ease, transform 0.5s ease';
   obs.observe(el);
 });
+document.getElementById('homeNews').innerHTML = [...document.querySelectorAll('#page-news .news-item')].slice(0, 3).map(li => li.outerHTML).join('');
 </script>
 <script data-goatcounter="https://evaristo.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
